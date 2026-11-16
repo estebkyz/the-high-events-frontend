@@ -1,0 +1,1 @@
+export type RouteId = "dashboard" | "eventos" | "agendamiento" | "tareas" | "equipos" | "prestamos" | "incidentes" | "clientes" | "cotizaciones" | "ventas" | "abonos" | "proveedores" | "recepciones" | "servicios" | "empleados" | "usuarios" | "roles"
