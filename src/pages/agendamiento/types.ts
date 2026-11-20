@@ -38,6 +38,8 @@ export interface AgendaEvent {
   tipoEventoTentativo?: string // Boda, Quinceañera, Corporativo, etc.
   lugarTentativo?: string
   cliente_id?: string
+  evento_id?: string
+  cotizacion_id?: string
 }
 
 export interface AgendaFormData {
@@ -57,6 +59,8 @@ export interface AgendaFormData {
   tipoEventoTentativo?: string
   lugarTentativo?: string
   cliente_id?: string
+  evento_id?: string
+  cotizacion_id?: string
 }
 
 export interface AgendaLocation {

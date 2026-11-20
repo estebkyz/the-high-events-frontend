@@ -185,13 +185,16 @@ export function EventoStaffSection({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-6 border-t border-[#262D3D]">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Columna izquierda: contexto + acción principal */}
       <div className="lg:col-span-3 space-y-3">
         <div>
-          <h2 className="text-[16px] font-bold text-[#F8FAFC]">
-            Empleados
-          </h2>
+          <h3 className="text-sm font-bold text-[#F8FAFC]">
+            Personal del evento
+          </h3>
+          <p className="text-[11px] text-[#94A3B8] mt-1 leading-relaxed">
+            Vincula los colaboradores que participarán en el evento. Las tareas específicas se asignan en el módulo de Tareas.
+          </p>
         </div>
 
         <button
@@ -201,15 +204,15 @@ export function EventoStaffSection({
           className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold bg-[#7C3AED] hover:bg-[#6D28D9] text-white transition-colors shadow-sm shadow-[#2563EB]/25 flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F1117]"
         >
           <Plus size={15} className="text-[#F8FAFC]"/>
-          <span>{showSelector ? "Ocultar" : "Agregar"}</span>
+          <span>{showSelector ? "Ocultar buscador" : "Vincular empleado"}</span>
         </button>
 
         {assignedList.length > 0 && (
           <p className="text-xs text-[#94A3B8]">
             {assignedList.length}{" "}
             {assignedList.length === 1
-              ? "tarea asignada al evento"
-              : "tareas asignadas al evento"}
+              ? "colaborador vinculado al evento"
+              : "colaboradores vinculados al evento"}
           </p>
         )}
       </div>
@@ -218,7 +221,7 @@ export function EventoStaffSection({
       <div className="lg:col-span-9 space-y-3">
         {showSelector && (
           <div
-            className="bg-[#181B22] rounded-2xl p-3 flex items-center gap-2.5 animate-in fade-in zoom-in-95 duration-150 shadow-lg"
+            className="bg-[#111318] border border-[#262D3D] rounded-2xl p-3 flex items-center gap-2.5 animate-in fade-in zoom-in-95 duration-150 shadow-lg"
             onKeyDown={(e) => {
               if (e.key === "Escape") setShowSelector(false)
             }}
@@ -242,7 +245,7 @@ export function EventoStaffSection({
               onClick={() => setShowSelector(false)}
               aria-label="Cerrar buscador"
               title="Cerrar buscador"
-              className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-[#111318] text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#222734] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"
+              className="h-[42px] w-[42px] shrink-0 flex items-center justify-center rounded-xl bg-[#181B22] text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#222734] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"
             >
               <X size={16} />
             </button>
@@ -254,7 +257,7 @@ export function EventoStaffSection({
           <div
             role="status"
             aria-live="polite"
-            className="flex items-center justify-between gap-3 bg-[#181B22] border border-[#2D3748] rounded-xl px-4 py-2.5"
+            className="flex items-center justify-between gap-3 bg-[#111318] border border-[#2D3748] rounded-xl px-4 py-2.5"
           >
             <p className="text-xs text-[#CBD5E1]">
               Quitaste a{" "}
@@ -273,19 +276,20 @@ export function EventoStaffSection({
         )}
 
         {assignedList.length > 0
-          ? assignedList.map((item) => (
-              <div
-                key={item.empId}
-                className="bg-[#181B22] rounded-2xl p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] space-y-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
+          ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {assignedList.map((item) => (
+                <div
+                  key={item.empId}
+                  className="bg-[#111318] border border-[#262D3D] rounded-xl p-4 space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm font-bold text-[#F8FAFC]">
+                        <h4 className="text-xs font-bold text-[#F8FAFC]">
                           {item.nombre}
                         </h4>
-                        <span className="px-2.5 py-0.5 rounded-md bg-[#222734] text-[11px] font-semibold text-[#CBD5E1]">
+                        <span className="px-2 py-0.5 rounded-md bg-[#222734] text-[10px] font-semibold text-[#A78BFA]">
                           {item.cargo}
                         </span>
                       </div>
@@ -295,50 +299,23 @@ export function EventoStaffSection({
                           .join(" · ") || "Equipo The High Events"}
                       </p>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleRemoveEmployee(item.empId, item.nombre)
+                      }
+                      aria-label={`Quitar a ${item.nombre} del evento`}
+                      title="Quitar del evento"
+                      className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F87171] hover:bg-[#EF4444]/10 transition-colors cursor-pointer shrink-0"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleRemoveEmployee(item.empId, item.nombre)
-                    }
-                    aria-label={`Quitar a ${item.nombre} del evento`}
-                    title="Quitar del evento"
-                    className="p-2 rounded-lg text-[#94A3B8] hover:text-[#F87171] hover:bg-[#EF4444]/10 transition-colors cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EF4444]/60"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#262D3D]/60">
-                  <div>
-                    <label className="text-xs font-medium text-[#CBD5E1] flex items-center justify-between mb-1.5">
-                      <span className="flex items-center gap-1.5">
-                        Tarea asignada
-                      </span>
-                      <span className="text-[10px] font-mono text-[#A78BFA]">
-                        {item.tarea_codigo}
-                      </span>
-                    </label>
-                    <CustomSelect
-                      options={tareaOptions}
-                      value={item.tarea_id}
-                      searchable={true}
-                      allowCreate={true}
-                      createLabel="Crear nueva tarea"
-                      onChange={(newTaskId) =>
-                        handleSelectTareaCatalogo(item.empId, newTaskId)
-                      }
-                      onCreate={(query) =>
-                        handleCreateTareaInCatalogo(item.empId, query)
-                      }
-                      placeholder="Seleccionar tarea"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-[#CBD5E1] block mb-1.5">
-                      Fase de ejecución en el evento
+                  <div className="pt-2.5 border-t border-[#262D3D]/60">
+                    <label className="text-[11px] font-medium text-[#CBD5E1] block mb-1">
+                      Fase principal asignada en el evento
                     </label>
                     <CustomSelect
                       options={faseOptions}
@@ -353,10 +330,11 @@ export function EventoStaffSection({
                     />
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
+          )
           : !showSelector && (
-              <div className="bg-[#181B22] border border-[#262D3D] border-dashed rounded-2xl p-8 flex flex-col items-center text-center gap-3">
+              <div className="bg-[#111318] border border-[#262D3D] border-dashed rounded-2xl p-8 flex flex-col items-center text-center gap-3">
                 <UserPlus
                   size={22}
                   className="text-[#94A3B8]"
@@ -364,12 +342,10 @@ export function EventoStaffSection({
                 />
                 <div>
                   <p className="text-sm font-medium text-[#CBD5E1]">
-                    Aún no hay empleados asignados en este evento
+                    Aún no hay personal vinculado a este evento
                   </p>
                   <p className="text-xs text-[#94A3B8] mt-1">
-                    Asigna empleados eligiendo las tareas del catálogo
-                    maestro para el montaje, prueba de sonido, ejecución o
-                    desmontaje.
+                    Vincula los colaboradores que formarán parte del equipo técnico y logístico del evento.
                   </p>
                 </div>
               </div>

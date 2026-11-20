@@ -2,6 +2,7 @@ import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import { INITIAL_PRESTAMOS } from "./data"
 import { PrestamoTable } from "./components/PrestamoTable"
@@ -141,15 +142,26 @@ export default function PrestamosPage() {
 
   const handleCreatePrestamo = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!editForm.responsable?.trim() || !editForm.evento?.trim()) {
+      toast.error("Debes seleccionar el empleado responsable y el evento")
+      return
+    }
+    if (!editForm.equipos || editForm.equipos.length === 0) {
+      toast.error("Debes seleccionar al menos un equipo para registrar el préstamo")
+      return
+    }
     const newP: PrestamoItem = {
       id: String(Date.now()),
       codigo: `PR-${100 + prestamos.length + 4}`,
       responsable: editForm.responsable ?? "",
+      responsable_id: editForm.responsable_id,
       evento: editForm.evento ?? "",
-      equipos: [],
+      evento_id: editForm.evento_id,
+      equipos: editForm.equipos,
       fechaSalida: editForm.fechaSalida ?? new Date().toISOString().split("T")[0],
       fechaDevolucion: editForm.fechaDevolucion ?? "",
       estado: "Activo",
+      observaciones_entrega: editForm.observaciones_entrega,
     }
     setPrestamos((prev) => [newP, ...prev])
     toast.success("Préstamo registrado exitosamente")
@@ -159,14 +171,24 @@ export default function PrestamosPage() {
   const handleUpdatePrestamo = (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedPrestamo) return
+    if (!editForm.equipos || editForm.equipos.length === 0) {
+      toast.error("El préstamo debe tener al menos un equipo asignado")
+      return
+    }
     setPrestamos((prev) =>
       prev.map((p) =>
         p.id === selectedPrestamo.id
           ? {
               ...p,
               responsable: editForm.responsable ?? p.responsable,
+              responsable_id: editForm.responsable_id ?? p.responsable_id,
               evento: editForm.evento ?? p.evento,
+              evento_id: editForm.evento_id ?? p.evento_id,
+              equipos: editForm.equipos ?? p.equipos,
+              fechaSalida: editForm.fechaSalida ?? p.fechaSalida,
               fechaDevolucion: editForm.fechaDevolucion ?? p.fechaDevolucion,
+              observaciones_entrega:
+                editForm.observaciones_entrega ?? p.observaciones_entrega,
             }
           : p,
       ),
@@ -184,9 +206,13 @@ export default function PrestamosPage() {
     setSelectedPrestamo(p)
     setEditForm({
       responsable: p.responsable,
+      responsable_id: p.responsable_id,
       evento: p.evento,
+      evento_id: p.evento_id,
+      equipos: [...p.equipos],
       fechaSalida: p.fechaSalida,
       fechaDevolucion: p.fechaDevolucion,
+      observaciones_entrega: p.observaciones_entrega,
     })
     setDrawerMode("edit")
   }
@@ -203,8 +229,9 @@ export default function PrestamosPage() {
             setEditForm({
               responsable: "",
               evento: "",
-              fechaSalida: "2026-09-18",
-              fechaDevolucion: "2026-09-20",
+              equipos: [],
+              fechaSalida: new Date().toISOString().split("T")[0],
+              fechaDevolucion: "",
             })
             setDrawerMode("new")
           }}
@@ -214,8 +241,46 @@ export default function PrestamosPage() {
             setCurrentPage(1)
           }}
           searchPlaceholder="Buscar"
-          activeFilterCount={0}
-        />
+          activeFilterCount={activeTab !== "Todos" ? 1 : 0}
+          activeFilterPills={
+            activeTab !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${activeTab}`,
+                    onClear: () => {
+                      setActiveTab("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []
+          }
+          onResetFilters={() => {
+            setActiveTab("Todos")
+            setCurrentPage(1)
+          }}
+        >
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Estado del Préstamo
+            </label>
+            <CustomSelect
+              value={activeTab}
+              onChange={(val) => {
+                setActiveTab(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Activos", value: "Activo" },
+                { label: "Devueltos", value: "Devuelto" },
+                { label: "Con Retraso", value: "Con Retraso" },
+                { label: "Con Daños", value: "Con Daños" },
+              ]}
+            />
+          </div>
+        </PageHeader>
 
         {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
         <IndexTabs

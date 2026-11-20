@@ -337,6 +337,32 @@ export default function CotizacionesPage() {
             (filterEstado !== "Todos" ? 1 : 0) +
             (filterCliente !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterCliente !== "Todos"
+              ? [
+                  {
+                    key: "cliente",
+                    label: `Cliente: ${filterCliente}`,
+                    onClear: () => {
+                      setFilterCliente("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterEstado("Todos")
             setFilterCliente("Todos")

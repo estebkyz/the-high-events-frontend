@@ -1,6 +1,10 @@
 import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
+import { Layers, Plus, Trash2, Edit2, Check } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
+import { Drawer } from "../../components/Drawer"
 import { useToast } from "../../components/Toast"
 import { INITIAL_EQUIPMENT } from "./data"
 import { EquiposKPIs } from "./components/EquiposKPIs"
@@ -13,11 +17,59 @@ import type {
   EquipoFormData,
   EstadoOperativo,
   Categoria,
+  CategoriaEquipoItem,
 } from "./types"
+
+const INITIAL_CATEGORIAS_EQUIPO: CategoriaEquipoItem[] = [
+  {
+    id: "1",
+    nombre: "Audio",
+    descripcion: "Consolas digitales, cabinas line array, subwoofers y micrófonos",
+    estado: "Activo",
+  },
+  {
+    id: "2",
+    nombre: "Iluminación",
+    descripcion: "Cabezas móviles Beam/Wash, barras LED, láseres y consolas DMX",
+    estado: "Activo",
+  },
+  {
+    id: "3",
+    nombre: "Video",
+    descripcion: "Módulos de pantalla LED P3/P2, procesadores y proyectores",
+    estado: "Activo",
+  },
+  {
+    id: "4",
+    nombre: "Estructuras",
+    descripcion: "Truss de aluminio, torres de elevación, tarimas y rigging",
+    estado: "Activo",
+  },
+  {
+    id: "5",
+    nombre: "Efectos Especiales / Humo",
+    descripcion: "Máquinas de humo, hazer, CO2, chispas frías y confeti",
+    estado: "Activo",
+  },
+  {
+    id: "6",
+    nombre: "Accesorios y Cableado",
+    descripcion: "Cajas directas, snakes, acometidas eléctricas y soportes",
+    estado: "Activo",
+  },
+]
 
 export default function EquiposPage() {
   const toast = useToast()
   const [equipos, setEquipos] = useState<EquipoItem[]>(INITIAL_EQUIPMENT)
+  const [categorias, setCategorias] = useState<CategoriaEquipoItem[]>(
+    INITIAL_CATEGORIAS_EQUIPO,
+  )
+
+  //Estado para formulario de Categorías (tabla categorias_equipo)
+  const [catNombre, setCatNombre] = useState("")
+  const [catDesc, setCatDesc] = useState("")
+  const [editingCatId, setEditingCatId] = useState<string | null>(null)
 
   // Search & Pagination
   const [search, setSearch] = useState("")
@@ -31,6 +83,11 @@ export default function EquiposPage() {
   const [editForm, setEditForm] = useState<EquipoFormData>({})
   const [viewDetailEstado, setViewDetailEstado] =
     useState<EstadoOperativo>("Disponible")
+
+  const nombresCategorias = useMemo(
+    () => categorias.map((c) => c.nombre),
+    [categorias],
+  )
 
   const filtered = useMemo(() => {
     return equipos.filter((e) => {
@@ -97,13 +154,88 @@ export default function EquiposPage() {
     setDrawerMode("none")
     setSelectedEquipo(null)
     setEditForm({})
+    setEditingCatId(null)
+    setCatNombre("")
+    setCatDesc("")
   }
 
   const handleDelete = (item: EquipoItem) => {
-    if (confirm(`¿Eliminar equipo ${item.nombre}?`)) {
-      setEquipos((prev) => prev.filter((e) => e.id !== item.id))
-      toast.success("Equipo eliminado")
+    setEquipos((prev) => prev.filter((e) => e.id !== item.id))
+    toast.success("Equipo eliminado")
+  }
+
+  const handleCreateQuickCategory = (nombre: string) => {
+    const clean = nombre.trim()
+    if (!clean) return
+    if (!categorias.some((c) => c.nombre.toLowerCase() === clean.toLowerCase())) {
+      setCategorias((prev) => [
+        ...prev,
+        {
+          id: String(Date.now()),
+          nombre: clean,
+          descripcion: "Categoría personalizada de inventario técnico",
+          estado: "Activo",
+        },
+      ])
+      toast.success(`Categoría "${clean}" creada en el catálogo`)
     }
+  }
+
+  const handleSaveCategoryForm = (e: React.FormEvent) => {
+    e.preventDefault()
+    const clean = catNombre.trim()
+    if (!clean) return
+
+    if (editingCatId) {
+      const oldCat = categorias.find((c) => c.id === editingCatId)
+      setCategorias((prev) =>
+        prev.map((c) =>
+          c.id === editingCatId
+            ? { ...c, nombre: clean, descripcion: catDesc.trim() }
+            : c,
+        ),
+      )
+      if (oldCat && oldCat.nombre !== clean) {
+        setEquipos((prev) =>
+          prev.map((eq) =>
+            eq.categoria === oldCat.nombre ? { ...eq, categoria: clean } : eq,
+          ),
+        )
+      }
+      toast.success("Categoría actualizada")
+    } else {
+      if (
+        categorias.some((c) => c.nombre.toLowerCase() === clean.toLowerCase())
+      ) {
+        toast.error("Ya existe una categoría con ese nombre")
+        return
+      }
+      setCategorias((prev) => [
+        ...prev,
+        {
+          id: String(Date.now()),
+          nombre: clean,
+          descripcion: catDesc.trim() || "Categoría de equipos técnicos",
+          estado: "Activo",
+        },
+      ])
+      toast.success(`Categoría "${clean}" agregada`)
+    }
+    setEditingCatId(null)
+    setCatNombre("")
+    setCatDesc("")
+  }
+
+  const handleDeleteCategory = (cat: CategoriaEquipoItem) => {
+    const count = equipos.filter((e) => e.categoria === cat.nombre).length
+    if (count > 0) {
+      toast.error(
+        `No se puede eliminar "${cat.nombre}" porque tiene ${count} equipo(s) asociado(s)`,
+      )
+      return
+    }
+    setCategorias((prev) => prev.filter((c) => c.id !== cat.id))
+    toast.success(`Categoría "${cat.nombre}" eliminada`)
   }
 
   const handleSaveForm = (e: React.FormEvent) => {
@@ -115,16 +247,21 @@ export default function EquiposPage() {
 
     const propiedad = (editForm.propiedad as EquipoItem["propiedad"]) || "Propio"
     if (propiedad === "Alquilado" && !editForm.proveedor_nombre?.trim()) {
-      toast.error("Para un equipo alquilado debes seleccionar el proveedor que lo suministra")
+      toast.error(
+        "Para un equipo alquilado debes seleccionar el proveedor que lo suministra",
+      )
       return
     }
 
     const normalizedForm: EquipoFormData = {
       ...editForm,
       propiedad,
-      proveedor_id: propiedad === "Alquilado" ? (editForm.proveedor_id ?? null) : null,
+      proveedor_id:
+        propiedad === "Alquilado" ? (editForm.proveedor_id ?? null) : null,
       proveedor_nombre:
-        propiedad === "Alquilado" ? editForm.proveedor_nombre?.trim() : undefined,
+        propiedad === "Alquilado"
+          ? editForm.proveedor_nombre?.trim()
+          : undefined,
     }
 
     if (drawerMode === "edit" && selectedEquipo) {
@@ -160,7 +297,7 @@ export default function EquiposPage() {
     setEditForm({
       nombre: "",
       serie: "",
-      categoria: "Audio",
+      categoria: nombresCategorias[0] || "Audio",
       estadoOperativo: "Disponible",
       propiedad: "Propio",
       proveedor_id: null,
@@ -168,6 +305,34 @@ export default function EquiposPage() {
     })
     setDrawerMode("new")
   }
+
+  const quickTabs = useMemo(
+    () => [
+      { id: "Todos", label: "Todos", count: equipos.length },
+      {
+        id: "Disponible",
+        label: "Disponibles",
+        count: equipos.filter((e) => e.estadoOperativo === "Disponible").length,
+      },
+      {
+        id: "En Evento",
+        label: "En Evento",
+        count: equipos.filter((e) => e.estadoOperativo === "En Evento").length,
+      },
+      {
+        id: "Prestado",
+        label: "Prestados",
+        count: equipos.filter((e) => e.estadoOperativo === "Prestado").length,
+      },
+      {
+        id: "En Mantenimiento",
+        label: "Mantenimiento",
+        count: equipos.filter((e) => e.estadoOperativo === "En Mantenimiento")
+          .length,
+      },
+    ],
+    [equipos],
+  )
 
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
@@ -186,50 +351,84 @@ export default function EquiposPage() {
             (filterCategoria !== "Todos" ? 1 : 0) +
             (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterCategoria !== "Todos"
+              ? [
+                  {
+                    key: "cat",
+                    label: `Categoría: ${filterCategoria}`,
+                    onClear: () => {
+                      setFilterCategoria("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterCategoria("Todos")
             setFilterEstado("Todos")
             setCurrentPage(1)
           }}
+          extraControls={
+            <button
+              type="button"
+              onClick={() => setDrawerMode("categorias")}
+              className="h-[36px] px-3 rounded-xl text-xs font-semibold bg-[#181B22] border border-[#262D3D] text-[#A78BFA] hover:bg-[#222734] transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Layers size={13} />
+              <span>Categorías ({categorias.length})</span>
+            </button>
+          }
         >
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
               Categoría
             </label>
-            <select
+            <CustomSelect
               value={filterCategoria}
-              onChange={(e) => {
-                setFilterCategoria(e.target.value)
+              onChange={(val) => {
+                setFilterCategoria(val)
                 setCurrentPage(1)
               }}
-              className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F1F5F9] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="Todos">Todas las Categorías</option>
-              <option value="Audio">Audio</option>
-              <option value="Iluminación">Iluminación</option>
-              <option value="Video">Video</option>
-              <option value="Estructuras">Estructuras</option>
-            </select>
+              options={[
+                { label: "Todas las Categorías", value: "Todos" },
+                ...nombresCategorias.map((cat) => ({ label: cat, value: cat })),
+              ]}
+            />
           </div>
 
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
               Estado Operativo
             </label>
-            <select
+            <CustomSelect
               value={filterEstado}
-              onChange={(e) => {
-                setFilterEstado(e.target.value)
+              onChange={(val) => {
+                setFilterEstado(val)
                 setCurrentPage(1)
               }}
-              className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F1F5F9] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="Todos">Todos los Estados</option>
-              <option value="Disponible">Disponible</option>
-              <option value="En Préstamo">En Préstamo</option>
-              <option value="Mantenimiento">Mantenimiento</option>
-              <option value="Dañado">Dañado</option>
-            </select>
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Disponible", value: "Disponible" },
+                { label: "En Evento", value: "En Evento" },
+                { label: "Prestado", value: "Prestado" },
+                { label: "En Mantenimiento", value: "En Mantenimiento" },
+                { label: "De Baja", value: "De Baja" },
+              ]}
+            />
           </div>
         </PageHeader>
 
@@ -239,6 +438,16 @@ export default function EquiposPage() {
           disponible={kpiDisponible}
           prestamo={kpiPrestamo}
           mantenimiento={kpiMantenimiento}
+        />
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterEstado}
+          onTabChange={(newTab) => {
+            setFilterEstado(newTab)
+            setCurrentPage(1)
+          }}
         />
 
         {/* ── Tabla Modularizada y Paginación ── */}
@@ -281,6 +490,8 @@ export default function EquiposPage() {
         formData={editForm}
         setFormData={setEditForm}
         onSubmit={handleSaveForm}
+        categorias={nombresCategorias}
+        onCreateCategoria={handleCreateQuickCategory}
       />
 
       {/* Detail Drawer */}
@@ -296,6 +507,116 @@ export default function EquiposPage() {
           toast.success(`Estado actualizado a ${newEst}`)
         }}
       />
+
+      {/* Modal de Gestión de Categorías de Equipos (Tabla categorias_equipo) */}
+      <Drawer
+        isOpen={drawerMode === "categorias"}
+        onClose={closeDrawer}
+        position="center"
+        width="max-w-2xl"
+        title="Gestión de categorías de equipos"
+      >
+        <div className="space-y-4">
+          <form
+            onSubmit={handleSaveCategoryForm}
+            className="p-3.5 bg-[#111318] border border-[#262D3D] rounded-xl space-y-3"
+          >
+            <p className="text-xs font-bold text-[#F8FAFC]">
+              {editingCatId ? "Editar categoría" : "Agregar nueva categoría"}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Efectos / Humo, Accesorios..."
+                  value={catNombre}
+                  onChange={(e) => setCatNombre(e.target.value)}
+                  className="w-full h-[38px] px-3 bg-[#181B22] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#7C3AED]"
+                />
+              </div>
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  placeholder="Descripción breve..."
+                  value={catDesc}
+                  onChange={(e) => setCatDesc(e.target.value)}
+                  className="w-full h-[38px] px-3 bg-[#181B22] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#7C3AED]"
+                />
+              </div>
+              <div className="sm:col-span-2 flex gap-1.5">
+                <button
+                  type="submit"
+                  className="w-full h-[38px] rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <span>{editingCatId ? "Guardar" : "Crear"}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+            {categorias.map((cat) => {
+              const count = equipos.filter(
+                (e) => e.categoria === cat.nombre,
+              ).length
+              return (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#111318] border border-[#262D3D]"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#F8FAFC]">
+                        {cat.nombre}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/15 text-[#A78BFA]">
+                        {count} {count === 1 ? "equipo" : "equipos"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#94A3B8] mt-0.5 truncate">
+                      {cat.descripcion}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCatId(cat.id)
+                        setCatNombre(cat.nombre)
+                        setCatDesc(cat.descripcion)
+                      }}
+                      title="Editar categoría"
+                      className="p-1.5 text-[#94A3B8] hover:text-[#60A5FA] hover:bg-[#3B82F6]/15 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(cat)}
+                      title="Eliminar categoría"
+                      className="p-1.5 text-[#94A3B8] hover:text-[#F87171] hover:bg-[#EF4444]/15 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="flex justify-end pt-3 border-t border-[#262D3D]">
+            <button
+              type="button"
+              onClick={closeDrawer}
+              className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#181B22] border border-[#262D3D] text-[#F8FAFC] hover:bg-[#222734] transition-colors cursor-pointer"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </Drawer>
     </div>
   )
 }

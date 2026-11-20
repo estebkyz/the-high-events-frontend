@@ -1,16 +1,33 @@
 import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
+import { Layers, Edit2, Trash2 } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
+import { Drawer } from "../../components/Drawer"
 import { useToast } from "../../components/Toast"
-import { INITIAL_SERVICES, CATEGORIES } from "./data"
+import { INITIAL_SERVICES, INITIAL_CATEGORIAS_SERVICIO } from "./data"
 import { ServicioTable } from "./components/ServicioTable"
 import { ServicioDetailDrawer } from "./drawers/ServicioDetailDrawer"
 import { ServicioFormDrawer } from "./drawers/ServicioFormDrawer"
-import type { ServicioItem, ServicioModalMode, ServicioFormData } from "./types"
+import type {
+  ServicioItem,
+  ServicioModalMode,
+  ServicioFormData,
+  CategoriaServicioItem,
+} from "./types"
 
 export default function ServiciosPage() {
   const toast = useToast()
   const [services, setServices] = useState<ServicioItem[]>(INITIAL_SERVICES)
+  const [categorias, setCategorias] = useState<CategoriaServicioItem[]>(
+    INITIAL_CATEGORIAS_SERVICIO,
+  )
+
+  // Estado para formulario de Categorías (tabla categorias_servicio)
+  const [catNombre, setCatNombre] = useState("")
+  const [catDesc, setCatDesc] = useState("")
+  const [editingCatId, setEditingCatId] = useState<string | null>(null)
 
   // Search & Pagination
   const [search, setSearch] = useState("")
@@ -26,6 +43,11 @@ export default function ServiciosPage() {
   )
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState<ServicioFormData>({})
+
+  const nombresCategorias = useMemo(
+    () => categorias.map((c) => c.nombre),
+    [categorias],
+  )
 
   const filteredData = useMemo(() => {
     return services.filter((s) => {
@@ -66,7 +88,7 @@ export default function ServiciosPage() {
     setIsEditing(false)
     setEditForm({
       nombre: "",
-      categoria: "Sonido",
+      categoria: nombresCategorias[0] || "Sonido",
       tipo_cobro: "por_evento",
       descripcion: "",
       precioBase: "",
@@ -91,6 +113,9 @@ export default function ServiciosPage() {
     setModalMode("closed")
     setSelectedService(null)
     setIsEditing(false)
+    setEditingCatId(null)
+    setCatNombre("")
+    setCatDesc("")
   }
 
   const handleDelete = (r: ServicioItem) => {
@@ -98,6 +123,80 @@ export default function ServiciosPage() {
       setServices((prev) => prev.filter((s) => s.id !== r.id))
       toast.success("Servicio eliminado")
     }
+  }
+
+  const handleCreateQuickCategory = (nombre: string) => {
+    const clean = nombre.trim()
+    if (!clean) return
+    if (!categorias.some((c) => c.nombre.toLowerCase() === clean.toLowerCase())) {
+      setCategorias((prev) => [
+        ...prev,
+        {
+          id: String(Date.now()),
+          nombre: clean,
+          descripcion: "Categoría de servicios comerciales",
+          estado: "Activo",
+        },
+      ])
+      toast.success(`Categoría "${clean}" creada en el catálogo`)
+    }
+  }
+
+  const handleSaveCategoryForm = (e: React.FormEvent) => {
+    e.preventDefault()
+    const clean = catNombre.trim()
+    if (!clean) return
+
+    if (editingCatId) {
+      const oldCat = categorias.find((c) => c.id === editingCatId)
+      setCategorias((prev) =>
+        prev.map((c) =>
+          c.id === editingCatId
+            ? { ...c, nombre: clean, descripcion: catDesc.trim() }
+            : c,
+        ),
+      )
+      if (oldCat && oldCat.nombre !== clean) {
+        setServices((prev) =>
+          prev.map((s) =>
+            s.categoria === oldCat.nombre ? { ...s, categoria: clean } : s,
+          ),
+        )
+      }
+      toast.success("Categoría actualizada")
+    } else {
+      if (
+        categorias.some((c) => c.nombre.toLowerCase() === clean.toLowerCase())
+      ) {
+        toast.error("Ya existe una categoría con ese nombre")
+        return
+      }
+      setCategorias((prev) => [
+        ...prev,
+        {
+          id: String(Date.now()),
+          nombre: clean,
+          descripcion: catDesc.trim() || "Categoría de servicios comerciales",
+          estado: "Activo",
+        },
+      ])
+      toast.success(`Categoría "${clean}" agregada`)
+    }
+    setEditingCatId(null)
+    setCatNombre("")
+    setCatDesc("")
+  }
+
+  const handleDeleteCategory = (cat: CategoriaServicioItem) => {
+    const count = services.filter((s) => s.categoria === cat.nombre).length
+    if (count > 0) {
+      toast.error(
+        `No se puede eliminar "${cat.nombre}" porque tiene ${count} servicio(s) asociado(s)`,
+      )
+      return
+    }
+    setCategorias((prev) => prev.filter((c) => c.id !== cat.id))
+    toast.success(`Categoría "${cat.nombre}" eliminada`)
   }
 
   const handleSaveForm = (e: React.FormEvent) => {
@@ -120,7 +219,7 @@ export default function ServiciosPage() {
       const nuevo: ServicioItem = {
         id: String(Date.now()),
         nombre: editForm.nombre.trim(),
-        categoria: editForm.categoria || "Sonido",
+        categoria: editForm.categoria || nombresCategorias[0] || "Sonido",
         tipo_cobro: editForm.tipo_cobro || "por_evento",
         descripcion: editForm.descripcion?.trim() || "",
         precioBase: editForm.precioBase?.trim() || "$ 0",
@@ -131,6 +230,23 @@ export default function ServiciosPage() {
     }
     closeModal()
   }
+
+  const quickTabs = useMemo(
+    () => [
+      { id: "Todos", label: "Todos", count: services.length },
+      {
+        id: "Activo",
+        label: "Activos",
+        count: services.filter((s) => s.estado === "Activo").length,
+      },
+      {
+        id: "Inactivo",
+        label: "Inactivos",
+        count: services.filter((s) => s.estado === "Inactivo").length,
+      },
+    ],
+    [services],
+  )
 
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
@@ -148,51 +264,93 @@ export default function ServiciosPage() {
           activeFilterCount={
             (filterCat !== "Todos" ? 1 : 0) + (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterCat !== "Todos"
+              ? [
+                  {
+                    key: "cat",
+                    label: `Categoría: ${filterCat}`,
+                    onClear: () => {
+                      setFilterCat("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterCat("Todos")
             setFilterEstado("Todos")
             setCurrentPage(1)
           }}
+          extraControls={
+            <button
+              type="button"
+              onClick={() => setModalMode("categorias")}
+              className="h-[36px] px-3 rounded-xl text-xs font-semibold bg-[#181B22] border border-[#262D3D] text-[#A78BFA] hover:bg-[#222734] transition-colors cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Layers size={13} />
+              <span>Categorías ({categorias.length})</span>
+            </button>
+          }
         >
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
               Categoría
             </label>
-            <select
+            <CustomSelect
               value={filterCat}
-              onChange={(e) => {
-                setFilterCat(e.target.value)
+              onChange={(val) => {
+                setFilterCat(val)
                 setCurrentPage(1)
               }}
-              className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F1F5F9] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="Todos">Todas las Categorías</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              options={[
+                { label: "Todas las Categorías", value: "Todos" },
+                ...nombresCategorias.map((c) => ({ label: c, value: c })),
+              ]}
+            />
           </div>
 
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
               Estado
             </label>
-            <select
+            <CustomSelect
               value={filterEstado}
-              onChange={(e) => {
-                setFilterEstado(e.target.value)
+              onChange={(val) => {
+                setFilterEstado(val)
                 setCurrentPage(1)
               }}
-              className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F1F5F9] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="Todos">Todos los Estados</option>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Activo", value: "Activo" },
+                { label: "Inactivo", value: "Inactivo" },
+              ]}
+            />
           </div>
         </PageHeader>
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterEstado}
+          onTabChange={(newTab) => {
+            setFilterEstado(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* ── Tabla Modularizada y Paginación ── */}
         <ServicioTable
@@ -230,7 +388,119 @@ export default function ServiciosPage() {
         formData={editForm}
         setFormData={setEditForm}
         onSubmit={handleSaveForm}
+        categorias={nombresCategorias}
+        onCreateCategoria={handleCreateQuickCategory}
       />
+
+      {/* Drawer Gestión de Categorías */}
+      <Drawer
+        isOpen={modalMode === "categorias"}
+        onClose={closeModal}
+        position="center"
+        title="Gestión de Categorías de Servicios"
+        subtitle="Administra el catálogo de categorías para clasificar los servicios comerciales"
+      >
+        <div className="space-y-4">
+          <form
+            onSubmit={handleSaveCategoryForm}
+            className="p-3.5 bg-[#111318] border border-[#262D3D] rounded-xl space-y-3"
+          >
+            <p className="text-xs font-bold text-[#F8FAFC]">
+              {editingCatId ? "Editar categoría" : "Agregar nueva categoría"}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Efectos Especiales, Animación..."
+                  value={catNombre}
+                  onChange={(e) => setCatNombre(e.target.value)}
+                  className="w-full h-[38px] px-3 bg-[#181B22] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#7C3AED]"
+                />
+              </div>
+              <div className="sm:col-span-5">
+                <input
+                  type="text"
+                  placeholder="Descripción breve..."
+                  value={catDesc}
+                  onChange={(e) => setCatDesc(e.target.value)}
+                  className="w-full h-[38px] px-3 bg-[#181B22] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] placeholder-[#64748B] focus:outline-none focus:border-[#7C3AED]"
+                />
+              </div>
+              <div className="sm:col-span-2 flex gap-1.5">
+                <button
+                  type="submit"
+                  className="w-full h-[38px] rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <span>{editingCatId ? "Guardar" : "Crear"}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+            {categorias.map((cat) => {
+              const count = services.filter(
+                (s) => s.categoria === cat.nombre,
+              ).length
+              return (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[#111318] border border-[#262D3D]"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#F8FAFC]">
+                        {cat.nombre}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#7C3AED]/15 text-[#A78BFA]">
+                        {count} {count === 1 ? "servicio" : "servicios"}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#94A3B8] mt-0.5 truncate">
+                      {cat.descripcion}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCatId(cat.id)
+                        setCatNombre(cat.nombre)
+                        setCatDesc(cat.descripcion)
+                      }}
+                      title="Editar categoría"
+                      className="p-1.5 text-[#94A3B8] hover:text-[#60A5FA] hover:bg-[#3B82F6]/15 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCategory(cat)}
+                      title="Eliminar categoría"
+                      className="p-1.5 text-[#94A3B8] hover:text-[#F87171] hover:bg-[#EF4444]/15 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="flex justify-end pt-3 border-t border-[#262D3D]">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#181B22] border border-[#262D3D] text-[#F8FAFC] hover:bg-[#222734] transition-colors cursor-pointer"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </Drawer>
     </div>
   )
 }

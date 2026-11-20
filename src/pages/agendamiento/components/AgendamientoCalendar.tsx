@@ -293,15 +293,10 @@ export function AgendamientoCalendar({
                             e.stopPropagation()
                             onOpenEvent(ev)
                           }}
-                          className="w-full text-left px-1.5 py-0.5 rounded-md text-[10px] font-medium flex items-center gap-1 truncate shadow-2xs hover:opacity-90 transition-opacity"
-                          style={{
-                            backgroundColor: `${meta.color}1A`,
-                            color: meta.text,
-                            borderLeft: `2px solid ${meta.color}`,
-                          }}
+                          className={`w-full text-left px-1.5 py-0.5 rounded-md text-[10px] font-semibold flex items-center gap-1 truncate shadow-2xs hover:opacity-90 transition-opacity ${meta.chipClass}`}
                           title={`${ev.time} · ${ev.title} · ${ev.client} (${ev.estado})`}
                         >
-                          <span className="tabular-nums opacity-85 shrink-0 text-[9px]">
+                          <span className="tabular-nums shrink-0 text-[9px] font-bold">
                             {ev.time}
                           </span>
                           <span className="truncate flex-1 font-semibold">

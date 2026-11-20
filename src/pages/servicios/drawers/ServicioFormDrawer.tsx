@@ -6,12 +6,15 @@ import { CATEGORIES, ESTADO_SERVICIOS_OPTIONS, TIPO_COBRO_OPTIONS } from "../dat
 import type { ServicioItem, ServicioFormData, TipoCobroServicio } from "../types"
 
 interface ServicioFormDrawerProps {
-  isOpen: boolean; onClose: () => void
+  isOpen: boolean
+  onClose: () => void
   isEditing: boolean
   service: ServicioItem | null
   formData: ServicioFormData
   setFormData: React.Dispatch<React.SetStateAction<ServicioFormData>>
   onSubmit: (e: React.FormEvent) => void
+  categorias?: string[]
+  onCreateCategoria?: (nombre: string) => void
 }
 
 const CATEGORY_SELECT_OPTIONS = CATEGORIES.map((c) => ({
@@ -32,7 +35,14 @@ export function ServicioFormDrawer({
   formData,
   setFormData,
   onSubmit,
+  categorias,
+  onCreateCategoria,
 }: ServicioFormDrawerProps) {
+  const categoryOptions = (categorias && categorias.length > 0 ? categorias : CATEGORIES).map((c) => ({
+    value: c,
+    label: c,
+  }))
+
   return (
     <Drawer
       isOpen={isOpen}
@@ -59,9 +69,18 @@ export function ServicioFormDrawer({
                 Categoría
               </label>
               <CustomSelect
-                value={formData.categoria || "Sonido"}
+                value={formData.categoria || (categoryOptions[0]?.value ?? "Sonido")}
                 onChange={(val) => setFormData((f) => ({ ...f, categoria: val }))}
-                options={CATEGORY_SELECT_OPTIONS}
+                options={categoryOptions}
+                searchable
+                allowCreate={!!onCreateCategoria}
+                createLabel="Crear categoría"
+                onCreate={(newCat) => {
+                  if (onCreateCategoria) {
+                    onCreateCategoria(newCat)
+                    setFormData((f) => ({ ...f, categoria: newCat }))
+                  }
+                }}
               />
             </div>
 

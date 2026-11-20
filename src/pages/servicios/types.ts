@@ -24,6 +24,13 @@ export interface ServicioItem {
   estado: "Activo" | "Inactivo"
 }
 
-export type ServicioModalMode = "closed" | "view" | "form"
+export interface CategoriaServicioItem {
+  id: string
+  nombre: string
+  descripcion: string
+  estado: "Activo" | "Inactivo"
+}
+
+export type ServicioModalMode = "closed" | "view" | "form" | "categorias"
 
 export type ServicioFormData = Partial<ServicioItem>

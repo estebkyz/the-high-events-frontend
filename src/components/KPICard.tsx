@@ -5,8 +5,8 @@ interface KPICardProps {
   value: string | number
   subtitle?: string
   icon: LucideIcon
-  iconColor?: string // e.g. "text-purple-400" or hex
-  iconBg?: string // e.g. "bg-purple-500/10"
+  iconColor?: string
+  iconBg?: string
   change?: string
   changeType?: "positive" | "negative" | "neutral"
   size?: "sm" | "md" | "lg" | string
@@ -27,39 +27,50 @@ export function KPICard({
   return (
     <div
       onClick={onClick}
-      className={`bg-[#181B22] border border-[#2D3748] rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col justify-between transition-all hover:border-[#4A5568] ${
-        onClick ? "cursor-pointer hover:bg-[#2A303C]" : ""
+      className={`bg-[#181B22] border border-[#262D3D] rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between transition-all shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] hover:border-[#3B455A] ${
+        onClick ? "cursor-pointer hover:bg-[#1E222B]" : ""
       }`}
     >
-      <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-        <span className="text-sm font-medium text-[#64748B]">{title}</span>
-        <div className="p-1.5 sm:p-2 rounded-lg shrink-0">
-          <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
+      <div className="flex items-center justify-between gap-2 mb-2.5">
+        <span className="text-xs font-medium text-[#94A3B8] truncate">
+          {title}
+        </span>
+        <div className="w-7 h-7 rounded-lg bg-[#222734] border border-[#2D3546] flex items-center justify-center text-[#94A3B8] shrink-0">
+          <Icon size={14} />
         </div>
       </div>
 
-      <div>
-        <div className="flex items-baseline gap-1.5 sm:gap-2">
-          <p className="text-[20px] sm:text-[28px] font-bold text-[#F1F5F9] tracking-tight leading-none">{value}</p>
+      <div className="space-y-1.5">
+        <div className="flex items-baseline gap-1.5">
+          <p className="text-[17px] sm:text-[19px] font-semibold text-[#F8FAFC] tracking-tight leading-none whitespace-nowrap tabular-nums">
+            {value}
+          </p>
           {change && (
             <span
-              className={`inline-flex items-center text-[11px] font-medium px-1.5 py-0.5 rounded ${
+              className={`inline-flex items-center text-[10.5px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap ${
                 changeType === "positive"
                   ? "text-[#10B981] bg-[#10B981]/10"
                   : changeType === "negative"
-                  ? "text-[#EF4444] bg-[#EF4444]/10"
-                  : "text-[#94A3B8] bg-[#2D3748]"
+                    ? "text-[#EF4444] bg-[#EF4444]/10"
+                    : "text-[#94A3B8] bg-[#2D3748]"
               }`}
             >
-              {changeType === "positive" ? <TrendingUp size={10} className="mr-0.5" /> : changeType === "negative" ? <TrendingDown size={10} className="mr-0.5" /> : null}
+              {changeType === "positive" ? (
+                <TrendingUp size={10} className="mr-0.5" />
+              ) : changeType === "negative" ? (
+                <TrendingDown size={10} className="mr-0.5" />
+              ) : null}
               {change}
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between mt-1">
-          {subtitle && <p className="text-[12px] text-[#94A3B8]">{subtitle}</p>}
+
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          {subtitle && (
+            <p className="text-[11px] text-[#94A3B8] truncate">{subtitle}</p>
+          )}
           {actionLabel && (
-            <span className="text-[11px] text-[#A78BFA] font-medium hover:underline ml-auto">
+            <span className="text-[11px] text-[#A78BFA] font-medium hover:underline whitespace-nowrap shrink-0 ml-auto">
               {actionLabel} →
             </span>
           )}

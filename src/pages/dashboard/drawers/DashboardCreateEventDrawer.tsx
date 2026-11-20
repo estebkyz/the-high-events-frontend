@@ -47,7 +47,7 @@ export const DashboardCreateEventDrawer: React.FC<DashboardCreateEventDrawerProp
                 options={[
                   { label: "Evento para cliente", value: "Cliente" },
                   {
-                    label: "Producción propia (The High Events)",
+                    label: "Producción propia ",
                     value: "Propio",
                   },
                 ]}

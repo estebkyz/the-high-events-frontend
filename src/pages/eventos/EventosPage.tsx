@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { LayoutGrid, List, CalendarDays } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import { EmptyState } from "../../components/EmptyState"
 import { EVENTO_PATHS } from "../../routes/paths"
@@ -114,37 +115,63 @@ export default function EventosPage() {
           activeFilterCount={
             (activeTab !== "Todos" ? 1 : 0) + (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(activeTab !== "Todos"
+              ? [
+                  {
+                    key: "modalidad",
+                    label: `Modalidad: ${activeTab}`,
+                    onClear: () => {
+                      setActiveTab("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setActiveTab("Todos")
             setFilterEstado("Todos")
             setCurrentPage(1)
           }}
           extraControls={
-            <div className="flex items-center bg-[#181B22] p-1 rounded-xl">
+            <div className="flex items-center bg-[#181B22] border border-[#262D3D] p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   viewMode === "grid"
                     ? "bg-[#7C3AED] text-white shadow-xs font-semibold"
                     : "text-[#94A3B8] hover:text-[#F8FAFC]"
                 }`}
                 title="Vista en Tarjetas"
               >
-                <LayoutGrid size={14} />
+                <LayoutGrid size={13} />
                 <span className="hidden sm:inline">Tarjetas</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   viewMode === "table"
                     ? "bg-[#7C3AED] text-white shadow-xs font-semibold"
                     : "text-[#94A3B8] hover:text-[#F8FAFC]"
                 }`}
                 title="Vista en Tabla"
               >
-                <List size={14} />
+                <List size={13} />
                 <span className="hidden sm:inline">Tabla</span>
               </button>
             </div>
@@ -179,24 +206,24 @@ export default function EventosPage() {
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
               Estado
             </label>
-            <select
+            <CustomSelect
               value={filterEstado}
-              onChange={(e) => {
-                setFilterEstado(e.target.value)
+              onChange={(val) => {
+                setFilterEstado(val)
                 setCurrentPage(1)
               }}
-              className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F1F5F9] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="Todos">Todos los Estados</option>
-              <option value="Planificación">Planificación</option>
-              <option value="Confirmado">Confirmado</option>
-              <option value="Montaje">Montaje</option>
-              <option value="En ejecución">En ejecución</option>
-              <option value="Desmontaje">Desmontaje</option>
-              <option value="Finalizado">Finalizado</option>
-              <option value="Cerrado financiero">Cerrado financiero</option>
-              <option value="Cancelado">Cancelado</option>
-            </select>
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Planificación", value: "Planificación" },
+                { label: "Confirmado", value: "Confirmado" },
+                { label: "Montaje", value: "Montaje" },
+                { label: "En ejecución", value: "En ejecución" },
+                { label: "Desmontaje", value: "Desmontaje" },
+                { label: "Finalizado", value: "Finalizado" },
+                { label: "Cerrado financiero", value: "Cerrado financiero" },
+                { label: "Cancelado", value: "Cancelado" },
+              ]}
+            />
           </div>
         </PageHeader>
 

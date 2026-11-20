@@ -1,6 +1,8 @@
 import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import { INITIAL_EMPLOYEES, CARGOS } from "./data"
 import { getEmpleadoFullName } from "./utils"
@@ -216,9 +218,27 @@ export default function EmpleadosPage() {
     closeDrawer()
   }
 
+  const quickTabs = useMemo(
+    () => [
+      { id: "Todos", label: "Todos", count: employees.length },
+      {
+        id: "Fijo",
+        label: "Vinculación Fija",
+        count: employees.filter((e) => (e.vinculacion || "Fijo") === "Fijo")
+          .length,
+      },
+      {
+        id: "Por Evento",
+        label: "Por Evento",
+        count: employees.filter((e) => e.vinculacion === "Por Evento").length,
+      },
+    ],
+    [employees],
+  )
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
-      <main className="flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
         {/* Cabecera con buscador y filtros */}
         <PageHeader
           title="Empleados"
@@ -235,6 +255,44 @@ export default function EmpleadosPage() {
             (filterVinculacion !== "Todos" ? 1 : 0) +
             (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterCargo !== "Todos"
+              ? [
+                  {
+                    key: "cargo",
+                    label: `Cargo: ${filterCargo}`,
+                    onClear: () => {
+                      setFilterCargo("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterVinculacion !== "Todos"
+              ? [
+                  {
+                    key: "vinc",
+                    label: `Vinculación: ${filterVinculacion}`,
+                    onClear: () => {
+                      setFilterVinculacion("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterCargo("Todos")
             setFilterVinculacion("Todos")
@@ -242,72 +300,76 @@ export default function EmpleadosPage() {
             setCurrentPage(1)
           }}
         >
-          <div className="space-y-3">
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-                Cargo
-              </label>
-              <select
-                value={filterCargo}
-                onChange={(e) => {
-                  setFilterCargo(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-              >
-                <option value="Todos">Todos los Cargos</option>
-                {CARGOS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Cargo
+            </label>
+            <CustomSelect
+              value={filterCargo}
+              onChange={(val) => {
+                setFilterCargo(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { label: "Todos los Cargos", value: "Todos" },
+                ...CARGOS.map((c) => ({ label: c, value: c })),
+              ]}
+            />
+          </div>
 
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-                Modalidad de Vinculación
-              </label>
-              <div className="grid grid-cols-3 gap-1 bg-[#111318] p-1 rounded-xl border border-[#262D3D]">
-                {["Todos", "Fijo", "Por Evento"].map((vinc) => (
-                  <button
-                    key={vinc}
-                    type="button"
-                    onClick={() => {
-                      setFilterVinculacion(vinc)
-                      setCurrentPage(1)
-                    }}
-                    className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all cursor-pointer text-center truncate ${
-                      filterVinculacion === vinc
-                        ? "bg-[#7C3AED] text-white font-semibold"
-                        : "text-[#94A3B8] hover:text-[#F8FAFC]"
-                    }`}
-                  >
-                    {vinc === "Por Evento" ? "Evento" : vinc}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-                Estado
-              </label>
-              <select
-                value={filterEstado}
-                onChange={(e) => {
-                  setFilterEstado(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-              >
-                <option value="Todos">Todos los Estados</option>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Modalidad de Vinculación
+            </label>
+            <div className="grid grid-cols-3 gap-1 bg-[#111318] p-1 rounded-xl border border-[#262D3D]">
+              {["Todos", "Fijo", "Por Evento"].map((vinc) => (
+                <button
+                  key={vinc}
+                  type="button"
+                  onClick={() => {
+                    setFilterVinculacion(vinc)
+                    setCurrentPage(1)
+                  }}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all cursor-pointer text-center truncate ${
+                    filterVinculacion === vinc
+                      ? "bg-[#7C3AED] text-white font-semibold"
+                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                  }`}
+                >
+                  {vinc === "Por Evento" ? "Evento" : vinc}
+                </button>
+              ))}
             </div>
           </div>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Estado
+            </label>
+            <CustomSelect
+              value={filterEstado}
+              onChange={(val) => {
+                setFilterEstado(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Activo", value: "Activo" },
+                { label: "Inactivo", value: "Inactivo" },
+              ]}
+            />
+          </div>
         </PageHeader>
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterVinculacion}
+          onTabChange={(newTab) => {
+            setFilterVinculacion(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* Tabla principal con paginación */}
         <EmpleadoTable

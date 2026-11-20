@@ -2,6 +2,7 @@ import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
 import { BulkActionsBar } from "../../components/BulkActionsBar"
 import { useToast } from "../../components/Toast"
 import { CheckCircle2, Download, Trash2 } from "lucide-react"
@@ -289,6 +290,32 @@ export default function VentasPage() {
             (filterTipo !== "Todos" ? 1 : 0) +
             (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterTipo !== "Todos"
+              ? [
+                  {
+                    key: "tipo",
+                    label: `Tipo: ${filterTipo}`,
+                    onClear: () => {
+                      setFilterTipo("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterTipo("Todos")
             setFilterEstado("Todos")
@@ -328,19 +355,19 @@ export default function VentasPage() {
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
               Estado de Pago
             </label>
-            <select
+            <CustomSelect
               value={filterEstado}
-              onChange={(e) => {
-                setFilterEstado(e.target.value)
+              onChange={(val) => {
+                setFilterEstado(val)
                 setCurrentPage(1)
               }}
-              className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F1F5F9] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="Todos">Todos los Estados</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="Parcial">Parcial</option>
-              <option value="Pagado">Pagado</option>
-            </select>
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Pendiente", value: "Pendiente" },
+                { label: "Parcial", value: "Parcial" },
+                { label: "Pagado", value: "Pagado" },
+              ]}
+            />
           </div>
         </PageHeader>
 

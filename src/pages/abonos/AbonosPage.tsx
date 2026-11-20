@@ -3,6 +3,8 @@ import React, { useState, useMemo, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import { Users, Truck, CheckCircle2, Download, Trash2 } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
 import { BulkActionsBar } from "../../components/BulkActionsBar"
 import { useToast } from "../../components/Toast"
 import { INITIAL_ABONOS } from "./data"
@@ -33,6 +35,7 @@ export default function AbonosPage() {
 
   // Search & Pagination
   const [search, setSearch] = useState("")
+  const [filterEstadoPago, setFilterEstadoPago] = useState("Todos")
 
   // Pestaña Activa: 'Clientes' o 'Proveedores' (Regla de negocio UI/UX)
   const [activeTab, setActiveTab] = useState<TipoAbonoTab>("Clientes")
@@ -99,6 +102,8 @@ export default function AbonosPage() {
     const q = search.trim().toLowerCase()
     return abonos.filter((a) => {
       if (a.tipoCartera !== activeTab) return false
+      if (filterEstadoPago === "Pendiente" && a.porcentaje === 100) return false
+      if (filterEstadoPago === "Liquidado" && a.porcentaje < 100) return false
       if (!q) return true
       const matchEvento = a.evento.toLowerCase().includes(q)
       const matchCliente = a.cliente
@@ -112,7 +117,7 @@ export default function AbonosPage() {
         : false
       return matchEvento || matchCliente || matchProveedor || matchServicio
     })
-  }, [abonos, activeTab, search])
+  }, [abonos, activeTab, search, filterEstadoPago])
 
   // Paginación
   const {
@@ -459,53 +464,111 @@ export default function AbonosPage() {
             setCurrentPage(1)
           }}
           searchPlaceholder="Buscar"
-          activeFilterCount={0}
-        />
-
-        {/* ── PESTAÑAS PRINCIPALES UI/UX (Clientes vs Proveedores) ── */}
-        <div className="bg-[#181B22] border border-[#262D3D] rounded-2xl p-2.5 shadow-sm space-y-2.5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Botones de Pestaña */}
-            <div className="flex items-center gap-2">
+          activeFilterCount={filterEstadoPago !== "Todos" ? 1 : 0}
+          activeFilterPills={
+            filterEstadoPago !== "Todos"
+              ? [
+                  {
+                    key: "estadoPago",
+                    label: `Estado: ${filterEstadoPago}`,
+                    onClear: () => {
+                      setFilterEstadoPago("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []
+          }
+          onResetFilters={() => {
+            setFilterEstadoPago("Todos")
+            setCurrentPage(1)
+          }}
+          extraControls={
+            <div className="inline-flex items-center gap-1 p-1 bg-[#181B22] border border-[#262D3D] rounded-xl">
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab("Clientes")
                   setCurrentPage(1)
-                  setSearch("")
                 }}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "Clientes"
-                    ? "bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/25"
-                    : "bg-[#111318] text-[#94A3B8] hover:text-[#F8FAFC] hover:border-[#3B455A]"
+                    ? "bg-[#7C3AED] text-white shadow-xs"
+                    : "text-[#94A3B8] hover:text-[#F8FAFC]"
                 }`}
               >
-                <Users size={16} />
+                <Users size={13} />
                 <span>Clientes</span>
               </button>
-
               <button
                 type="button"
                 onClick={() => {
                   setActiveTab("Proveedores")
                   setCurrentPage(1)
-                  setSearch("")
                 }}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "Proveedores"
-                    ? "bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/25"
-                    : "bg-[#111318] text-[#94A3B8] hover:text-[#F8FAFC] hover:border-[#3B455A]"
+                    ? "bg-[#7C3AED] text-white shadow-xs"
+                    : "text-[#94A3B8] hover:text-[#F8FAFC]"
                 }`}
               >
-                <Truck size={16} />
+                <Truck size={13} />
                 <span>Proveedores</span>
               </button>
             </div>
+          }
+        >
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Estado de Cartera
+            </label>
+            <CustomSelect
+              value={filterEstadoPago}
+              onChange={(val) => {
+                setFilterEstadoPago(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { label: "Todos los Registros", value: "Todos" },
+                { label: "Con Saldo Pendiente (50%)", value: "Pendiente" },
+                { label: "Liquidados (100%)", value: "Liquidado" },
+              ]}
+            />
           </div>
-        </div>
+        </PageHeader>
 
         {/* 4 Summary KPI Cards Contextualizados */}
         <AbonosKPIs kpis={kpis} activeTab={activeTab} />
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={[
+            {
+              id: "Todos",
+              label: "Todos",
+              count: abonos.filter((a) => a.tipoCartera === activeTab).length,
+            },
+            {
+              id: "Pendiente",
+              label: "Pendientes",
+              count: abonos.filter(
+                (a) => a.tipoCartera === activeTab && a.porcentaje < 100,
+              ).length,
+            },
+            {
+              id: "Liquidado",
+              label: "Liquidados",
+              count: abonos.filter(
+                (a) => a.tipoCartera === activeTab && a.porcentaje === 100,
+              ).length,
+            },
+          ]}
+          activeTab={filterEstadoPago}
+          onTabChange={(newTab) => {
+            setFilterEstadoPago(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* ── Tabla Modularizada y Paginación ── */}
         <AbonoTable

@@ -49,7 +49,7 @@ export function validateEventoForm(
   }
 
   if (!form.direccion?.trim()) {
-    return "La locación o venue del evento propio es obligatoria."
+    return "La ubicación del evento propio es obligatoria."
   }
 
   if (!form.hora_inicio || !form.hora_fin) {

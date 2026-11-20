@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react"
 import { usePagination } from "../../hooks/usePagination"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import type { UsuarioItem, UsuarioDrawerMode, UsuarioFormData } from "./types"
@@ -195,6 +196,23 @@ export default function UsuariosPage() {
     closeDrawer()
   }
 
+  const quickTabs = useMemo(
+    () => [
+      { id: "Todos", label: "Todos", count: users.length },
+      {
+        id: "Activo",
+        label: "Activos",
+        count: users.filter((u) => u.estado === "Activo").length,
+      },
+      {
+        id: "Inactivo",
+        label: "Inactivos",
+        count: users.filter((u) => u.estado === "Inactivo").length,
+      },
+    ],
+    [users],
+  )
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
       <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
@@ -212,6 +230,32 @@ export default function UsuariosPage() {
           activeFilterCount={
             (filterRol !== "Todos" ? 1 : 0) + (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterRol !== "Todos"
+              ? [
+                  {
+                    key: "rol",
+                    label: `Rol: ${filterRol}`,
+                    onClear: () => {
+                      setFilterRol("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterRol("Todos")
             setFilterEstado("Todos")
@@ -246,6 +290,16 @@ export default function UsuariosPage() {
             />
           </div>
         </PageHeader>
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterEstado}
+          onTabChange={(newTab) => {
+            setFilterEstado(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* ── Tabla Modularizada y Paginación ── */}
         <UsuarioTable

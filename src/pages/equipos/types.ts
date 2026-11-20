@@ -1,4 +1,18 @@
-export type Categoria = "Audio" | "Iluminación" | "Video" | "Estructuras"
+export type Categoria =
+  | "Audio"
+  | "Iluminación"
+  | "Video"
+  | "Estructuras"
+  | "Efectos Especiales / Humo"
+  | "Accesorios"
+  | string
+
+export interface CategoriaEquipoItem {
+  id: string
+  nombre: string
+  descripcion: string
+  estado: "Activo" | "Inactivo"
+}
 
 export type TipoPropiedadEquipo = "Propio" | "Alquilado"
 
@@ -32,6 +46,6 @@ export interface MantenimientoEntry {
   tecnico: string
 }
 
-export type EquipoDrawerMode = "none" | "new" | "edit" | "view"
+export type EquipoDrawerMode = "none" | "new" | "edit" | "view" | "categorias"
 
 export type EquipoFormData = Partial<EquipoItem>

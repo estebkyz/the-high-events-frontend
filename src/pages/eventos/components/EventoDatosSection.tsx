@@ -44,67 +44,41 @@ function ModalidadSelector({
   value: ModalidadEvento
   onChange: (modalidad: ModalidadEvento) => void
 }) {
-  const name = useId()
-
   return (
-    <fieldset className="space-y-3">
-      <legend className="text-[16px] font-bold text-[#F8FAFC]">Modalidad</legend>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-[#262D3D]">
+      <div>
+        <h2 className="text-[15px] font-bold text-[#F8FAFC]">
+          Datos generales
+        </h2>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
-        {OPCIONES_MODALIDAD.map(({ value: optValue, icon: Icon, titulo, descripcion }) => {
+      <div
+        role="radiogroup"
+        aria-label="Modalidad del evento"
+        className="inline-flex items-center gap-1.5 p-1 bg-[#111318] border border-[#262D3D] rounded-xl shrink-0"
+      >
+        {OPCIONES_MODALIDAD.map(({ value: optValue, icon: Icon, titulo }) => {
           const selected = value === optValue
           return (
-            <label
+            <button
               key={optValue}
-              className={`relative flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-colors ${
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(optValue)}
+              className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                 selected
-                  ? "bg-[#7C3AED]/15 border-[#7C3AED] shadow-sm shadow-[#7C3AED]/20"
-                  : "bg-[#181B22] border-[#262D3D] hover:border-[#3B475E]"
+                  ? "bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/30"
+                  : "text-[#94A3B8] hover:text-[#F8FAFC]"
               }`}
             >
-              <input
-                type="radio"
-                name={name}
-                value={optValue}
-                checked={selected}
-                onChange={() => onChange(optValue)}
-                className="peer sr-only"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 rounded-xl peer-focus-visible:ring-2 peer-focus-visible:ring-[#7C3AED]/70 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[#0F1117]"
-              />
-
-              <span
-                className={`p-2 rounded-lg shrink-0 ${
-                  selected ? "bg-[#7C3AED] text-white" : "bg-[#222734] text-[#94A3B8]"
-                }`}
-              >
-                <Icon size={16} aria-hidden="true" />
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs font-bold text-[#F1F5F9]">{titulo}</span>
-                <span className="block text-[11px] leading-snug text-[#94A3B8] mt-0.5">
-                  {descripcion}
-                </span>
-              </span>
-
-              <span
-                aria-hidden="true"
-                className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                  selected
-                    ? "bg-[#7C3AED] border-[#7C3AED] text-white"
-                    : "border-[#3B475E]"
-                }`}
-              >
-                {selected && <Check size={11} strokeWidth={3} />}
-              </span>
-            </label>
+              <Icon size={14} aria-hidden="true" />
+              <span>{titulo}</span>
+            </button>
           )
         })}
       </div>
-    </fieldset>
+    </div>
   )
 }
 
@@ -482,14 +456,11 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
   /* -------------------------------- UI -------------------------------- */
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      {/* Columna izquierda: selector de modalidad (queda visible al hacer scroll) */}
-      <div className="lg:col-span-3 lg:sticky lg:top-6">
-        <ModalidadSelector value={modalidad} onChange={handleModalidad} />
-      </div>
+    <div className="bg-[#181B22] border border-[#262D3D] rounded-2xl p-5 sm:p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] space-y-5">
+      {/* Barra superior compacta de modalidad */}
+      <ModalidadSelector value={modalidad} onChange={handleModalidad} />
 
-      {/* Columna derecha: formulario según modalidad */}
-      <div className="lg:col-span-9 bg-[#181B22] rounded-2xl p-6 sm:p-8 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] space-y-6">
+      <div>
         {/* ============================ EVENTO DE CLIENTE ============================ */}
         {esCliente && (
           <div className="space-y-6">
@@ -547,7 +518,7 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
                     </h4>
                     <p className="text-xs text-[#CBD5E1] mt-1 max-w-xl leading-relaxed">
                       Para crear un evento de cliente es obligatorio contar con una cotización
-                      aprobada donde se definan el nombre, fecha, horario, venue y servicios
+                      aprobada donde se definan el nombre, fecha, horario, lugar y servicios
                       contratados.
                     </p>
                   </div>
@@ -565,8 +536,8 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
 
             {/* Con cotización: datos heredados y bloqueados */}
             {cotizacionSeleccionada && (
-              <div className="space-y-5 animate-fade-in pt-4 border-t border-[#262D3D]">
-                <div className="p-4 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 flex items-start gap-3">
+              <div className="space-y-4 animate-fade-in pt-4 border-t border-[#262D3D]">
+                <div className="p-3.5 rounded-xl bg-[#10B981]/10 border border-[#10B981]/20 flex items-start gap-3">
                   <CheckCircle2
                     size={18}
                     aria-hidden="true"
@@ -579,7 +550,6 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
                         {cotizacionSeleccionada.codigo}
                       </span>
                     </p>
-                    {/* Sin fechas inventadas: solo se muestra lo que realmente existe */}
                     {(cotizacionSeleccionada.fecha_emision ||
                       cotizacionSeleccionada.fecha_vencimiento) && (
                       <p className="text-[11px] text-[#A7F3D0] mt-1">
@@ -595,11 +565,11 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <CampoHeredado label="Nombre del evento">{form.nombre}</CampoHeredado>
 
                   <CampoHeredado
-                    label="Venue y dirección"
+                    label="Ubicación"
                     icon={<MapPin size={13} aria-hidden="true" className="text-[#94A3B8] mr-2 shrink-0" />}
                   >
                     {form.direccion}
@@ -636,7 +606,7 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
                     />
                   </div>
 
-                  <CampoHeredado label="Observaciones" multiline className="sm:col-span-2">
+                  <CampoHeredado label="Observaciones" multiline className="sm:col-span-3">
                     {form.observaciones ||
                       cotizacionSeleccionada.observaciones ||
                       "Sin observaciones registradas en la cotización"}
@@ -649,32 +619,56 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
 
         {/* ======================= EVENTO PROPIO (THE HIGH EVENTS) ======================= */}
         {esPropio && (
-          <div className="space-y-5 animate-fade-in">
-            <div>
-              <label htmlFor={id("propio-nombre")} className={labelClass}>
-                Nombre del evento
-              </label>
-              <input
-                id={id("propio-nombre")}
-                type="text"
-                maxLength={150}
-                placeholder="Ej. Festival Electrónico 360 Open Air"
-                value={form.nombre || ""}
-                onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-                className={`${fieldBase} px-3.5`}
-                required
-              />
+          <div className="space-y-4 animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor={id("propio-nombre")} className={labelClass}>
+                  Nombre del evento
+                </label>
+                <input
+                  id={id("propio-nombre")}
+                  type="text"
+                  maxLength={150}
+                  placeholder="Ej. Festival Electrónico 360 Open Air"
+                  value={form.nombre || ""}
+                  onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+                  className={`${fieldBase} px-3.5`}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor={id("propio-venue")} className={labelClass}>
+                  Ubicación
+                </label>
+                <div className="relative">
+                  <MapPin
+                    size={14}
+                    aria-hidden="true"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none"
+                  />
+                  <input
+                    id={id("propio-venue")}
+                    type="text"
+                    maxLength={150}
+                    placeholder="Discoteca 360 Club, Medellín"
+                    value={form.direccion || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, direccion: e.target.value }))}
+                    className={`${fieldBase} pl-10 pr-4`}
+                    required
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Concepto: texto descriptivo, por eso es un área de texto a ancho completo */}
             <div>
               <label htmlFor={id("concepto")} className={labelClass}>
                 Concepto del evento
               </label>
               <textarea
                 id={id("concepto")}
-                rows={3}
-                placeholder="Describe el concepto: show de visuales 360, láseres y techno en vivo..."
+                rows={2}
+                placeholder="Describe el concepto: show de visuales 360, láseres y música en vivo..."
                 value={form.concepto_espectaculo || ""}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, concepto_espectaculo: e.target.value }))
@@ -682,29 +676,6 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
                 className={`${fieldBase} h-auto p-3.5 resize-none`}
                 required
               />
-            </div>
-
-            <div>
-              <label htmlFor={id("propio-venue")} className={labelClass}>
-                Venue y dirección
-              </label>
-              <div className="relative">
-                <MapPin
-                  size={14}
-                  aria-hidden="true"
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none"
-                />
-                <input
-                  id={id("propio-venue")}
-                  type="text"
-                  maxLength={150}
-                  placeholder="Discoteca 360 Club, Calle 49e #83a-200, Medellín"
-                  value={form.direccion || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, direccion: e.target.value }))}
-                  className={`${fieldBase} pl-10 pr-4`}
-                  required
-                />
-              </div>
             </div>
 
             {/* Fechas y horarios */}

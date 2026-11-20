@@ -495,6 +495,7 @@ export default function AgendamientoPage() {
           onSearchChange={setSearch}
           searchPlaceholder="Buscar"
           activeFilterCount={activeChips.length}
+          activeFilterPills={activeChips}
           onResetFilters={resetFilters}
         >
           <div>
@@ -543,41 +544,6 @@ export default function AgendamientoPage() {
             </div>
           </div>
         </PageHeader>
-
-        {/* ── Chips de filtros activos ── */}
-        {activeChips.length > 0 && (
-          <div
-            className="flex flex-wrap items-center gap-2 text-xs"
-            aria-label="Filtros activos"
-          >
-            {activeChips.map((chip) => (
-              <span
-                key={chip.key}
-                className="inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-lg bg-[#7C3AED]/15 border border-[#7C3AED]/40 text-[#C4B5FD] font-semibold"
-              >
-                {chip.icon}
-                {chip.label}
-                <button
-                  type="button"
-                  onClick={chip.onClear}
-                  aria-label={`Quitar filtro: ${chip.label}`}
-                  className={`p-1 rounded hover:text-white cursor-pointer ${focusRing}`}
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            ))}
-            {activeChips.length > 1 && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className={`text-[#CBD5E1] hover:text-white underline underline-offset-2 cursor-pointer rounded px-1 ${focusRing}`}
-              >
-                Limpiar todo
-              </button>
-            )}
-          </div>
-        )}
 
         {/* ── Calendario Principal Unificado con Panel Lateral (Estética según referencia visual) ── */}
         <AgendamientoCalendar
@@ -709,11 +675,7 @@ export default function AgendamientoPage() {
                                     </span>
                                   </div>
                                   <span
-                                    className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                                    style={{
-                                      backgroundColor: `${meta.color}1A`,
-                                      color: meta.text,
-                                    }}
+                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${meta.badgeClass}`}
                                   >
                                     {ev.estado}
                                   </span>
@@ -774,11 +736,7 @@ export default function AgendamientoPage() {
                                 </span>
                               </div>
                               <span
-                                className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                                style={{
-                                  backgroundColor: `${meta.color}1A`,
-                                  color: meta.text,
-                                }}
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${meta.badgeClass}`}
                               >
                                 {ev.estado}
                               </span>

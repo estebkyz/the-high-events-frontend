@@ -43,6 +43,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Eventos",
     icon: CalendarDays,
     items: [
+      { label: "Cotizaciones", icon: FileText, route: "cotizaciones" },
       { label: "Eventos", icon: CalendarDays, route: "eventos" },
       { label: "Agendamiento", icon: Clock, route: "agendamiento" },
     ],
@@ -53,7 +54,6 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Clientes", icon: Users, route: "clientes" },
       { label: "Servicios", icon: Layers, route: "servicios" },
-      { label: "Cotizaciones", icon: FileText, route: "cotizaciones" },
       { label: "Ventas", icon: DollarSign, route: "ventas" },
       { label: "Abonos", icon: CreditCard, route: "abonos" },
     ],

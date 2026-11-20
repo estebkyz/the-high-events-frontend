@@ -1,6 +1,7 @@
 import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import type {
@@ -260,6 +261,23 @@ export default function ProveedoresPage() {
     setCurrentPage(1)
   }
 
+  const quickTabs = useMemo(
+    () => [
+      { id: "Todos", label: "Todos", count: providers.length },
+      {
+        id: "Activo",
+        label: "Activos",
+        count: providers.filter((p) => p.estado === "Activo").length,
+      },
+      {
+        id: "Inactivo",
+        label: "Inactivos",
+        count: providers.filter((p) => p.estado === "Inactivo").length,
+      },
+    ],
+    [providers],
+  )
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
       <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
@@ -276,9 +294,27 @@ export default function ProveedoresPage() {
           searchPlaceholder="Buscar"
           activeFilterCount={
             (filterEstado !== "Todos" ? 1 : 0) +
-            (filterServicio.length > 0 ? 1 : 0) +
-            (filterEquipo.length > 0 ? 1 : 0)
+            (filterServicio.length > 0 ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...filterServicio.map((s) => ({
+              key: `srv-${s}`,
+              label: `Servicio: ${s}`,
+              onClear: () => toggleServicioFilter(s),
+            })),
+          ]}
           onResetFilters={() => {
             setFilterEstado("Todos")
             setFilterServicio([])
@@ -303,7 +339,7 @@ export default function ProveedoresPage() {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-wider text-[#A78BFA]">
-                Servicios y Personal Especializado
+                Especialidades / Servicios
               </label>
               {filterServicio.length > 0 && (
                 <button
@@ -335,43 +371,17 @@ export default function ProveedoresPage() {
               ))}
             </div>
           </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#60A5FA]">
-                Equipos e Insumos Técnicos
-              </label>
-              {filterEquipo.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterEquipo([])
-                    setCurrentPage(1)
-                  }}
-                  className="text-[10px] text-[#EF4444] hover:underline cursor-pointer"
-                >
-                  Limpiar ({filterEquipo.length})
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-[#111318] rounded-xl border border-[#2D3748]">
-              {ALL_EQUIPOS_PROVEEDOR.map((eq) => (
-                <button
-                  key={eq}
-                  type="button"
-                  onClick={() => toggleEquipoFilter(eq)}
-                  className={`px-2 py-1 rounded-lg text-[10px] font-medium border transition-all cursor-pointer ${
-                    filterEquipo.includes(eq)
-                      ? "bg-[#3B82F6]/20 text-[#60A5FA] border-[#3B82F6]/50 font-semibold"
-                      : "bg-[#1A1D23] text-[#64748B] border-[#2D3748] hover:text-[#94A3B8]"
-                  }`}
-                >
-                  {eq}
-                </button>
-              ))}
-            </div>
-          </div>
         </PageHeader>
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterEstado}
+          onTabChange={(newTab) => {
+            setFilterEstado(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* ── Tabla Modularizada y Paginación ── */}
         <ProveedorTable

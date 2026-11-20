@@ -185,3 +185,6 @@ export const INITIAL_EQUIPMENT: EquipoItem[] = [
   },
 ]
 
+export const INITIAL_EQUIPOS = INITIAL_EQUIPMENT
+
+

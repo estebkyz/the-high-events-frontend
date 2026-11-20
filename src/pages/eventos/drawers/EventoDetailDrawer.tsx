@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react"
+import { useState, type ElementType, type ReactNode } from "react"
 import {
   MapPin,
   Calendar,
@@ -109,6 +109,7 @@ export function EventoDetailDrawer({
   onClose,
   onEdit,
 }: EventoDetailDrawerProps) {
+  const [activeTab, setActiveTab] = useState<"servicios" | "equipos" | "empleados">("servicios")
   const equipos = event?.equiposAsignados ?? []
   const empleados = event?.empleadosAsignados ?? []
   const sinCotizacion =
@@ -153,7 +154,7 @@ export function EventoDetailDrawer({
                 hasta {formatFechaHora(event.hora_fin)}
               </span>
             </InfoField>
-            <InfoField icon={MapPin} label="Dirección">
+            <InfoField icon={MapPin} label="Ubicación">
               {event.direccion}
             </InfoField>
             <InfoField
@@ -180,101 +181,143 @@ export function EventoDetailDrawer({
             </div>
           </dl>
 
-          {/* Servicios */}
-          <Section
-            icon={Layers}
-            title={
-              event.modalidad === "Cliente"
-                ? "Servicios contratados"
-                : "Servicios requeridos"
-            }
-            count={
-              event.servicios.length > 0
-                ? `${event.servicios.length} servicio(s)`
-                : undefined
-            }
-          >
-            {sinCotizacion ? (
-              <EmptyNote icon={FileWarning}>
-                Aún no hay una cotización asignada a este evento.
-              </EmptyNote>
-            ) : event.servicios.length === 0 ? (
-              <EmptyNote>No hay servicios registrados.</EmptyNote>
-            ) : (
-              <ul className="flex flex-wrap gap-2">
-                {event.servicios.map((s) => (
-                  <li
-                    key={s}
-                    className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#7C3AED]/15 text-[#A78BFA]"
-                  >
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Section>
+          {/* Pestañas (Tabs) para Servicios, Equipos y Empleados */}
+          <div className="pt-3 border-t border-[#2D3748] space-y-3">
+            <div className="grid grid-cols-3 gap-1 p-1 bg-[#111318] border border-[#2D3748] rounded-xl">
+              <button
+                type="button"
+                onClick={() => setActiveTab("servicios")}
+                className={`py-2 px-2 rounded-lg text-[11.5px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                  activeTab === "servicios"
+                    ? "bg-[#7C3AED] text-white"
+                    : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                }`}
+              >
+                <Layers size={13} />
+                <span>Servicios ({event.servicios.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("equipos")}
+                className={`py-2 px-2 rounded-lg text-[11.5px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                  activeTab === "equipos"
+                    ? "bg-[#7C3AED] text-white"
+                    : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                }`}
+              >
+                <Boxes size={13} />
+                <span>Equipos ({equipos.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("empleados")}
+                className={`py-2 px-2 rounded-lg text-[11.5px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                  activeTab === "empleados"
+                    ? "bg-[#7C3AED] text-white"
+                    : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                }`}
+              >
+                <UserCheck size={13} />
+                <span>Personal ({empleados.length})</span>
+              </button>
+            </div>
 
-          {/* Equipos */}
-          <Section
-            icon={Boxes}
-            title="Equipos asignados"
-            count={equipos.length > 0 ? `${equipos.length} equipo(s)` : undefined}
-          >
-            {equipos.length === 0 ? (
-              <EmptyNote>No hay equipos asignados a este evento.</EmptyNote>
-            ) : (
-              <ul className="flex flex-wrap gap-1.5">
-                {equipos.map((eqId) => {
-                  const eq = AVAILABLE_EQUIPMENT.find((e) => e.id === eqId)
-                  return (
-                    <li
-                      key={eqId}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#111318] text-[#CBD5E1]"
-                    >
-                      <span className="font-mono text-[10px] text-[#A78BFA]">
-                        {eq?.codigo || `EQ-${eqId}`}
-                      </span>
-                      <span>{eq?.nombre || `Equipo #${eqId}`}</span>
-                    </li>
-                  )
-                })}
-              </ul>
+            {activeTab === "servicios" && (
+              <Section
+                icon={Layers}
+                title={
+                  event.modalidad === "Cliente"
+                    ? "Servicios contratados"
+                    : "Servicios requeridos"
+                }
+                count={
+                  event.servicios.length > 0
+                    ? `${event.servicios.length} servicio(s)`
+                    : undefined
+                }
+              >
+                {sinCotizacion ? (
+                  <EmptyNote icon={FileWarning}>
+                    Aún no hay una cotización asignada a este evento.
+                  </EmptyNote>
+                ) : event.servicios.length === 0 ? (
+                  <EmptyNote>No hay servicios registrados.</EmptyNote>
+                ) : (
+                  <ul className="flex flex-wrap gap-2">
+                    {event.servicios.map((s) => (
+                      <li
+                        key={s}
+                        className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#7C3AED]/15 text-[#A78BFA]"
+                      >
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
             )}
-          </Section>
 
-          {/* Empleados y tareas (`evento_tarea`) */}
-          <Section
-            icon={UserCheck}
-            title="Empleados"
-            count={
-              empleados.length > 0 ? `${empleados.length} asignado(s)` : undefined
-            }
-          >
-            {empleados.length === 0 ? (
-              <EmptyNote>
-                No hay empleados ni tareas operativas asignadas aún.
-              </EmptyNote>
-            ) : (
-              <ul className="divide-y divide-[#2D3748]/50">
-                {empleados.map((emp) => (
-                  <li key={emp.empleado_id} className="py-2.5 space-y-1.5">
-                    <div>
-                      <p className="font-semibold text-[#F1F5F9] text-xs">
-                        {emp.nombre}
-                      </p>
-                      <p className="text-[11px] text-[#94A3B8]">
-                        {emp.nombre_tarea}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <StatusBadge status={emp.fase} />
-                      <StatusBadge status={emp.estado} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            {activeTab === "equipos" && (
+              <Section
+                icon={Boxes}
+                title="Equipos asignados"
+                count={equipos.length > 0 ? `${equipos.length} equipo(s)` : undefined}
+              >
+                {equipos.length === 0 ? (
+                  <EmptyNote>No hay equipos asignados a este evento.</EmptyNote>
+                ) : (
+                  <ul className="flex flex-wrap gap-1.5">
+                    {equipos.map((eqId) => {
+                      const eq = AVAILABLE_EQUIPMENT.find((e) => e.id === eqId)
+                      return (
+                        <li
+                          key={eqId}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#111318] text-[#CBD5E1]"
+                        >
+                          <span className="font-mono text-[10px] text-[#A78BFA]">
+                            {eq?.codigo || `EQ-${eqId}`}
+                          </span>
+                          <span>{eq?.nombre || `Equipo #${eqId}`}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </Section>
             )}
-          </Section>
+
+            {activeTab === "empleados" && (
+              <Section
+                icon={UserCheck}
+                title="Personal asignado al evento"
+                count={
+                  empleados.length > 0 ? `${empleados.length} asignado(s)` : undefined
+                }
+              >
+                {empleados.length === 0 ? (
+                  <EmptyNote>
+                    No hay personal operativo asignado aún.
+                  </EmptyNote>
+                ) : (
+                  <ul className="divide-y divide-[#2D3748]/50">
+                    {empleados.map((emp) => (
+                      <li key={emp.empleado_id} className="py-2.5 flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-[#F1F5F9] text-xs">
+                            {emp.nombre}
+                          </p>
+                          <p className="text-[11px] text-[#94A3B8]">
+                            Rol / Fase: {emp.fase}
+                          </p>
+                        </div>
+                        <StatusBadge status={emp.fase} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+            )}
+          </div>
 
           {/* Acción principal fija al pie del panel */}
           <div className="sticky bottom-0 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 px-4 sm:px-5 py-3 flex justify-end bg-[#181B22] border-t border-[#2D3748]">

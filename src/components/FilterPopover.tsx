@@ -41,7 +41,7 @@ export function FilterPopover({
 
   return (
     <div className="relative inline-block" ref={popoverRef}>
-      {/* ── Filter Trigger Button ── */}
+      {/* ── Filter Trigger Button (Shopify Polaris Style) ── */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -54,21 +54,21 @@ export function FilterPopover({
               }`
             : ""
         }`}
-        className={`h-[36px] px-3.5 rounded-xl text-[13px] font-medium flex items-center gap-2 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] ${
+        className={`h-[36px] px-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] ${
           activeCount > 0 || isOpen
-            ? "bg-[#7C3AED]/15 text-[#F1F5F9] shadow-sm shadow-[#7C3AED]/20"
-            : "bg-[#1A1D23] text-[#94A3B8] hover:text-[#F1F5F9]"
+            ? "bg-[#7C3AED]/15 border-[#7C3AED]/50 text-[#F1F5F9] shadow-xs"
+            : "bg-[#181B22] border-[#262D3D] text-[#CBD5E1] hover:border-[#3B455A] hover:text-[#F1F5F9]"
         }`}
-        title="Filtrar datos"
+        title="Filtrar registros"
       >
         <SlidersHorizontal
           size={13}
-          className={activeCount > 0 ? "text-[#A78BFA]" : "text-[#64748B]"}
+          className={activeCount > 0 ? "text-[#A78BFA]" : "text-[#94A3B8]"}
           aria-hidden="true"
         />
         <span>Filtrar</span>
         {activeCount > 0 && (
-          <span className="w-5 h-5 rounded-full bg-[#7C3AED] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+          <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#7C3AED] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
             {activeCount}
           </span>
         )}
@@ -79,10 +79,10 @@ export function FilterPopover({
         <div
           role="dialog"
           aria-label="Panel de filtros"
-          className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 bg-[#1A1D23] border border-[#2D3748] rounded-2xl shadow-2xl p-4 text-xs space-y-4 animate-in fade-in duration-150"
+          className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 bg-[#181B22] border border-[#262D3D] rounded-2xl shadow-2xl p-4 text-xs space-y-4 animate-in fade-in duration-150"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#2D3748] pb-2.5">
+          <div className="flex items-center justify-between border-b border-[#262D3D] pb-2.5">
             <div className="flex items-center gap-1.5">
               <SlidersHorizontal size={13} className="text-[#A78BFA]" />
               <span className="font-semibold text-[13px] text-[#F1F5F9]">
@@ -100,19 +100,19 @@ export function FilterPopover({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="text-[11px] text-[#94A3B8] hover:text-[#F1F5F9] flex items-center gap-1 transition-colors cursor-pointer"
+                  className="text-[11px] text-[#A78BFA] hover:text-[#C4B5FD] flex items-center gap-1 transition-colors cursor-pointer font-medium"
                   title="Restablecer filtros"
                 >
                   <RotateCcw size={10} />
-                  <span>Limpiar</span>
+                  <span>Restablecer</span>
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded text-[#64748B] hover:text-[#F1F5F9] hover:bg-[#2D3748] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#222734] transition-colors cursor-pointer"
               >
-                <X size={12} />
+                <X size={13} />
               </button>
             </div>
           </div>
@@ -121,13 +121,13 @@ export function FilterPopover({
           <div className="space-y-3.5">{children}</div>
 
           {/* Footer action */}
-          <div className="pt-2 border-t border-[#2D3748] flex justify-end">
+          <div className="pt-2.5 border-t border-[#262D3D] flex justify-end">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="w-full py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[12px] font-semibold transition-all cursor-pointer text-center"
+              className="w-full py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold transition-all cursor-pointer text-center"
             >
-              Listo
+              Aplicar
             </button>
           </div>
         </div>
