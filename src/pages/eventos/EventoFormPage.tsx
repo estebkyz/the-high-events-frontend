@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { Navigate, useNavigate, useParams, useLocation } from "react-router-dom"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, Layers, Boxes, UserCheck } from "lucide-react"
 import { useToast } from "../../components/Toast"
 import { ROUTE_PATHS, EVENTO_PATHS } from "../../routes/paths"
 import {
@@ -166,20 +166,20 @@ export default function EventoFormPage() {
       )
       const newEvent: EventoItem = {
         id: `ev-${Date.now()}`,
-        cliente_id: form.modalidad === "Propio" ? null : form.cliente_id,
+        cliente_id: form.modalidad === "Propio" ? null : (form.cliente_id ?? null),
         cliente_nombre:
           form.modalidad === "Propio"
             ? "The High Events"
             : clienteEncontrado?.nombre || "Cliente General",
         cotizacion_id: form.cotizacion_id || "",
         cotizacion_codigo: form.cotizacion_codigo || "",
-        modalidad: form.modalidad,
-        nombre: form.nombre.trim(),
-        direccion: form.direccion.trim(),
-        hora_inicio: form.hora_inicio,
-        hora_fin: form.hora_fin,
+        modalidad: form.modalidad || "Cliente",
+        nombre: (form.nombre || "").trim(),
+        direccion: (form.direccion || "").trim(),
+        hora_inicio: form.hora_inicio || "",
+        hora_fin: form.hora_fin || "",
         presupuesto_estimado: Number(form.presupuesto_estimado) || 0,
-        estado: (form.estado as any) || "Planificación",
+        estado: (form.estado as any) || "Confirmado",
         fecha_creacion: new Date().toISOString().replace("T", " ").slice(0, 19),
         aforo_esperado: form.aforo_esperado || "200 personas",
         concepto_espectaculo: form.concepto_espectaculo || "",
@@ -197,7 +197,8 @@ export default function EventoFormPage() {
               cargo: emp?.cargo || "Personal",
               fase: a.fase,
               tarea_id: a.tarea_id,
-              tarea_nombre: tarea?.nombre_tarea || "Tarea",
+              nombre_tarea: tarea?.nombre_tarea || "Personal de evento",
+              estado: "Pendiente",
             }
           }),
       }
@@ -224,11 +225,16 @@ export default function EventoFormPage() {
     executeSave()
   }
 
+  const [detailTab, setDetailTab] = useState<"servicios" | "equipos" | "empleados">("servicios")
+  const serviciosCount = (form.servicios || []).length
+  const equiposCount = equiposAsignados.length
+  const empleadosCount = Object.values(assignments).filter((a) => a.checked).length
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
       <main className="flex-1 overflow-y-auto p-6 sm:p-8 max-w-6xl mx-auto w-full">
         {/* Breadcrumb superior */}
-        <div className="flex items-center gap-2 text-xs text-[#94A3B8] mb-4">
+        <div className="flex items-center gap-2 text-xs text-[#94A3B8] mb-3">
           <button
             type="button"
             onClick={goBack}
@@ -243,37 +249,111 @@ export default function EventoFormPage() {
         </div>
 
         {/* Encabezado */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-[26px] font-bold text-[#F8FAFC] tracking-tight">
-              {isEditing ? "Editar evento" : "Crear un evento"}
-            </h1>
-            
-          </div>
+        <div className="mb-6">
+          <h1 className="text-[24px] font-bold text-[#F8FAFC] tracking-tight">
+            {isEditing ? "Editar evento" : "Crear evento"}
+          </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <EventoDatosSection form={form} setForm={setForm} />
 
-          <EventoServiciosSection
-            form={form}
-            setForm={setForm}
-            onGoToCreateService={handleGoToCreateService}
-          />
+          {/* Pestañas (Tabs) para los detalles operativos: Servicios, Equipos, Empleados */}
+          <div className="bg-[#181B22] border border-[#262D3D] rounded-2xl p-5 sm:p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#262D3D] pb-4">
+              <div>
+                <h2 className="text-[15px] font-bold text-[#F8FAFC]">
+                  Detalles operativos
+                </h2>
+              </div>
 
-          <EventoEquiposSection
-            equiposAsignados={equiposAsignados}
-            setEquiposAsignados={setEquiposAsignados}
-          />
+              <div
+                role="tablist"
+                aria-label="Detalles del evento"
+                className="inline-flex items-center gap-1.5 p-1 bg-[#111318] border border-[#262D3D] rounded-xl"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={detailTab === "servicios"}
+                  onClick={() => setDetailTab("servicios")}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                    detailTab === "servicios"
+                      ? "bg-[#7C3AED] text-white shadow-sm"
+                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                  }`}
+                >
+                  <Layers size={14} />
+                  <span>Servicios</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/25">
+                    {serviciosCount}
+                  </span>
+                </button>
 
-          <EventoStaffSection
-            assignments={assignments}
-            setAssignments={setAssignments}
-            onGoToCreateEmpleado={handleGoToCreateEmpleado}
-          />
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={detailTab === "equipos"}
+                  onClick={() => setDetailTab("equipos")}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                    detailTab === "equipos"
+                      ? "bg-[#7C3AED] text-white shadow-sm"
+                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                  }`}
+                >
+                  <Boxes size={14} />
+                  <span>Equipos</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/25">
+                    {equiposCount}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={detailTab === "empleados"}
+                  onClick={() => setDetailTab("empleados")}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                    detailTab === "empleados"
+                      ? "bg-[#7C3AED] text-white shadow-sm"
+                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                  }`}
+                >
+                  <UserCheck size={14} />
+                  <span>Empleados</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/25">
+                    {empleadosCount}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {detailTab === "servicios" && (
+              <EventoServiciosSection
+                form={form}
+                setForm={setForm}
+                onGoToCreateService={handleGoToCreateService}
+              />
+            )}
+
+            {detailTab === "equipos" && (
+              <EventoEquiposSection
+                equiposAsignados={equiposAsignados}
+                setEquiposAsignados={setEquiposAsignados}
+              />
+            )}
+
+            {detailTab === "empleados" && (
+              <EventoStaffSection
+                assignments={assignments}
+                setAssignments={setAssignments}
+                onGoToCreateEmpleado={handleGoToCreateEmpleado}
+              />
+            )}
+          </div>
 
           {/* Pie de acciones */}
-          <div className="pt-6 border-t border-[#262D3D] flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-[#262D3D] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={goBack}

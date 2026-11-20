@@ -97,7 +97,7 @@ export const CotizacionDetailDrawer: React.FC<CotizacionDetailDrawerProps> = ({
               )}
               {quote.direccion && (
                 <div className="col-span-2">
-                  <span className="text-[#64748B]">Dirección del venue: </span>
+                  <span className="text-[#64748B]">Ubicación: </span>
                   <span className="text-[#F1F5F9]">{quote.direccion}</span>
                 </div>
               )}

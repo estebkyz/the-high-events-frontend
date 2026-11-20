@@ -17,12 +17,46 @@ export const GRUPO_META: Record<
     label: string
     color: string
     text: string
+    badgeClass: string
+    chipClass: string
   }
 > = {
-  pendiente: { label: "Pendiente", color: "#F59E0B", text: "#FCD34D" },
-  confirmado: { label: "Confirmado", color: "#3B82F6", text: "#93C5FD" },
-  realizado: { label: "Realizado", color: "#10B981", text: "#6EE7B7" },
-  cancelado: { label: "Cancelado", color: "#EF4444", text: "#FCA5A5" },
+  pendiente: {
+    label: "Pendiente",
+    color: "#F59E0B",
+    text: "#B45309",
+    badgeClass:
+      "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-[#F59E0B]/20 dark:text-[#FCD34D] dark:border-[#F59E0B]/30",
+    chipClass:
+      "bg-amber-100 text-amber-900 border-l-[3px] border-l-amber-600 dark:bg-[#F59E0B]/20 dark:text-[#FCD34D] dark:border-l-[#F59E0B]",
+  },
+  confirmado: {
+    label: "Confirmado",
+    color: "#3B82F6",
+    text: "#1D4ED8",
+    badgeClass:
+      "bg-blue-100 text-blue-800 border border-blue-300 dark:bg-[#3B82F6]/20 dark:text-[#93C5FD] dark:border-[#3B82F6]/30",
+    chipClass:
+      "bg-blue-100 text-blue-900 border-l-[3px] border-l-blue-600 dark:bg-[#3B82F6]/20 dark:text-[#93C5FD] dark:border-l-[#3B82F6]",
+  },
+  realizado: {
+    label: "Realizado",
+    color: "#10B981",
+    text: "#047857",
+    badgeClass:
+      "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-[#10B981]/20 dark:text-[#6EE7B7] dark:border-[#10B981]/30",
+    chipClass:
+      "bg-emerald-100 text-emerald-900 border-l-[3px] border-l-emerald-600 dark:bg-[#10B981]/20 dark:text-[#6EE7B7] dark:border-l-[#10B981]",
+  },
+  cancelado: {
+    label: "Cancelado",
+    color: "#EF4444",
+    text: "#B91C1C",
+    badgeClass:
+      "bg-red-100 text-red-800 border border-red-300 dark:bg-[#EF4444]/20 dark:text-[#FCA5A5] dark:border-[#EF4444]/30",
+    chipClass:
+      "bg-red-100 text-red-900 border-l-[3px] border-l-red-600 dark:bg-[#EF4444]/20 dark:text-[#FCA5A5] dark:border-l-[#EF4444]",
+  },
 }
 
 const ESTADO_GRUPO: Record<string, GrupoEstado> = {

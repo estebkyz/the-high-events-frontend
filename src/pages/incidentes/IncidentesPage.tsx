@@ -317,6 +317,32 @@ export default function IncidentesPage() {
             (filterCriticidad !== "Todos" ? 1 : 0) +
             (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterCriticidad !== "Todos"
+              ? [
+                  {
+                    key: "criticidad",
+                    label: `Criticidad: ${filterCriticidad}`,
+                    onClear: () => {
+                      setFilterCriticidad("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterCriticidad("Todos")
             setFilterEstado("Todos")

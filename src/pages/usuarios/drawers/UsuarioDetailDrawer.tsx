@@ -1,12 +1,13 @@
 import React from "react"
 import { Drawer } from "../../../components/Drawer"
 import { StatusBadge } from "../../../components/StatusBadge"
-import { Edit2, Clock } from "lucide-react"
+import { Edit2 } from "lucide-react"
 import type { UsuarioItem } from "../types"
 import { getUsuarioFullName } from "../utils"
 
 interface UsuarioDetailDrawerProps {
-  isOpen: boolean; user: UsuarioItem | null
+  isOpen: boolean
+  user: UsuarioItem | null
   onClose: () => void
   onOpenEdit: (user: UsuarioItem) => void
 }
@@ -24,8 +25,8 @@ export const UsuarioDetailDrawer: React.FC<UsuarioDetailDrawerProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       size="detail"
-      title="Detalle de Usuario"
-      subtitle="Información del perfil, rol y auditoría de accesos"
+      title="Detalle de usuario"
+      subtitle="Información de la cuenta registrada en la tabla usuarios"
     >
       <div className="space-y-4">
         <div className="flex items-center gap-3.5 p-3.5 bg-[#1A1D23] rounded-xl border border-[#2D3748]">
@@ -47,91 +48,72 @@ export const UsuarioDetailDrawer: React.FC<UsuarioDetailDrawerProps> = ({
           </div>
         </div>
 
-        <div className="space-y-3 bg-[#1A1D23] border border-[#2D3748] rounded-xl p-4 text-[12px]">
-          <div className="flex items-center justify-between">
-            <span className="text-[#64748B]">Documento de Identidad</span>
-            <span className="text-[#F1F5F9] font-medium">
+        {/* Campos exactos de la tabla usuarios en la BD distribuidos en 2 columnas */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#1A1D23] border border-[#2D3748] rounded-xl p-4 text-[12px]">
+          <div>
+            <p className="text-[#64748B] text-[11px]">Tipo y Nro. Documento</p>
+            <p className="text-[#F1F5F9] font-semibold mt-0.5">
               {user.tipo_documento} {user.numero_documento}
-            </span>
+            </p>
           </div>
-          <div className="border-t border-[#2D3748]/50" />
-          <div className="flex items-center justify-between">
-            <span className="text-[#64748B]">Teléfono de Contacto</span>
-            <span className="text-[#F1F5F9] font-medium">{user.telefono}</span>
+          <div>
+            <p className="text-[#64748B] text-[11px]">Teléfono de Contacto</p>
+            <p className="text-[#F1F5F9] font-semibold mt-0.5">
+              {user.telefono}
+            </p>
           </div>
-          <div className="border-t border-[#2D3748]/50" />
-          <div className="flex items-center justify-between">
-            <span className="text-[#64748B]">Rol Asignado</span>
-            <span className="text-[#F1F5F9] font-medium">{user.rol}</span>
+          <div>
+            <p className="text-[#64748B] text-[11px]">Nombres</p>
+            <p className="text-[#F1F5F9] font-semibold mt-0.5">
+              {user.primer_nombre} {user.segundo_nombre || ""}
+            </p>
           </div>
-          <div className="border-t border-[#2D3748]/50" />
-          <div className="flex items-center justify-between">
-            <span className="text-[#64748B]">Último Acceso Registrado</span>
-            <span className="text-[#F1F5F9] font-medium">
-              {user.ultimoAcceso}
-            </span>
+          <div>
+            <p className="text-[#64748B] text-[11px]">Apellidos</p>
+            <p className="text-[#F1F5F9] font-semibold mt-0.5">
+              {user.primer_apellido} {user.segundo_apellido || ""}
+            </p>
           </div>
-          <div className="border-t border-[#2D3748]/50" />
-          <div className="flex items-center justify-between">
-            <span className="text-[#64748B]">Estado de Cuenta</span>
-            <span
-              className={`font-semibold ${
+          <div className="sm:col-span-2">
+            <p className="text-[#64748B] text-[11px]">Correo Electrónico</p>
+            <p className="text-[#F1F5F9] font-semibold mt-0.5 break-all">
+              {user.correo}
+            </p>
+          </div>
+          <div>
+            <p className="text-[#64748B] text-[11px]">Rol Asignado (FK id_rol)</p>
+            <p className="text-[#F1F5F9] font-semibold mt-0.5">{user.rol}</p>
+          </div>
+          <div>
+            <p className="text-[#64748B] text-[11px]">Estado de Cuenta</p>
+            <p
+              className={`font-semibold mt-0.5 ${
                 user.estado === "Activo" ? "text-[#10B981]" : "text-[#EF4444]"
               }`}
             >
               {user.estado}
-            </span>
-          </div>
-        </div>
-
-        {/* Historial de Sesiones */}
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2">
-            <Clock size={14} className="text-[#A78BFA]" />
-            <p className="text-[11px] text-[#A78BFA] uppercase tracking-wider font-semibold">
-              Historial de Conexiones
             </p>
           </div>
-
-          {!user.sesiones || user.sesiones.length === 0 ? (
-            <div className="p-3 bg-[#1A1D23] border border-[#2D3748] rounded-xl text-center text-[#64748B] text-xs">
-              Sin registros de sesión recientes
-            </div>
-          ) : (
-            <div className="bg-[#1A1D23] border border-[#2D3748] rounded-xl divide-y divide-[#2D3748]/50 overflow-hidden">
-              {user.sesiones.map((ses, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 flex items-center justify-between text-xs"
-                >
-                  <div>
-                    <p className="text-[#F1F5F9] font-medium leading-tight">
-                      {ses.fecha}
-                    </p>
-                    <p className="text-[10px] text-[#64748B] mt-0.5">
-                      {ses.dispositivo} · IP {ses.ip}
-                    </p>
-                  </div>
-                  <StatusBadge
-                    status={ses.resultado}
-                    className="text-[10px] font-bold px-2"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        <div className="space-y-2 pt-2">
+        <div className="pt-2 flex justify-end gap-3 border-t border-[#2D3748]">
           <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] border border-[#2D3748] transition-colors cursor-pointer"
+          >
+            Cerrar
+          </button>
+          <button
+            type="button"
             onClick={() => {
               onClose()
               onOpenEdit(user)
             }}
-            className="w-full h-[40px] rounded-xl text-[12px] font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-[12px] font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <Edit2 size={14} />
-            Editar Usuario
+            Editar usuario
           </button>
         </div>
       </div>

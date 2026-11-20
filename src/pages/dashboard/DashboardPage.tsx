@@ -6,32 +6,38 @@ import {
   CreditCard,
   ChevronDown,
   Clock,
-  TrendingUp,
-  Users,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { useToast } from "../../components/Toast"
 import { KPICard } from "../../components/KPICard"
-import { WEEK_COMPARISON_SERIES, MONTH_COMPARISON_SERIES } from "../../data"
 import { EVENTO_PATHS } from "../../routes/paths"
 import type { DashboardPageProps } from "./types"
 import { PERIOD_OPTIONS, PERIOD_DATA } from "./data"
 import { formatCOP, fmtPct } from "./utils"
 import { ChartCard } from "./components/ChartCard"
 import { AvailabilityMiniCalendar } from "./components/AvailabilityMiniCalendar"
+import { StatisticalCharts } from "./components/StatisticalCharts"
 
 export default function DashboardPage({
   onNavigate,
 }: DashboardPageProps) {
   const navigate = useNavigate()
-  const toast = useToast()
-  const [periodId, setPeriodId] = useState("oct-2026")
+  const [rangeType, setRangeType] = useState<"dia" | "semana" | "mes" | "anio">("mes")
+  const [monthPeriodId, setMonthPeriodId] = useState("nov-2026")
   const [isPeriodDropdown, setIsPeriodDropdown] = useState(false)
   const periodRef = useRef<HTMLDivElement>(null)
 
+  const activePeriodId =
+    rangeType === "dia"
+      ? "hoy-2026"
+      : rangeType === "semana"
+        ? "sem-2026"
+        : rangeType === "anio"
+          ? "anio-2026"
+          : monthPeriodId
+
   const period =
-    PERIOD_OPTIONS.find((p) => p.id === periodId) ?? PERIOD_OPTIONS[0]
-  const data = PERIOD_DATA[periodId] ?? PERIOD_DATA["oct-2026"]
+    PERIOD_OPTIONS.find((p) => p.id === monthPeriodId) ?? PERIOD_OPTIONS[0]
+  const data = PERIOD_DATA[activePeriodId] ?? PERIOD_DATA["nov-2026"]
 
   // Cerrar el selector al hacer clic fuera o con Esc
   useEffect(() => {
@@ -52,13 +58,16 @@ export default function DashboardPage({
     }
   }, [isPeriodDropdown])
 
-  // Métricas derivadas
+  // Métricas derivadas delimitadas por el mes seleccionado
   const cobradoPct = Math.round((data.cobrado / data.vendido) * 100)
   const porCobrarPct = Math.round((data.porCobrar / data.vendido) * 100)
   const desvMeta = ((data.cobrado - data.metaCobrado) / data.metaCobrado) * 100
   const crecMensual =
     ((data.cobrado - data.cobradoMesAnterior) / data.cobradoMesAnterior) * 100
-  const metaMillones = data.metaCobrado / 1_000_000
+
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+  const mesActualLabel = capitalize(data.monthName)
+  const mesAnteriorLabel = capitalize(data.previousMonthName)
 
   const handleOpenCreateEvent = (fecha = "") => {
     if (fecha) {
@@ -75,195 +84,213 @@ export default function DashboardPage({
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
       <main className="flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
-        {/* ── Encabezado ── */}
+        {/* ── Encabezado con Selector de Rango Mensual ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-[24px] font-bold text-[#F8FAFC] tracking-tight">
-              Resumen
+              Dashboard
             </h1>
-            <p className="text-[13px] text-[#94A3B8] mt-1">
-              Resumen de rendimiento y métricas clave
-            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div ref={periodRef} className="relative">
-              <button
-                type="button"
-                aria-haspopup="listbox"
-                aria-expanded={isPeriodDropdown}
-                onClick={() => setIsPeriodDropdown((o) => !o)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#181B22] text-[13px] font-medium text-[#F8FAFC] hover:border-[#3B455A] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/60"
-              >
-                <Calendar size={15} className="text-[#CBD5E1]" />
-                <span>{period.label}</span>
-                <ChevronDown size={14} className="text-[#94A3B8] ml-1" />
-              </button>
-
-              {isPeriodDropdown && (
-                <div
-                  role="listbox"
-                  aria-label="Período"
-                  className="absolute right-0 top-full mt-1 w-56 bg-[#181B22] border border-[#262D3D] rounded-xl shadow-xl py-1 z-30 text-[13px]"
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Filtro de rango de tiempo: Día | Semana | Mes | Año */}
+            <div
+              role="group"
+              aria-label="Rango de tiempo"
+              className="inline-flex items-center gap-1 p-1 rounded-xl bg-[#181B22] border border-[#262D3D]"
+            >
+              {(
+                [
+                  { id: "dia", label: "Día" },
+                  { id: "semana", label: "Semana" },
+                  { id: "mes", label: "Mes" },
+                  { id: "anio", label: "Año" },
+                ] as const
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setRangeType(item.id)
+                    if (item.id !== "mes") setIsPeriodDropdown(false)
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    rangeType === item.id
+                      ? "bg-[#7C3AED] text-white shadow-xs"
+                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                  }`}
                 >
-                  {PERIOD_OPTIONS.map((p) => {
-                    const sinDatos = "sinDatos" in p && p.sinDatos
-                    return (
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Selector de mes específico cuando el filtro es Mensual */}
+            {rangeType === "mes" && (
+              <div ref={periodRef} className="relative">
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={isPeriodDropdown}
+                  onClick={() => setIsPeriodDropdown((o) => !o)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181B22] border border-[#262D3D] text-xs font-medium text-[#F8FAFC] hover:border-[#7C3AED] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/60"
+                >
+                  <Calendar size={13} className="text-[#A78BFA] shrink-0" />
+                  <span>{period.label}</span>
+                  <ChevronDown size={13} className="text-[#94A3B8] ml-0.5 shrink-0" />
+                </button>
+
+                {isPeriodDropdown && (
+                  <div
+                    role="listbox"
+                    aria-label="Seleccionar mes del año"
+                    className="absolute right-0 top-full mt-1 w-40 bg-[#181B22] border border-[#262D3D] rounded-xl shadow-xl py-1 z-30 text-xs"
+                  >
+                    {PERIOD_OPTIONS.map((p) => (
                       <button
                         key={p.id}
                         type="button"
                         role="option"
-                        aria-selected={periodId === p.id}
-                        disabled={sinDatos}
+                        aria-selected={monthPeriodId === p.id}
                         onClick={() => {
-                          setPeriodId(p.id)
+                          setMonthPeriodId(p.id)
                           setIsPeriodDropdown(false)
                         }}
-                        className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between ${
-                          sinDatos
-                            ? "text-[#94A3B8] cursor-not-allowed"
-                            : "hover:bg-[#222734] cursor-pointer"
-                        } ${
-                          periodId === p.id
-                            ? "text-[#A78BFA] font-semibold"
-                            : sinDatos
-                              ? ""
-                              : "text-[#F8FAFC]"
+                        className={`w-full text-left px-3 py-1.5 transition-colors flex items-center justify-between hover:bg-[#222734] cursor-pointer ${
+                          monthPeriodId === p.id
+                            ? "text-[#A78BFA] font-semibold bg-[#7C3AED]/10"
+                            : "text-[#F8FAFC]"
                         }`}
                       >
                         <span>{p.label}</span>
-                        {sinDatos && (
-                          <span className="text-[11px]">Sin datos aún</span>
-                        )}
                       </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               type="button"
               onClick={() => handleOpenCreateEvent()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-[13px] font-semibold transition-colors shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A78BFA]"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A78BFA]"
             >
               Crear evento
             </button>
           </div>
         </div>
 
-        {/* ── Fila 1: KPIs principales ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        {/* ── Fila 1: Los 5 KPIs Principales Delimitados por Mes ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <KPICard
             title="Ventas Totales"
             value={formatCOP(data.vendido)}
-            subtitle="Total del período"
+            subtitle={`${mesActualLabel} ${data.year}`}
             icon={DollarSign}
+            onClick={() => onNavigate?.("ventas")}
+            actionLabel="Ver ventas"
           />
           <KPICard
             title="Cobros Totales"
             value={formatCOP(data.cobrado)}
-            subtitle={`Total del período`}
+            subtitle={`${cobradoPct}% (${fmtPct(crecMensual)})`}
             icon={CreditCard}
+            onClick={() => onNavigate?.("abonos")}
+            actionLabel="Ver cobros"
           />
           <KPICard
-            title="Ticket Promedio"
-            value={formatCOP(data.ticket)}
-            subtitle={`Por evento (${data.eventosTotal} eventos)`}
-            icon={Users}
-          />
-          <KPICard
-            title="Eventos"
+            title="Eventos del Mes"
             value={`${data.eventosConfirmados}/${data.eventosTotal}`}
-            subtitle={`${data.eventosConfirmados} confirmados de ${data.eventosTotal}`}
+            subtitle={`${data.eventosConfirmados} confirmados`}
             icon={Calendar}
+            onClick={() => onNavigate?.("eventos")}
+            actionLabel="Ver eventos"
           />
-        </div>
-
-        {/* ── Fila 2: KPIs de seguimiento ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
           <KPICard
-            size="lg"
-            title="Por cobrar a clientes"
+            title="Por Cobrar Clientes"
             value={formatCOP(data.porCobrar)}
-            subtitle={`${porCobrarPct} % de lo vendido`}
+            subtitle={`Saldo 50% (${porCobrarPct}%)`}
             icon={Clock}
             onClick={() => onNavigate?.("abonos")}
             actionLabel="Ver abonos"
           />
           <KPICard
-            size="lg"
-            title="Por pagar a proveedores"
+            title="Por Pagar Proveedores"
             value={formatCOP(data.porPagarProveedores)}
-            subtitle="Pagos pendientes del período"
+            subtitle={`Pendiente ${mesActualLabel}`}
             icon={Truck}
             onClick={() => onNavigate?.("proveedores")}
-            actionLabel="Ver proveedores"
-          />
-          <KPICard
-            size="lg"
-            title="Rentabilidad neta"
-            value={formatCOP(data.rentabilidad)}
-            subtitle="Estimada después de costos"
-            icon={TrendingUp}
-            onClick={() => onNavigate?.("ventas")}
-            actionLabel="Ver ventas"
+            actionLabel="Proveedores"
           />
         </div>
 
-        {/* ── Fila 3: gráficos + agenda ── */}
+        {/* ── Fila 2: Gráficos Estadísticos 1 y 2 + Mini-Agenda Multi-Evento ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            {/* Gráfico Estadístico 1: Cobrado Mes vs Mes (Siempre los 2 últimos meses respecto al seleccionado) */}
             <ChartCard
-              title="Cobrado Mes contra Mes"
-              subtitle={`Octubre vs septiembre · ${fmtPct(desvMeta)} frente a la meta`}
-              labels={MONTH_COMPARISON_SERIES.map((p) => p.label)}
+              title={`Cobrado Mes contra Mes (${mesActualLabel} vs ${mesAnteriorLabel})`}
+              subtitle={`Comparativa acumulada de los 2 últimos meses · ${fmtPct(desvMeta)} frente a la meta`}
+              labels={data.monthComparison.map((p) => p.label)}
               series={[
                 {
-                  name: "Octubre",
-                  color: "#3B82F6",
-                  values: MONTH_COMPARISON_SERIES.map((p) => p.actual),
+                  name: `${mesActualLabel} ${data.year}`,
+                  color: "#7C3AED",
+                  values: data.monthComparison.map((p) => p.actual),
                   area: true,
                   strong: true,
                 },
                 {
-                  name: "Septiembre",
+                  name: `${mesAnteriorLabel} ${data.year}`,
                   color: "#10B981",
-                  values: MONTH_COMPARISON_SERIES.map((p) => p.anterior),
+                  values: data.monthComparison.map((p) => p.anterior),
                 },
               ]}
-              ariaLabel="Gráfico de líneas del cobrado acumulado de octubre frente a septiembre y la meta del mes"
+              ariaLabel={`Gráfico comparativo de cobros entre ${mesActualLabel} y ${mesAnteriorLabel}`}
             />
 
+            {/* Gráfico Estadístico 2: Ventas Semana contra Semana */}
             <ChartCard
-              title="Ventas Semana contra Semana"
-              subtitle="19 oct - 25 oct vs semana anterior"
-              labels={WEEK_COMPARISON_SERIES.map((d) => d.day)}
+              title={`Evolución de Ventas Semanales (${mesActualLabel})`}
+              subtitle={`Comportamiento diario por semana en ${mesActualLabel} vs semana previa`}
+              labels={data.weekComparison.map((d) => d.day)}
               series={[
                 {
-                  name: "Semana 19/10",
+                  name: `Semana actual (${mesActualLabel})`,
                   color: "#3B82F6",
-                  values: WEEK_COMPARISON_SERIES.map((d) => d.actual),
+                  values: data.weekComparison.map((d) => d.actual),
                   area: true,
                   strong: true,
                 },
                 {
-                  name: "Semana 12/10",
+                  name: "Semana anterior",
                   color: "#10B981",
-                  values: WEEK_COMPARISON_SERIES.map((d) => d.anterior),
+                  values: data.weekComparison.map((d) => d.anterior),
                 },
               ]}
-              ariaLabel="Gráfico de líneas de las ventas por día de la semana del 19 de octubre frente a la semana anterior"
+              ariaLabel={`Gráfico de ventas semanales en ${mesActualLabel}`}
             />
           </div>
 
           <div className="lg:col-span-1">
             <AvailabilityMiniCalendar
+              year={data.year}
+              monthIndex={data.monthIndex}
+              monthName={data.monthName}
+              calendarDays={data.calendarDays}
               onNavigate={onNavigate}
               onAgendar={(iso) => handleOpenCreateEvent(iso)}
             />
           </div>
         </div>
+
+        {/* ── Fila 3: Gráficos Estadísticos 3, 4 y 5 ── */}
+        <StatisticalCharts
+          monthLabel={`${mesActualLabel} ${data.year}`}
+          serviciosRevenue={data.serviciosRevenue}
+          modalidadEventos={data.modalidadEventos}
+          operacionStats={data.operacionStats}
+        />
       </main>
     </div>
   )

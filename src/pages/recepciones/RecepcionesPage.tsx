@@ -1,6 +1,8 @@
 import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
+import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import { INITIAL_RECEPCIONES } from "./data"
 import { RecepcionesKPIs } from "./components/RecepcionesKPIs"
@@ -130,6 +132,8 @@ export default function RecepcionesPage() {
         nombre: it.nombre,
         cantidad: String(it.cantidad),
         estado: it.estado,
+        observaciones: it.observaciones || "",
+        evidencia_foto: it.evidencia_foto || "",
       })),
     )
     setDrawerMode("edit")
@@ -177,6 +181,8 @@ export default function RecepcionesPage() {
         nombre: it.nombre.trim(),
         cantidad: parseInt(it.cantidad, 10) || 1,
         estado: it.estado,
+        observaciones: it.observaciones?.trim() || undefined,
+        evidencia_foto: it.evidencia_foto?.trim() || undefined,
       }))
 
     if (cleanItems.length === 0) {
@@ -261,9 +267,31 @@ export default function RecepcionesPage() {
     closeDrawer()
   }
 
+  const quickTabs = useMemo(
+    () => [
+      { id: "", label: "Todas", count: recepciones.length },
+      {
+        id: "Pendiente",
+        label: "Pendientes",
+        count: recepciones.filter((r) => r.estado === "Pendiente").length,
+      },
+      {
+        id: "Conforme",
+        label: "Conformes",
+        count: recepciones.filter((r) => r.estado === "Conforme").length,
+      },
+      {
+        id: "Cerrada",
+        label: "Cerradas",
+        count: recepciones.filter((r) => r.estado === "Cerrada").length,
+      },
+    ],
+    [recepciones],
+  )
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
-      <main className="flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
+      <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
         {/* Cabecera con PageHeader estandarizado */}
         <PageHeader
           title="Recepciones"
@@ -276,65 +304,100 @@ export default function RecepcionesPage() {
           }}
           searchPlaceholder="Buscar"
           activeFilterCount={(filterTipo ? 1 : 0) + (filterEstado ? 1 : 0)}
+          activeFilterPills={[
+            ...(filterTipo
+              ? [
+                  {
+                    key: "tipo",
+                    label: `Tipo: ${filterTipo}`,
+                    onClear: () => {
+                      setFilterTipo("")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterTipo("")
             setFilterEstado("")
             setCurrentPage(1)
           }}
         >
-          <div className="space-y-3">
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-                Tipo de acta
-              </label>
-              <div className="grid grid-cols-3 gap-1 bg-[#111318] p-1 rounded-xl border border-[#262D3D]">
-                {[
-                  { value: "", label: "Todos" },
-                  { value: "Entrega", label: "Entrega" },
-                  { value: "Devolución", label: "Devolución" },
-                ].map((t) => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    onClick={() => {
-                      setFilterTipo(t.value)
-                      setCurrentPage(1)
-                    }}
-                    className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all cursor-pointer text-center truncate ${
-                      filterTipo === t.value
-                        ? "bg-[#7C3AED] text-white font-semibold"
-                        : "text-[#94A3B8] hover:text-[#F8FAFC]"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Tipo de acta
+            </label>
+            <div className="grid grid-cols-3 gap-1 bg-[#111318] p-1 rounded-xl border border-[#262D3D]">
+              {[
+                { value: "", label: "Todas" },
+                { value: "Recepción Montaje", label: "Montaje" },
+                { value: "Recepción Desmontaje", label: "Desmontaje" },
+              ].map((t) => (
+                <button
+                  key={t.value || "all"}
+                  type="button"
+                  onClick={() => {
+                    setFilterTipo(t.value)
+                    setCurrentPage(1)
+                  }}
+                  className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all cursor-pointer text-center truncate ${
+                    filterTipo === t.value
+                      ? "bg-[#7C3AED] text-white font-semibold"
+                      : "text-[#94A3B8] hover:text-[#F8FAFC]"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-                Estado del acta
-              </label>
-              <select
-                value={filterEstado}
-                onChange={(e) => {
-                  setFilterEstado(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="w-full h-[36px] px-3 bg-[#111318] border border-[#262D3D] rounded-xl text-xs text-[#F8FAFC] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-              >
-                <option value="">Todos los Estados</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Firmada">Firmada</option>
-                <option value="Observada">Observada</option>
-              </select>
-            </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
+              Estado del acta
+            </label>
+            <CustomSelect
+              value={filterEstado || "Todos"}
+              onChange={(val) => {
+                setFilterEstado(val === "Todos" ? "" : val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { label: "Todos los Estados", value: "Todos" },
+                { label: "Pendiente", value: "Pendiente" },
+                { label: "Conforme", value: "Conforme" },
+                { label: "Cerrada", value: "Cerrada" },
+                { label: "Anulada", value: "Anulada" },
+              ]}
+            />
           </div>
         </PageHeader>
 
         {/* Fila de KPIs */}
         <RecepcionesKPIs kpis={kpis} />
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterEstado}
+          onTabChange={(newTab) => {
+            setFilterEstado(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* Tabla principal con paginación */}
         <RecepcionTable

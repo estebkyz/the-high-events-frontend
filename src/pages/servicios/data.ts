@@ -9,7 +9,7 @@ import {
   Package,
   Disc,
 } from "lucide-react"
-import type { ServicioItem, TipoCobroServicio } from "./types"
+import type { ServicioItem, TipoCobroServicio, CategoriaServicioItem } from "./types"
 
 export const CATEGORY_CONFIG: Record<string, {
   icon: React.ElementType; color: string
@@ -23,6 +23,57 @@ export const CATEGORY_CONFIG: Record<string, {
   Escenografía: { icon: Theater, color: "text-[#F97316]" },
   Logística: { icon: Package, color: "text-[#94A3B8]" },
 }
+
+export const INITIAL_CATEGORIAS_SERVICIO: CategoriaServicioItem[] = [
+  {
+    id: "1",
+    nombre: "Sonido",
+    descripcion: "Sistemas de audio profesional, consolas digitales, monitores y microfonía",
+    estado: "Activo",
+  },
+  {
+    id: "2",
+    nombre: "Iluminación",
+    descripcion: "Robóticas Beam/Spot, iluminación arquitectónica wash y consolas DMX",
+    estado: "Activo",
+  },
+  {
+    id: "3",
+    nombre: "Pantallas",
+    descripcion: "Pantallas gigantes LED modulares de alta resolución y proyectores HD",
+    estado: "Activo",
+  },
+  {
+    id: "4",
+    nombre: "DJ",
+    descripcion: "DJs profesionales, tornamesas, mezclas en vivo y riders artísticos",
+    estado: "Activo",
+  },
+  {
+    id: "5",
+    nombre: "Fotografía",
+    descripcion: "Cobertura fotográfica profesional, edición digital y galería privada",
+    estado: "Activo",
+  },
+  {
+    id: "6",
+    nombre: "Video",
+    descripcion: "Producción audiovisual multicámara, circuito cerrado de TV y streaming",
+    estado: "Activo",
+  },
+  {
+    id: "7",
+    nombre: "Escenografía",
+    descripcion: "Tarimas moduladas, backing de escenario, estructuras y ambientación",
+    estado: "Activo",
+  },
+  {
+    id: "8",
+    nombre: "Logística",
+    descripcion: "Coordinación técnica en sitio, transporte, montaje y desmontaje seguro",
+    estado: "Activo",
+  },
+]
 
 export const CATEGORIES = Object.keys(CATEGORY_CONFIG)
 

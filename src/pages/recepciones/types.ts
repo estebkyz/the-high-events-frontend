@@ -12,6 +12,7 @@ export interface EquipmentItem {
   cantidad: number
   estado: EstadoItemRecepcion | string
   observaciones?: string
+  evidencia_foto?: string
 }
 
 export interface Recepcion {
@@ -40,6 +41,7 @@ export interface NewItem {
   cantidad: string
   estado: EstadoItemRecepcion | string
   observaciones?: string
+  evidencia_foto?: string
 }
 
 export interface DevolucionItem {

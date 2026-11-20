@@ -243,7 +243,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
         <div className="space-y-3 pb-4 border-b border-[#262D3D]">
 
           <FormInput
-            label="Dirección del venue"
+            label="Ubicación"
             value={formState.direccion || ""}
             onChange={(e) =>
               setFormState((f) => ({ ...f, direccion: e.target.value }))

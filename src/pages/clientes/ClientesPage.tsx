@@ -1,6 +1,7 @@
 import { usePagination } from "../../hooks/usePagination"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
+import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import type {
@@ -196,6 +197,23 @@ export default function ClientesPage() {
     closeDrawer()
   }
 
+  const quickTabs = useMemo(
+    () => [
+      { id: "Todos", label: "Todos", count: clients.length },
+      {
+        id: "Empresa",
+        label: "Empresas",
+        count: clients.filter((c) => c.tipo_cliente === "Empresa").length,
+      },
+      {
+        id: "Natural",
+        label: "Personas Naturales",
+        count: clients.filter((c) => c.tipo_cliente === "Natural").length,
+      },
+    ],
+    [clients],
+  )
+
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
       <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
@@ -214,6 +232,32 @@ export default function ClientesPage() {
             (filterTipo !== "Todos" ? 1 : 0) +
             (filterEstado !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterTipo !== "Todos"
+              ? [
+                  {
+                    key: "tipo",
+                    label: `Tipo: ${filterTipo}`,
+                    onClear: () => {
+                      setFilterTipo("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEstado !== "Todos"
+              ? [
+                  {
+                    key: "estado",
+                    label: `Estado: ${filterEstado}`,
+                    onClear: () => {
+                      setFilterEstado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterTipo("Todos")
             setFilterEstado("Todos")
@@ -259,6 +303,16 @@ export default function ClientesPage() {
             />
           </div>
         </PageHeader>
+
+        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
+        <IndexTabs
+          tabs={quickTabs}
+          activeTab={filterTipo}
+          onTabChange={(newTab) => {
+            setFilterTipo(newTab)
+            setCurrentPage(1)
+          }}
+        />
 
         {/* ── Tabla Modularizada y Paginación ── */}
         <ClienteTable

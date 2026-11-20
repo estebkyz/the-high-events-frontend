@@ -56,7 +56,7 @@ export const EquipoTable: React.FC<EquipoTableProps> = ({
               <tr className="border-b border-[#262D3D] text-xs font-medium text-[#94A3B8] bg-[#111318]">
                 <th scope="col" className="py-3 px-4">Equipo</th>
                 <th scope="col" className="py-3 px-4">Categoría</th>
-                <th scope="col" className="py-3 px-4">Propiedad / Proveedor</th>
+                <th scope="col" className="py-3 px-4">Propiedad</th>
                 <th scope="col" className="py-3 px-4">Estado</th>
                 <th scope="col" className="py-3 px-4 text-right">Acciones</th>
               </tr>

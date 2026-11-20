@@ -518,17 +518,63 @@ export default function TareasPage() {
             setSearch(val)
             setCurrentPage(1)
           }}
-          searchPlaceholder={
-            viewMode === "catalogo"
-              ? "Buscar"
-              : "Buscar"
-          }
+          searchPlaceholder="Buscar"
           activeFilterCount={
             (filterEvento !== "Todos" ? 1 : 0) +
             (filterFase !== "Todos" ? 1 : 0) +
             (filterEmpleado !== "Todos" ? 1 : 0) +
             (filterPrioridad !== "Todos" ? 1 : 0)
           }
+          activeFilterPills={[
+            ...(filterEvento !== "Todos"
+              ? [
+                  {
+                    key: "ev",
+                    label: `Evento: ${filterEvento}`,
+                    onClear: () => {
+                      setFilterEvento("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterFase !== "Todos"
+              ? [
+                  {
+                    key: "fase",
+                    label: `Fase: ${filterFase}`,
+                    onClear: () => {
+                      setFilterFase("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterEmpleado !== "Todos"
+              ? [
+                  {
+                    key: "emp",
+                    label: `Empleado: ${filterEmpleado}`,
+                    onClear: () => {
+                      setFilterEmpleado("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+            ...(filterPrioridad !== "Todos"
+              ? [
+                  {
+                    key: "prio",
+                    label: `Prioridad: ${filterPrioridad}`,
+                    onClear: () => {
+                      setFilterPrioridad("Todos")
+                      setCurrentPage(1)
+                    },
+                  },
+                ]
+              : []),
+          ]}
           onResetFilters={() => {
             setFilterEvento("Todos")
             setFilterFase("Todos")
