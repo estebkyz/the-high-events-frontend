@@ -4,7 +4,6 @@ import {
   Receipt,
   TrendingUp,
   CheckCircle2,
-  AlertCircle,
   FileText,
   Sparkles,
 } from "lucide-react"
@@ -12,6 +11,12 @@ import { Drawer } from "../../../components/Drawer"
 import { StatusBadge } from "../../../components/StatusBadge"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect } from "../../../components/CustomSelect"
+import {
+  DetailSection,
+  DetailHighlight,
+  DetailList,
+  DetailEmptyNote,
+} from "../../../components/detail"
 import type { AbonoItem, PagoFormState, TipoPagoEnum } from "../types"
 import {
   METODO_PAGO_OPTIONS,
@@ -53,112 +58,117 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
       title={isClientes ? abono.evento : abono.servicio || abono.evento}
       subtitle={`Gestión de Cartera de ${abono.tipoCartera}`}
       size="detail"
+      footer={
+        <button
+          type="button"
+          onClick={onGenerarRecibo}
+          className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#10B981]/15 border border-[#10B981]/40 text-[#10B981] rounded-xl text-[13px] font-semibold hover:bg-[#10B981]/25 transition-colors cursor-pointer"
+        >
+          <Receipt size={16} aria-hidden="true" />
+          Generar Comprobante / Recibo de Caja
+        </button>
+      }
     >
       <div className="space-y-4">
-        {/* Event header card */}
-        <div className="bg-[#1A1D23] border border-[#2D3748] rounded-xl p-3.5 space-y-1">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider">
-              {isClientes ? "Monto Total Acordado" : "Monto Total Contratado"}
-            </p>
+        <DetailHighlight
+          label={isClientes ? "Monto Total Acordado" : "Monto Total Contratado"}
+          value={abono.total}
+          tone="accent"
+          badge={
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#7C3AED]/20 text-[#A78BFA] border border-[#7C3AED]/30">
               {abono.tipoCartera}
             </span>
-          </div>
-          <p className="text-[20px] font-bold text-[#F1F5F9]">{abono.total}</p>
-          <div className="text-[12px] text-[#94A3B8] flex items-center gap-2 flex-wrap pt-1">
-            <span>
-              {isClientes ? "Cliente:" : "Proveedor:"}{" "}
-              <strong className="text-[#F1F5F9]">
-                {abono.cliente || abono.proveedor || "No asignado"}
-              </strong>
-            </span>
-            {!isClientes && abono.servicio && (
-              <>
-                <span className="text-[#475569]">·</span>
-                <span>
-                  Evento:{" "}
-                  <strong className="text-[#F1F5F9]">{abono.evento}</strong>
-                </span>
-              </>
-            )}
-          </div>
-        </div>
+          }
+          sublabel={
+            <>
+              <span>
+                {isClientes ? "Cliente:" : "Proveedor:"}{" "}
+                <strong className="text-[#F1F5F9]">
+                  {abono.cliente || abono.proveedor || "No asignado"}
+                </strong>
+              </span>
+              {!isClientes && abono.servicio && (
+                <>
+                  <span className="mx-1.5 text-[#475569]">·</span>
+                  <span>
+                    Evento:{" "}
+                    <strong className="text-[#F1F5F9]">{abono.evento}</strong>
+                  </span>
+                </>
+              )}
+            </>
+          }
+        />
 
-        {/* Desglose de 50% Anticipo y 50% Saldo */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] font-semibold text-[#94A3B8] uppercase tracking-wider">
-              Esquema de Pagos (50% / 50%)
-            </p>
-            <span className="text-[11px] text-[#64748B]">
-              Normativa contractual
-            </span>
-          </div>
-          <div className="bg-[#1A1D23] border border-[#2D3748] rounded-xl overflow-hidden divide-y divide-[#2D3748]/60">
-            <div className="flex items-center justify-between px-4 py-3">
+        <DetailSection
+          noBorder
+          title="Esquema de Pagos (50% / 50%)"
+          count="Normativa contractual"
+        >
+          <DetailList>
+            <div className="py-2.5 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[13px] font-medium text-[#F1F5F9]">
                   Anticipo Inicial (50%)
                 </p>
-                <p className="text-[11px] text-[#10B981] font-semibold">
+                <p className="text-[11px] text-[#10B981] font-semibold tabular-nums">
                   {abono.anticipo}
                 </p>
               </div>
               <StatusBadge status={abono.estadoAnticipo} />
             </div>
-            <div className="flex items-center justify-between px-4 py-3">
-              <div>
+            <div className="py-2.5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-[13px] font-medium text-[#F1F5F9]">
                   Saldo Final (50%)
                 </p>
-                <p className="text-[11px] text-[#64748B]">
+                <p className="text-[11px] text-[#94A3B8]">
                   {isClientes
                     ? "Exigible tras finalización satisfactoria del evento"
                     : "Exigible tras verificar cumplimiento del servicio"}
                 </p>
-                <p className="text-[11px] text-[#F59E0B] font-semibold mt-0.5">
+                <p className="text-[11px] text-[#F59E0B] font-semibold tabular-nums mt-0.5">
                   {abono.saldo}
                 </p>
               </div>
               <StatusBadge status={abono.estadoSaldo} />
             </div>
-          </div>
-        </div>
+          </DetailList>
 
-        {/* Progress bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-[12px]">
-            <span className="text-[#94A3B8]">
-              Avance de Recaudo / Desembolso
-            </span>
-            <span className="font-bold text-[#F1F5F9]">
-              {abono.porcentaje}%
-            </span>
+          {/* Progress bar */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex justify-between text-[12px]">
+              <span className="text-[#94A3B8]">
+                Avance de Recaudo / Desembolso
+              </span>
+              <span className="font-bold text-[#F1F5F9] tabular-nums">
+                {abono.porcentaje}%
+              </span>
+            </div>
+            <div className="w-full bg-[#111318] h-2.5 rounded-full overflow-hidden border border-[#2D3748]">
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${
+                  abono.porcentaje === 100
+                    ? "bg-[#10B981]"
+                    : abono.porcentaje >= 50
+                      ? "bg-[#F59E0B]"
+                      : "bg-[#EF4444]"
+                }`}
+                style={{ width: `${abono.porcentaje}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-[#111318] h-2.5 rounded-full overflow-hidden border border-[#2D3748]">
-            <div
-              className={`h-full transition-all duration-500 rounded-full ${
-                abono.porcentaje === 100
-                  ? "bg-[#10B981]"
-                  : abono.porcentaje >= 50
-                    ? "bg-[#F59E0B]"
-                    : "bg-[#EF4444]"
-              }`}
-              style={{ width: `${abono.porcentaje}%` }}
-            />
-          </div>
-        </div>
+        </DetailSection>
 
         {/* Habilitación de "Crear Evento Operativo" si el anticipo 50% ya está pagado */}
         {isClientes && abono.estadoAnticipo === "Pagado" && (
           <div className="p-3.5 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-xl space-y-2.5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-bold text-[#F1F5F9] flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-[#10B981]" />
+                <CheckCircle2 size={14} className="text-[#10B981]" aria-hidden="true" />
                 Anticipo 50% Confirmado · Venta Activa
               </span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#10B981]/20 text-[#10B981]">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] shrink-0">
                 Paso 5: Crear Evento
               </span>
             </div>
@@ -173,34 +183,26 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
               }}
               className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-all shadow-sm shadow-[#7C3AED]/20 cursor-pointer"
             >
-              <Sparkles size={13} />
+              <Sparkles size={13} aria-hidden="true" />
               <span>+ Crear Evento Operativo (Equipos y Personal)</span>
             </button>
           </div>
         )}
 
-        {/* Historial de Transacciones (pago_cliente / pago_proveedor) */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-[12px] font-semibold text-[#94A3B8] uppercase tracking-wider">
-              Bitácora de Transacciones ({abono.historial.length})
-            </p>
-            <span className="text-[11px] text-[#64748B]">
-              Comprobantes asociados
-            </span>
-          </div>
+        <DetailSection
+          title={`Bitácora de Transacciones (${abono.historial.length})`}
+          count="Comprobantes asociados"
+        >
           {abono.historial.length === 0 ? (
-            <div className="bg-[#1A1D23] border border-[#2D3748] rounded-xl p-4 text-center text-[12px] text-[#64748B]">
-              No se han registrado comprobantes de pago aún.
-            </div>
+            <DetailEmptyNote text="No se han registrado comprobantes de pago aún." />
           ) : (
-            <div className="space-y-2.5">
+            <DetailList>
               {abono.historial.map((entry, i) => (
                 <div
                   key={entry.id || i}
-                  className="bg-[#1A1D23] border border-[#2D3748] rounded-xl p-3.5 space-y-1.5"
+                  className="py-2.5 space-y-1.5"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#7C3AED]/20 text-[#A78BFA] border border-[#7C3AED]/30">
                         {entry.tipoPago || entry.concepto}
@@ -209,7 +211,7 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
                         {entry.fecha}
                       </span>
                     </div>
-                    <span className="text-[14px] font-bold text-[#10B981]">
+                    <span className="text-[13px] font-bold text-[#10B981] tabular-nums">
                       {entry.monto}
                     </span>
                   </div>
@@ -221,9 +223,9 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
                     </span>
                     {entry.comprobante && (
                       <>
-                        <span className="text-[#475569]">·</span>
+                        <span className="text-[#475569]" aria-hidden="true">·</span>
                         <span className="flex items-center gap-1 text-[#60A5FA]">
-                          <FileText size={11} />
+                          <FileText size={11} aria-hidden="true" />
                           Comprobante: <strong>{entry.comprobante}</strong>
                         </span>
                       </>
@@ -231,28 +233,25 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
                   </div>
 
                   {entry.observaciones && (
-                    <p className="text-[11px] text-[#64748B] italic bg-[#111318] p-2 rounded-lg border border-[#262D3D]">
+                    <p className="text-[11px] text-[#94A3B8] italic">
                       "{entry.observaciones}"
                     </p>
                   )}
                 </div>
               ))}
-            </div>
+            </DetailList>
           )}
-        </div>
+        </DetailSection>
 
         {/* Registrar Pago section (Basado en pago_cliente / pago_proveedor) */}
         {(showPagoForm ||
           abono.estadoAnticipo === "Pendiente" ||
           abono.estadoSaldo === "Pendiente") && (
-          <div className="space-y-3 border-t border-[#2D3748] pt-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-[#F1F5F9] flex items-center gap-1.5">
-                <TrendingUp size={16} className="text-[#10B981]" />
-                Registrar Transacción (
-                {isClientes ? "pago_cliente" : "pago_proveedor"})
-              </p>
-              {showPagoForm && (
+          <DetailSection
+            title={`Registrar Transacción (${isClientes ? "pago_cliente" : "pago_proveedor"})`}
+            icon={TrendingUp}
+            action={
+              showPagoForm ? (
                 <button
                   type="button"
                   onClick={() => setShowPagoForm(false)}
@@ -260,16 +259,16 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
                 >
                   Ocultar formulario
                 </button>
-              )}
-            </div>
-
+              ) : undefined
+            }
+          >
             {!showPagoForm ? (
               <button
                 type="button"
                 onClick={() => setShowPagoForm(true)}
                 className="w-full py-2.5 border border-[#7C3AED]/50 text-[#A78BFA] rounded-xl text-[12px] font-semibold hover:bg-[#7C3AED]/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <TrendingUp size={14} />
+                <TrendingUp size={14} aria-hidden="true" />
                 Ingresar nuevo abono / pago
               </button>
             ) : (
@@ -432,18 +431,8 @@ export const AbonoDetailDrawer: React.FC<AbonoDetailDrawerProps> = ({
                 </div>
               </form>
             )}
-          </div>
+          </DetailSection>
         )}
-
-        {/* Generar Recibo button */}
-        <button
-          type="button"
-          onClick={onGenerarRecibo}
-          className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#10B981]/15 border border-[#10B981]/40 text-[#10B981] rounded-xl text-[13px] font-semibold hover:bg-[#10B981]/25 transition-colors cursor-pointer"
-        >
-          <Receipt size={16} />
-          Generar Comprobante / Recibo de Caja
-        </button>
       </div>
     </Drawer>
   )

@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react"
-import { Plus, Trash2, PackagePlus, Undo2, Lock, Search } from "lucide-react"
+import { Plus, Trash2, PackagePlus, Undo2, Lock, Search, Truck } from "lucide-react"
 import type { EventoFormValues, ServicioDetalleEvento } from "../types"
 import { getServiciosCatalogo } from "../catalogStore"
+import { INITIAL_PROVIDERS } from "../../proveedores/data"
 import type { Dispatch, SetStateAction } from "react"
 
 interface EventoServiciosSectionProps {
@@ -163,10 +164,29 @@ export function EventoServiciosSection({
     clearUndo()
   }
 
+  const activeProviders = useMemo(
+    () => INITIAL_PROVIDERS.filter((p) => p.estado === "Activo"),
+    [],
+  )
+
+  const handleAssignProvider = (detalle: ServicioDetalleEvento, providerId: string) => {
+    const prov = activeProviders.find((p) => p.id === providerId)
+    const nextDetalles = serviciosDetalles.map((d) =>
+      d.nombre === detalle.nombre
+        ? {
+            ...d,
+            proveedor_id: prov?.id || undefined,
+            proveedor_nombre: prov?.razon_social || undefined,
+          }
+        : d,
+    )
+    setForm((f) => ({ ...f, serviciosDetalles: nextDetalles }))
+  }
+
   const n = serviciosDetalles.length
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-6 border-t border-[#262D3D]">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Columna izquierda: contexto */}
       <div className="lg:col-span-3 space-y-3">
         <h2 className="text-[16px] font-bold text-[#F8FAFC]">Servicios</h2>
@@ -346,48 +366,72 @@ export function EventoServiciosSection({
             {serviciosDetalles.map((detalle) => (
               <div
                 key={detalle.id || detalle.nombre}
-                className="p-3.5 rounded-2xl bg-[#181B22] flex items-center justify-between gap-3"
+                title={esCliente ? "Servicio heredado de la cotización" : undefined}
+                className={`p-3.5 rounded-2xl flex flex-col gap-2.5 ${
+                  esCliente
+                    ? "bg-[#14171F] border border-dashed border-[#2D3748]"
+                    : "bg-[#111318] border border-[#262D3D]"
+                }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#7C3AED]/15 text-[#A78BFA]">
-                    <PackagePlus size={18} aria-hidden="true" />
-                  </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#7C3AED]/15 text-[#A78BFA]">
+                      <PackagePlus size={18} aria-hidden="true" />
+                    </div>
 
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[#F1F5F9] truncate">
-                      {detalle.nombre}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#222734] text-[#CBD5E1]">
-                        {detalle.categoria || "General"}
-                      </span>
-                      <span className="font-mono text-[11px] font-bold text-[#34D399]">
-                        {formatCOP(parseCOP(detalle.costo))}
-                      </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[#F1F5F9] truncate">
+                        {detalle.nombre}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#222734] text-[#CBD5E1]">
+                          {detalle.categoria || "General"}
+                        </span>
+                        <span className="font-mono text-[11px] font-bold text-[#34D399]">
+                          {formatCOP(parseCOP(detalle.costo))}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  {esCliente ? (
+                    <span
+                      title="Heredado de la cotización"
+                      className="p-2 text-[#94A3B8] shrink-0"
+                    >
+                      <Lock size={15} aria-hidden="true" />
+                      <span className="sr-only">Heredado de la cotización, solo lectura</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveService(detalle)}
+                      aria-label={`Quitar ${detalle.nombre} del evento`}
+                      title="Quitar servicio"
+                      className={`p-2 text-[#94A3B8] hover:text-[#F87171] hover:bg-[#EF4444]/10 rounded-xl transition-colors cursor-pointer shrink-0 ${focusRing}`}
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
 
-                {esCliente ? (
-                  // Indicador, no botón: no hace nada, así que no debe ser enfocable ni parecer clicable
-                  <span
-                    title="Heredado de la cotización"
-                    className="p-2 text-[#94A3B8] shrink-0"
+                {/* Asignación de proveedor que ejecuta/suministra el servicio */}
+                <div className="flex items-center gap-2 pt-2 border-t border-[#262D3D]/60">
+                  <Truck size={13} className="text-[#A78BFA] shrink-0" aria-hidden="true" />
+                  <select
+                    aria-label={`Proveedor para ${detalle.nombre}`}
+                    value={detalle.proveedor_id || ""}
+                    onChange={(e) => handleAssignProvider(detalle, e.target.value)}
+                    className="w-full h-8 px-2.5 rounded-lg bg-[#0F1117] border border-[#262D3D] text-[11px] text-[#CBD5E1] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
                   >
-                    <Lock size={15} aria-hidden="true" />
-                    <span className="sr-only">Heredado de la cotización, solo lectura</span>
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveService(detalle)}
-                    aria-label={`Quitar ${detalle.nombre} del evento`}
-                    title="Quitar servicio"
-                    className={`p-2 text-[#94A3B8] hover:text-[#F87171] hover:bg-[#EF4444]/10 rounded-xl transition-colors cursor-pointer shrink-0 ${focusRing}`}
-                  >
-                    <Trash2 size={15} aria-hidden="true" />
-                  </button>
-                )}
+                    <option value="">Ejecución interna (The High Events)</option>
+                    {activeProviders.map((prov) => (
+                      <option key={prov.id} value={prov.id}>
+                        {prov.razon_social} — {(prov.servicios || []).slice(0, 2).join(", ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             ))}
           </div>

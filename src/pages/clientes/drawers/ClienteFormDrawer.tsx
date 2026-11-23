@@ -45,7 +45,7 @@ export const ClienteFormDrawer: React.FC<ClienteFormDrawerProps> = ({
       <form onSubmit={onSubmit} className="space-y-5">
         {/* ── Bloque 1: Clasificación, Documento e Identidad ── */}
         <div className="space-y-3 pb-4 border-b border-[#262D3D]">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-[1.15fr_135px_1.35fr] gap-3.5">
             <div>
               <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
                 Tipo de cliente <span className="text-[#EF4444]">*</span>
@@ -64,7 +64,7 @@ export const ClienteFormDrawer: React.FC<ClienteFormDrawerProps> = ({
             </div>
 
             <div>
-              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block whitespace-nowrap">
                 Tipo de documento <span className="text-[#EF4444]">*</span>
               </label>
               <CustomSelect
@@ -118,55 +118,30 @@ export const ClienteFormDrawer: React.FC<ClienteFormDrawerProps> = ({
               />
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-                <FormInput
-                  label="Primer nombre"
-                  value={formState.primer_nombre || ""}
-                  onChange={(e) =>
-                    setFormState((f) => ({
-                      ...f,
-                      primer_nombre: e.target.value,
-                    }))
-                  }
-                  required
-                />
-                <FormInput
-                  label="Segundo nombre"
-                  value={formState.segundo_nombre || ""}
-                  onChange={(e) =>
-                    setFormState((f) => ({
-                      ...f,
-                      segundo_nombre: e.target.value,
-                    }))
-                  }
-                />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              <FormInput
+                label="Nombre"
+                maxLength={60}
+                value={formState.primer_nombre || ""}
+                onChange={(e) =>
+                  setFormState((f) => ({ ...f, primer_nombre: e.target.value }))
+                }
+                required
+              />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <FormInput
-                  label="Primer apellido"
-                  value={formState.primer_apellido || ""}
-                  onChange={(e) =>
-                    setFormState((f) => ({
-                      ...f,
-                      primer_apellido: e.target.value,
-                    }))
-                  }
-                  required
-                />
-                <FormInput
-                  label="Segundo apellido"
-                  value={formState.segundo_apellido || ""}
-                  onChange={(e) =>
-                    setFormState((f) => ({
-                      ...f,
-                      segundo_apellido: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </>
+              <FormInput
+                label="Apellido"
+                maxLength={60}
+                value={formState.primer_apellido || ""}
+                onChange={(e) =>
+                  setFormState((f) => ({
+                    ...f,
+                    primer_apellido: e.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
           )}
         </div>
 
@@ -195,15 +170,9 @@ export const ClienteFormDrawer: React.FC<ClienteFormDrawerProps> = ({
 
         {/* ── Bloque 3: Ubicación y Estado ── */}
         <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            <FormInput
-              label="Ciudad"
-              value={formState.ciudad || ""}
-              onChange={(e) =>
-                setFormState((f) => ({ ...f, ciudad: e.target.value }))
-              }
-              required
-            />
+          <div
+            className={`grid grid-cols-1 ${mode === "edit" ? "sm:grid-cols-2" : ""} gap-3.5`}
+          >
             <FormInput
               label="Dirección"
               value={formState.direccion || ""}
@@ -211,16 +180,18 @@ export const ClienteFormDrawer: React.FC<ClienteFormDrawerProps> = ({
                 setFormState((f) => ({ ...f, direccion: e.target.value }))
               }
             />
-            <div>
-              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-                Estado del cliente
-              </label>
-              <CustomSelect
-                value={formState.estado || "Activo"}
-                onChange={(val) => setFormState((f) => ({ ...f, estado: val }))}
-                options={ESTADO_OPTIONS}
-              />
-            </div>
+            {mode === "edit" && (
+              <div>
+                <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                  Estado
+                </label>
+                <CustomSelect
+                  value={formState.estado || "Activo"}
+                  onChange={(val) => setFormState((f) => ({ ...f, estado: val }))}
+                  options={ESTADO_OPTIONS}
+                />
+              </div>
+            )}
           </div>
         </div>
 

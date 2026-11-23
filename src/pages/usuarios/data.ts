@@ -125,10 +125,10 @@ export const ROL_OPTIONS = [
 ]
 
 export const TIPO_DOC_OPTIONS = [
-  { label: "Cédula de Ciudadanía (CC)", value: "CC" },
-  { label: "Cédula de Extranjería (CE)", value: "CE" },
+  { label: "CC", value: "CC" },
+  { label: "CE", value: "CE" },
   { label: "NIT", value: "NIT" },
-  { label: "Pasaporte", value: "Pasaporte" },
+  { label: "Pasaporte", value: "PASAPORTE" },
 ]
 
 export const ESTADO_OPTIONS = [

@@ -154,6 +154,8 @@ export const AVAILABLE_EQUIPMENT: EquipoCatalogoItem[] = [
     categoria: "Iluminación",
     disponible: true,
     propiedad: "Alquilado",
+    proveedor_id: "2",
+    proveedor_nombre: "Luminotecnia Pro",
   },
   {
     id: "3",
@@ -194,6 +196,8 @@ export const AVAILABLE_EQUIPMENT: EquipoCatalogoItem[] = [
     categoria: "Video",
     disponible: true,
     propiedad: "Alquilado",
+    proveedor_id: "4",
+    proveedor_nombre: "VideoMedia Productions",
   },
   {
     id: "8",

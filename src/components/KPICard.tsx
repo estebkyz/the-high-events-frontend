@@ -35,7 +35,7 @@ export function KPICard({
         <span className="text-xs font-medium text-[#94A3B8] truncate">
           {title}
         </span>
-        <div className="w-7 h-7 rounded-lg bg-[#222734] border border-[#2D3546] flex items-center justify-center text-[#94A3B8] shrink-0">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[#94A3B8] shrink-0">
           <Icon size={14} />
         </div>
       </div>

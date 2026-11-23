@@ -269,7 +269,7 @@ export default function AgendamientoPage() {
         initialTipo === "reunion_cliente"
           ? "Reunión de Cotización"
           : "Reserva de Evento",
-      estado: "Pendiente",
+      estado: initialKind === "cita" ? "Programada" : "Programado",
       venue: filterVenue || "Salón Principal 360",
       modalidadCita: "Videollamada (Meet / Zoom)",
       notas: "",
@@ -321,7 +321,7 @@ export default function AgendamientoPage() {
       ...f,
       kind: newKind,
       type: newKind === "cita" ? "Reunión de Cotización" : "Reserva de Evento",
-      estado: newKind === "cita" ? "Programada" : "Pendiente",
+      estado: newKind === "cita" ? "Programada" : "Programado",
       venue: f.venue || filterVenue || "Salón Principal 360",
       modalidadCita: f.modalidadCita || "Videollamada (Meet / Zoom)",
     }))
@@ -397,6 +397,28 @@ export default function AgendamientoPage() {
       formData.tipo_agendamiento === "reunion_cliente" ||
       formData.kind === "cita"
     const isEditing = drawerMode === "edit"
+    const targetTime = (formData.time || "10:00").slice(0, 5)
+    const editingId = isEditing && selectedEvent ? selectedEvent.id : ""
+
+    // Regla de negocio: evitar cruces de horario en la misma fecha y hora (citas vs eventos)
+    const conflict = events.find(
+      (ev) =>
+        ev.id !== editingId &&
+        ev.year === parsed.year &&
+        ev.month === parsed.month &&
+        ev.day === parsed.day &&
+        ev.time.slice(0, 5) === targetTime &&
+        ev.estado !== "Cancelado" &&
+        ev.estado !== "Cancelada",
+    )
+
+    if (conflict) {
+      const tipoConflicto = conflict.kind === "cita" ? "una cita" : "un evento"
+      toast.error(
+        `Conflicto de horario: ya existe ${tipoConflicto} ("${conflict.title}") el ${parsed.day} de ${MESES_NOMBRES[parsed.month]} a las ${targetTime}. Selecciona otra hora.`,
+      )
+      return
+    }
 
     if (isEditing && selectedEvent) {
       const updated: AgendaEvent = {
@@ -434,6 +456,7 @@ export default function AgendamientoPage() {
       )
       toast.success(`"${updated.title}" actualizado`)
     } else {
+      const initialEstado = isReunion ? "Programada" : "Programado"
       const newEv: AgendaEvent = {
         id: String(Date.now()),
         kind: formData.kind,
@@ -442,14 +465,14 @@ export default function AgendamientoPage() {
           (formData.kind === "cita" ? "reunion_cliente" : "evento"),
         title: formData.title.trim(),
         type: formData.type,
-        color: getEstadoColor(formData.estado || "Pendiente"),
+        color: getEstadoColor(initialEstado),
         time: formData.time || "10:00",
         day: parsed.day,
         month: parsed.month,
         year: parsed.year,
         client: formData.client.trim() || "Cliente por confirmar",
         cliente_id: formData.cliente_id || undefined,
-        estado: formData.estado || "Pendiente",
+        estado: initialEstado,
         venue: isReunion ? undefined : formData.venue || "Salón Principal 360",
         modalidadCita: isReunion ? formData.modalidadCita : undefined,
         notas: isReunion ? formData.notas.trim() : undefined,
@@ -822,6 +845,8 @@ export default function AgendamientoPage() {
         }}
         onSwitchKind={handleSwitchKind}
         onSubmit={handleSubmitForm}
+        existingEvents={events}
+        editingEventId={drawerMode === "edit" ? selectedEvent?.id : undefined}
       />
     </div>
   )

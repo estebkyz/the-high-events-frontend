@@ -96,7 +96,11 @@ export function ServicioFormDrawer({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div
+            className={
+              isEditing ? "grid grid-cols-1 sm:grid-cols-2 gap-3.5" : ""
+            }
+          >
             <FormInput
               label="Precio base (COP)"
               placeholder="Ej. $ 2.500.000"
@@ -108,16 +112,23 @@ export function ServicioFormDrawer({
               hint="Tarifa estándar antes de cotización"
             />
 
-            <div>
-              <label className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider mb-1.5 block">
-                Estado del servicio
-              </label>
-              <CustomSelect
-                value={formData.estado || "Activo"}
-                onChange={(val) => setFormData((f) => ({ ...f, estado: val as "Activo" | "Inactivo" }))}
-                options={ESTADO_SELECT_OPTIONS}
-              />
-            </div>
+            {isEditing && (
+              <div>
+                <label className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider mb-1.5 block">
+                  Estado del servicio
+                </label>
+                <CustomSelect
+                  value={formData.estado || "Activo"}
+                  onChange={(val) =>
+                    setFormData((f) => ({
+                      ...f,
+                      estado: val as "Activo" | "Inactivo",
+                    }))
+                  }
+                  options={ESTADO_SELECT_OPTIONS}
+                />
+              </div>
+            )}
           </div>
 
           <FormInput

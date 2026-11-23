@@ -178,7 +178,7 @@ export default function ClientesPage() {
         telefono: formState.telefono || "",
         direccion: formState.direccion || "",
         ciudad: formState.ciudad || "",
-        estado: formState.estado || "Activo",
+        estado: "Activo",
         fecha_creacion: new Date().toISOString(),
       }
       setClients([newClient, ...clients])

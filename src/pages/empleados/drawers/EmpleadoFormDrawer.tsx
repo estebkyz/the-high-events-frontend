@@ -38,9 +38,9 @@ export function EmpleadoFormDrawer({
     >
       <form onSubmit={onSubmit} className="space-y-4">
         {/* ── Fila 1: Identificación (Proporcional a la BD) ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
-          <div className="sm:col-span-4">
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3.5">
+          <div>
+            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block whitespace-nowrap">
               Tipo de documento <span className="text-[#EF4444]">*</span>
             </label>
             <CustomSelect
@@ -55,7 +55,7 @@ export function EmpleadoFormDrawer({
             />
           </div>
 
-          <div className="sm:col-span-8">
+          <div>
             <FormInput
               label="Número de documento"
               maxLength={20}
@@ -75,7 +75,7 @@ export function EmpleadoFormDrawer({
         {/* ── Fila 2: Nombres y Apellidos en 2 columnas ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormInput
-            label="Nombres"
+            label="Nombre"
             maxLength={60}
             placeholder="Ej. Andrés Felipe"
             value={formState.primer_nombre}
@@ -86,7 +86,7 @@ export function EmpleadoFormDrawer({
           />
 
           <FormInput
-            label="Apellidos"
+            label="Apellido"
             maxLength={60}
             placeholder="Ej. Restrepo Gómez"
             value={formState.primer_apellido}
@@ -130,8 +130,10 @@ export function EmpleadoFormDrawer({
           </div>
         </div>
 
-        {/* ── Fila 4: Cargo, Tipo de Vinculación y Estado (Coherente con la tabla de listado) ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2 border-t border-[#262D3D]">
+        {/* ── Fila 4: Cargo, Tipo de Vinculación y Estado (solo edición) ── */}
+        <div
+          className={`grid grid-cols-1 ${isEditing ? "sm:grid-cols-3" : "sm:grid-cols-2"} gap-3.5 pt-2 border-t border-[#262D3D]`}
+        >
           <div>
             <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
               Cargo del empleado <span className="text-[#EF4444]">*</span>
@@ -161,21 +163,23 @@ export function EmpleadoFormDrawer({
             />
           </div>
 
-          <div>
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Estado
-            </label>
-            <CustomSelect
-              options={ESTADOS_OPTIONS}
-              value={formState.estado}
-              onChange={(val) =>
-                setFormState((f) => ({
-                  ...f,
-                  estado: val as EmpleadoFormData["estado"],
-                }))
-              }
-            />
-          </div>
+          {isEditing && (
+            <div>
+              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                Estado
+              </label>
+              <CustomSelect
+                options={ESTADOS_OPTIONS}
+                value={formState.estado}
+                onChange={(val) =>
+                  setFormState((f) => ({
+                    ...f,
+                    estado: val as EmpleadoFormData["estado"],
+                  }))
+                }
+              />
+            </div>
+          )}
         </div>
 
         {/* ── Footer: Botones de Acción Coherentes ── */}

@@ -1,13 +1,11 @@
 import React, { useState, useMemo } from "react"
-import { Eye, Edit2, Trash2, ShieldCheck, Grid } from "lucide-react"
+import { Eye, Edit2, Trash2 } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { TableStatusSelect } from "../../components/TableStatusSelect"
-import { Drawer } from "../../components/Drawer"
 import { useToast } from "../../components/Toast"
 import { INITIAL_ROLES, PERMISSION_GROUPS, buildInitialPerms } from "./data"
-import { RolesMatrixTable } from "./components/RolesMatrixTable"
 import { RoleFormDrawer } from "./drawers/RoleFormDrawer"
 import type { Rol, PermsMap } from "./types"
 
@@ -22,7 +20,6 @@ export default function RolesPage() {
   const [drawerMode, setDrawerMode] = useState<
     "closed" | "view" | "edit" | "create"
   >("closed")
-  const [matrixModalOpen, setMatrixModalOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Rol | null>(null)
   const [formNombre, setFormNombre] = useState("")
   const [formDesc, setFormDesc] = useState("")
@@ -177,7 +174,7 @@ export default function RolesPage() {
           nombre: formNombre.trim(),
           descripcion: formDesc.trim(),
           usuariosCount: 0,
-          estado: formEstado,
+          estado: "Activo",
         },
       ])
       setPerms((p) => ({ ...p, [id]: new Set(draftPerms) }))
@@ -210,16 +207,6 @@ export default function RolesPage() {
               : []
           }
           onResetFilters={() => setFilterEstado("Todos")}
-          extraControls={
-            <button
-              type="button"
-              onClick={() => setMatrixModalOpen(true)}
-              className="h-[36px] px-3 rounded-xl text-xs font-semibold bg-[#181B22] border border-[#262D3D] text-[#A78BFA] hover:bg-[#222734] transition-colors cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <Grid size={13} />
-              <span>Ver matriz de privilegios</span>
-            </button>
-          }
         >
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
@@ -383,38 +370,6 @@ export default function RolesPage() {
         onSave={handleSave}
         onSwitchToEdit={() => setDrawerMode("edit")}
       />
-
-      {/* Modal opcional: Matriz completa de todos los privilegios asignados */}
-      <Drawer
-        isOpen={matrixModalOpen}
-        onClose={() => setMatrixModalOpen(false)}
-        position="center"
-        width="max-w-6xl"
-        title="Todos los privilegios asignados por rol"
-        subtitle="Vista comparativa global de los 17 módulos del sistema"
-      >
-        <div className="space-y-4">
-          <RolesMatrixTable
-            roles={roles}
-            perms={perms}
-            onTogglePerm={togglePermInMatrix}
-            onEditRole={(r) => {
-              setMatrixModalOpen(false)
-              openEdit(r)
-            }}
-            onDeleteRole={deleteRole}
-          />
-          <div className="flex justify-end pt-2 border-t border-[#262D3D]">
-            <button
-              type="button"
-              onClick={() => setMatrixModalOpen(false)}
-              className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors cursor-pointer"
-            >
-              Cerrar matriz
-            </button>
-          </div>
-        </div>
-      </Drawer>
     </div>
   )
 }

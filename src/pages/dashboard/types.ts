@@ -64,6 +64,8 @@ export interface PeriodData {
   calendarDays: MultiEventCalendarDay[]
 }
 
+export type DashboardRangeType = "dia" | "semana" | "mes" | "anio"
+
 export interface PeriodOption {
   id: string
   label: string

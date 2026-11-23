@@ -35,9 +35,9 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
     >
       <form onSubmit={onSubmit} className="space-y-4">
         {/* ── Fila 1: Identificación (Proporcional al tamaño en BD: Tipo Doc corto, Número Doc medio) ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
-          <div className="sm:col-span-4">
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3.5">
+          <div>
+            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block whitespace-nowrap">
               Tipo de documento <span className="text-[#EF4444]">*</span>
             </label>
             <CustomSelect
@@ -52,7 +52,7 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
             />
           </div>
 
-          <div className="sm:col-span-8">
+          <div>
             <FormInput
               label="Número de documento"
               maxLength={20}
@@ -72,7 +72,7 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
         {/* ── Fila 2: Nombres y Apellidos lado a lado aprovechando el espacio lateral ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormInput
-            label="Nombres"
+            label="Nombre"
             maxLength={60}
             placeholder="Ej. Carlos Alberto"
             value={formState.primer_nombre || ""}
@@ -83,7 +83,7 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
           />
 
           <FormInput
-            label="Apellidos"
+            label="Apellido"
             maxLength={60}
             placeholder="Ej. Ruiz Montoya"
             value={formState.primer_apellido || ""}
@@ -123,9 +123,9 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
           </div>
         </div>
 
-        {/* ── Fila 4: Rol, Estado y Contraseña con opción de visualizar para verificar ── */}
+        {/* ── Fila 4: Rol, Estado (solo edición) y Contraseña con opción de visualizar para verificar ── */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 pt-2 border-t border-[#262D3D]">
-          <div className="sm:col-span-4">
+          <div className={mode === "edit" ? "sm:col-span-4" : "sm:col-span-6"}>
             <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
               Rol de acceso <span className="text-[#EF4444]">*</span>
             </label>
@@ -136,23 +136,25 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
             />
           </div>
 
-          <div className="sm:col-span-3">
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Estado
-            </label>
-            <CustomSelect
-              value={formState.estado || "Activo"}
-              onChange={(val) =>
-                setFormState((f) => ({
-                  ...f,
-                  estado: val as "Activo" | "Inactivo",
-                }))
-              }
-              options={ESTADO_OPTIONS}
-            />
-          </div>
+          {mode === "edit" && (
+            <div className="sm:col-span-3">
+              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                Estado
+              </label>
+              <CustomSelect
+                value={formState.estado || "Activo"}
+                onChange={(val) =>
+                  setFormState((f) => ({
+                    ...f,
+                    estado: val as "Activo" | "Inactivo",
+                  }))
+                }
+                options={ESTADO_OPTIONS}
+              />
+            </div>
+          )}
 
-          <div className="sm:col-span-5">
+          <div className={mode === "edit" ? "sm:col-span-5" : "sm:col-span-6"}>
             <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
               {mode === "edit"
                 ? "Nueva contraseña (opcional)"

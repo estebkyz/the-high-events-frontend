@@ -3,12 +3,11 @@ import { Trash2, Plus, Tag, User, Building2, Briefcase, Calendar, DollarSign, Sp
 import { Drawer } from "../../../components/Drawer"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
+import { StatusBadge } from "../../../components/StatusBadge"
 import type {
   CotizacionItem,
   CotizacionFormData,
-  EstadoCotizacion,
 } from "../types"
-import { ESTADO_COTIZACION_OPTIONS } from "../data"
 import { INITIAL_CLIENTS } from "../../clientes/data"
 import {
   getEmpleadosCatalogo,
@@ -210,7 +209,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+          <div className={quote ? "grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1" : "pt-1"}>
             <FormInput
               label="Nombre del evento"
               value={formState.nombre_evento || ""}
@@ -220,22 +219,19 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
               required
             />
 
-            <div>
-              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-                Estado de la cotización 
-              </label>
-              <CustomSelect
-                value={formState.estado || "Borrador"}
-                onChange={(val) =>
-                  setFormState((f) => ({
-                    ...f,
-                    estado: val as EstadoCotizacion,
-                  }))
-                }
-                options={ESTADO_COTIZACION_OPTIONS}
-                
-              />
-            </div>
+            {quote && (
+              <div>
+                <span className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                  Estado actual
+                </span>
+                <div className="min-h-[42px] px-3 py-2 rounded-xl bg-[#111318] border border-dashed border-[#2D3748] flex items-center justify-between gap-2">
+                  <StatusBadge status={quote.estado} />
+                  <span className="text-[11px] text-[#94A3B8] truncate">
+                    Cambia desde el listado o detalle
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -243,7 +239,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
         <div className="space-y-3 pb-4 border-b border-[#262D3D]">
 
           <FormInput
-            label="Ubicación"
+            label="Ubicación del evento"
             value={formState.direccion || ""}
             onChange={(e) =>
               setFormState((f) => ({ ...f, direccion: e.target.value }))
@@ -252,7 +248,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormInput
-              label="Fecha tentativa del evento"
+              label="Fecha del evento"
               type="date"
               value={formState.fecha_evento || ""}
               onChange={(e) =>
@@ -277,7 +273,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormInput
-              label="Hora inicio estimada"
+              label="Hora inicio del evento"
               type="time"
               value={formState.hora_inicio || "18:00"}
               onChange={(e) =>
@@ -285,7 +281,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
               }
             />
             <FormInput
-              label="Hora fin estimada"
+              label="Hora fin del evento"
               type="time"
               value={formState.hora_fin || "02:00"}
               onChange={(e) =>

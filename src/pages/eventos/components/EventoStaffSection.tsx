@@ -189,12 +189,9 @@ export function EventoStaffSection({
       {/* Columna izquierda: contexto + acción principal */}
       <div className="lg:col-span-3 space-y-3">
         <div>
-          <h3 className="text-sm font-bold text-[#F8FAFC]">
-            Personal del evento
+          <h3 className="text-[16px] font-bold text-[#F8FAFC]">
+            Empleados
           </h3>
-          <p className="text-[11px] text-[#94A3B8] mt-1 leading-relaxed">
-            Vincula los colaboradores que participarán en el evento. Las tareas específicas se asignan en el módulo de Tareas.
-          </p>
         </div>
 
         <button
@@ -204,15 +201,15 @@ export function EventoStaffSection({
           className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold bg-[#7C3AED] hover:bg-[#6D28D9] text-white transition-colors shadow-sm shadow-[#2563EB]/25 flex items-center justify-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F1117]"
         >
           <Plus size={15} className="text-[#F8FAFC]"/>
-          <span>{showSelector ? "Ocultar buscador" : "Vincular empleado"}</span>
+          <span>{showSelector ? "Ocultar" : "Agregar"}</span>
         </button>
 
         {assignedList.length > 0 && (
           <p className="text-xs text-[#94A3B8]">
             {assignedList.length}{" "}
             {assignedList.length === 1
-              ? "colaborador vinculado al evento"
-              : "colaboradores vinculados al evento"}
+              ? "colaborador con tarea asignada"
+              : "colaboradores con tarea asignada"}
           </p>
         )}
       </div>
@@ -313,21 +310,54 @@ export function EventoStaffSection({
                     </button>
                   </div>
 
-                  <div className="pt-2.5 border-t border-[#262D3D]/60">
-                    <label className="text-[11px] font-medium text-[#CBD5E1] block mb-1">
-                      Fase principal asignada en el evento
-                    </label>
-                    <CustomSelect
-                      options={faseOptions}
-                      value={item.fase}
-                      onChange={(newFase) =>
-                        handleUpdateFase(
-                          item.empId,
-                          newFase as FaseTareaEvento,
-                        )
-                      }
-                      placeholder="Seleccionar fase"
-                    />
+                  <div className="pt-2.5 border-t border-[#262D3D]/60 space-y-2.5">
+                    <div>
+                      <label className="text-[11px] font-medium text-[#CBD5E1] flex items-center justify-between mb-1">
+                        <span className="flex items-center gap-1">
+                          <BookOpen size={11} className="text-[#A78BFA]" />
+                          Tarea del catálogo asignada
+                        </span>
+                        <span className="font-mono text-[10px] text-[#A78BFA]">
+                          {item.tarea_codigo}
+                        </span>
+                      </label>
+                      <CustomSelect
+                        options={tareaOptions}
+                        value={item.tarea_id}
+                        searchable={true}
+                        allowCreate={true}
+                        createLabel="Crear nueva tarea en el catálogo"
+                        placeholder="Seleccionar tarea"
+                        onChange={(newTaskId) =>
+                          handleSelectTareaCatalogo(item.empId, newTaskId)
+                        }
+                        onCreate={(query) =>
+                          handleCreateTareaInCatalogo(item.empId, query)
+                        }
+                      />
+                      {item.tarea_descripcion && (
+                        <p className="text-[10.5px] text-[#94A3B8] mt-1 leading-relaxed line-clamp-2">
+                          {item.tarea_descripcion}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-medium text-[#CBD5E1] block mb-1">
+                        Fase en el evento
+                      </label>
+                      <CustomSelect
+                        options={faseOptions}
+                        value={item.fase}
+                        onChange={(newFase) =>
+                          handleUpdateFase(
+                            item.empId,
+                            newFase as FaseTareaEvento,
+                          )
+                        }
+                        placeholder="Seleccionar fase"
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

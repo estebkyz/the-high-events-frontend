@@ -1,4 +1,4 @@
-export type TipoDocumentoUsuario = "CC" | "CE" | "NIT" | "Pasaporte"
+export type TipoDocumentoUsuario = "CC" | "CE" | "NIT" | "PASAPORTE"
 
 export interface SesionAcceso {
   fecha: string; ip: string

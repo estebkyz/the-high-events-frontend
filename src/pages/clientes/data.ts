@@ -155,19 +155,19 @@ export const INITIAL_CLIENTS: ClienteItem[] = [
 
 export const TIPO_CLIENTE_OPTIONS = [
   { label: "Empresa", value: "Empresa" },
-  { label: "Persona Natural", value: "Natural" },
+  { label: "Persona", value: "Natural" },
 ]
 
 export const TIPO_DOC_EMPRESA_OPTIONS = [
   { label: "NIT", value: "NIT" },
-  { label: "Cédula de Extranjería (CE)", value: "CE" },
-  { label: "Pasaporte", value: "Pasaporte" },
+  { label: "CE", value: "CE" },
+  { label: "Pasaporte", value: "PASAPORTE" },
 ]
 
 export const TIPO_DOC_NATURAL_OPTIONS = [
-  { label: "Cédula de Ciudadanía (CC)", value: "CC" },
-  { label: "Cédula de Extranjería (CE)", value: "CE" },
-  { label: "Pasaporte", value: "Pasaporte" },
+  { label: "CC", value: "CC" },
+  { label: "CE", value: "CE" },
+  { label: "Pasaporte", value: "PASAPORTE" },
 ]
 
 export const ESTADO_OPTIONS = [

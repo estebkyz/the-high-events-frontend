@@ -282,8 +282,7 @@ export default function EquiposPage() {
         serie:
           editForm.serie?.trim() || `SN-${Date.now().toString().slice(-4)}`,
         categoria: (editForm.categoria as Categoria) || "Audio",
-        estadoOperativo:
-          (editForm.estadoOperativo as EstadoOperativo) || "Disponible",
+        estadoOperativo: "Disponible",
         propiedad,
       }
       setEquipos((prev) => [nuevo, ...prev])
@@ -386,7 +385,7 @@ export default function EquiposPage() {
             <button
               type="button"
               onClick={() => setDrawerMode("categorias")}
-              className="h-[36px] px-3 rounded-xl text-xs font-semibold bg-[#181B22] border border-[#262D3D] text-[#A78BFA] hover:bg-[#222734] transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              className="h-[36px] px-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] bg-[#181B22] border-[#262D3D] text-[#CBD5E1] hover:border-[#3B455A] hover:text-[#F1F5F9]"
             >
               <Layers size={13} />
               <span>Categorías ({categorias.length})</span>

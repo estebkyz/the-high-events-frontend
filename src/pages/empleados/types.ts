@@ -1,4 +1,4 @@
-export type TipoDocumentoEmpleado = "CC" | "CE" | "Pasaporte"
+export type TipoDocumentoEmpleado = "CC" | "CE" | "NIT" | "PASAPORTE"
 export type EstadoEmpleado = "Activo" | "Inactivo"
 export type VinculacionEmpleado = "Fijo" | "Por Evento"
 

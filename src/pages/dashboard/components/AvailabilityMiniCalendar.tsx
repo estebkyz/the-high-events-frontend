@@ -1,26 +1,43 @@
 import React, { useState, useMemo, useEffect } from "react"
-import { MapPin, ArrowUpRight, Clock, Plus, Info } from "lucide-react"
-import type { RouteId, MultiEventCalendarDay, CalendarActivityItem } from "../types"
-import { STATUS_META } from "../data"
+import {
+  MapPin,
+  ArrowUpRight,
+  Clock,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
+import type { RouteId, CalendarActivityItem } from "../types"
+import { STATUS_META, PERIOD_DATA } from "../data"
 import { pad } from "../utils"
 
+const CALENDAR_MONTH_KEYS = [
+  "ago-2026",
+  "sep-2026",
+  "oct-2026",
+  "nov-2026",
+  "dic-2026",
+] as const
+
 interface AvailabilityMiniCalendarProps {
-  year?: number
-  monthIndex?: number
-  monthName?: string
-  calendarDays?: MultiEventCalendarDay[]
   onNavigate?: (route: RouteId) => void
   onAgendar: (isoDate: string) => void
 }
 
 export const AvailabilityMiniCalendar: React.FC<AvailabilityMiniCalendarProps> = ({
-  year = 2026,
-  monthIndex = 10,
-  monthName = "noviembre",
-  calendarDays = [],
   onNavigate,
   onAgendar,
 }) => {
+  // Estado propio e independiente del filtro de KPIs del dashboard
+  const [calMonthKeyIndex, setCalMonthKeyIndex] = useState<number>(3) // "nov-2026" por defecto
+  const calData =
+    PERIOD_DATA[CALENDAR_MONTH_KEYS[calMonthKeyIndex]] ?? PERIOD_DATA["nov-2026"]
+
+  const year = calData.year
+  const monthIndex = calData.monthIndex
+  const monthName = calData.monthName
+  const calendarDays = calData.calendarDays
+
   const today = new Date()
   const todayDay =
     today.getFullYear() === year && today.getMonth() === monthIndex
@@ -45,9 +62,8 @@ export const AvailabilityMiniCalendar: React.FC<AvailabilityMiniCalendarProps> =
   useEffect(() => {
     const firstWithMulti =
       calendarDays.find((d) => d.activities.length > 1)?.day ??
-      calendarDays[0]?.day ??
-      1
-    setSelectedDayNum(todayDay ?? firstWithMulti)
+      calendarDays[0]?.day
+    setSelectedDayNum(todayDay ?? firstWithMulti ?? 1)
   }, [year, monthIndex, calendarDays, todayDay])
 
   const counts = useMemo(() => {
@@ -75,9 +91,33 @@ export const AvailabilityMiniCalendar: React.FC<AvailabilityMiniCalendarProps> =
             <h2 className="text-[15px] font-semibold text-[#F8FAFC]">
               Disponibilidad de agenda
             </h2>
-            <p className="text-[11px] text-[#94A3B8] capitalize">
-              {monthName} {year} 
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <button
+                type="button"
+                aria-label="Mes anterior"
+                disabled={calMonthKeyIndex === 0}
+                onClick={() => setCalMonthKeyIndex((i) => Math.max(0, i - 1))}
+                className="p-0.5 rounded text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#222734] disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
+              >
+                <ChevronLeft size={13} />
+              </button>
+              <p className="text-[11px] text-[#94A3B8] capitalize min-w-[92px] text-center font-medium">
+                {monthName} {year}
+              </p>
+              <button
+                type="button"
+                aria-label="Mes siguiente"
+                disabled={calMonthKeyIndex === CALENDAR_MONTH_KEYS.length - 1}
+                onClick={() =>
+                  setCalMonthKeyIndex((i) =>
+                    Math.min(CALENDAR_MONTH_KEYS.length - 1, i + 1),
+                  )
+                }
+                className="p-0.5 rounded text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#222734] disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-colors"
+              >
+                <ChevronRight size={13} />
+              </button>
+            </div>
           </div>
           <button
             type="button"
@@ -86,34 +126,7 @@ export const AvailabilityMiniCalendar: React.FC<AvailabilityMiniCalendarProps> =
           >
             Abrir agenda <ArrowUpRight size={13} />
           </button>
-        </div>
-
-        {/* Guía clara de símbolos (Punto vs Cuadrado vs Triángulo) */}
-        <div className="mb-3 p-2.5 rounded-xl bg-[#111318] border border-[#262D3D] space-y-1.5">
-          <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-            {(["booked", "own_event", "technical_visit"] as const).map((s) => (
-              <div
-                key={s}
-                title={STATUS_META[s].description}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#181B22] border border-[#262D3D]/80"
-              >
-                <span
-                  className={`inline-flex items-center justify-center w-4 h-4 rounded text-[10px] font-bold ${STATUS_META[s].badge}`}
-                >
-                  {STATUS_META[s].glyph}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[10.5px] font-semibold text-[#F8FAFC] truncate">
-                    {STATUS_META[s].legend}
-                  </p>
-                  <p className="text-[9.5px] text-[#94A3B8]">
-                    {counts[s]} en el mes
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </div> 
 
         <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-[#94A3B8] mb-2">
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((d) => (
@@ -238,7 +251,7 @@ export const AvailabilityMiniCalendar: React.FC<AvailabilityMiniCalendarProps> =
                                   {act.title}
                                 </p>
                                 <p className="text-[#94A3B8] text-[10px] truncate">
-                                  📍 {act.locacion}
+                                  {act.locacion}
                                 </p>
                               </li>
                             )
