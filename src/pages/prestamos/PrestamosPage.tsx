@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
@@ -18,7 +19,12 @@ import type {
 
 export default function PrestamosPage() {
   const toast = useToast()
-  const [prestamos, setPrestamos] = useState<PrestamoItem[]>(INITIAL_PRESTAMOS)
+  const { items: prestamos, setItems: setPrestamos } =
+    useCrudResource<PrestamoItem>({
+      endpoint: "/prestamos",
+      storageKey: "high_events_prestamos_v1",
+      initialData: INITIAL_PRESTAMOS,
+    })
 
   // Search & Pagination
   const [search, setSearch] = useState("")

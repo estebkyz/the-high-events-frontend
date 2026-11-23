@@ -1,9 +1,11 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
+import type { ServicioItem, CategoriaServicioItem } from "../servicios/types"
 import type {
   ProveedorItem,
   ProveedorDrawerMode,
@@ -12,8 +14,6 @@ import type {
 } from "./types"
 import {
   INITIAL_PROVIDERS,
-  ALL_SERVICIOS,
-  ALL_EQUIPOS_PROVEEDOR,
   ESTADO_FILTER_OPTIONS,
 } from "./data"
 import { getProveedorContacto } from "./utils"
@@ -22,7 +22,26 @@ import { ProveedorDetailDrawer } from "./drawers/ProveedorDetailDrawer"
 import { ProveedorFormDrawer } from "./drawers/ProveedorFormDrawer"
 
 export default function ProveedoresPage() {
-  const [providers, setProviders] = useState<ProveedorItem[]>(INITIAL_PROVIDERS)
+  const { items: providers, setItems: setProviders } =
+    useCrudResource<ProveedorItem>({
+      endpoint: "/proveedores",
+      storageKey: "high_events_proveedores_v1",
+      initialData: INITIAL_PROVIDERS,
+    })
+  const { items: rawServices } = useCrudResource<ServicioItem>({ endpoint: "/servicios" })
+  const { items: rawCatServices } = useCrudResource<CategoriaServicioItem>({
+    endpoint: "/categorias-servicio",
+  })
+  const availableServicios = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...rawServices.map((s) => s.nombre),
+          ...rawCatServices.map((c) => c.nombre),
+        ]),
+      ).filter(Boolean),
+    [rawServices, rawCatServices],
+  )
   const toast = useToast()
 
   // Search & Pagination
@@ -355,7 +374,7 @@ export default function ProveedoresPage() {
               )}
             </div>
             <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-[#111318] rounded-xl border border-[#2D3748]">
-              {ALL_SERVICIOS.map((s) => (
+              {availableServicios.map((s) => (
                 <button
                   key={s}
                   type="button"

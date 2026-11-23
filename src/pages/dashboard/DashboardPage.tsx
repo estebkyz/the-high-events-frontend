@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState, useMemo } from "react"
 import {
   Calendar,
   DollarSign,
@@ -10,8 +10,16 @@ import {
 import { useNavigate } from "react-router-dom"
 import { KPICard } from "../../components/KPICard"
 import { EVENTO_PATHS } from "../../routes/paths"
-import type { DashboardPageProps, DashboardRangeType } from "./types"
-import { PERIOD_OPTIONS_BY_RANGE, getDashboardPeriodData } from "./data"
+import { useCrudResource } from "../../hooks/useCrudResource"
+import type { VentaItem } from "../ventas/types"
+import type { AbonoItem } from "../abonos/types"
+import type { EventoItem } from "../eventos/types"
+import type { EquipoItem } from "../equipos/types"
+import type { TareaItem } from "../tareas/types"
+import type { Recepcion } from "../recepciones/types"
+import type { IncidenteItem } from "../incidentes/types"
+import type { DashboardPageProps, DashboardRangeType, PeriodData } from "./types"
+import { PERIOD_OPTIONS_BY_RANGE, getDashboardPeriodData, MILLON } from "./data"
 import { formatCOP, fmtPct } from "./utils"
 import { ChartCard } from "./components/ChartCard"
 import { AvailabilityMiniCalendar } from "./components/AvailabilityMiniCalendar"
@@ -43,7 +51,110 @@ export default function DashboardPage({
       ? `Fecha: ${activePeriodId.replace("custom-dia-", "")}`
       : currentOptions[0].label
 
-  const data = getDashboardPeriodData(activePeriodId)
+  const baseData = getDashboardPeriodData(activePeriodId)
+  const { items: ventas } = useCrudResource<VentaItem>({ endpoint: "/ventas" })
+  const { items: abonos } = useCrudResource<AbonoItem>({ endpoint: "/abonos" })
+  const { items: eventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const { items: equipos } = useCrudResource<EquipoItem>({ endpoint: "/equipos" })
+  const { items: tareas } = useCrudResource<TareaItem>({ endpoint: "/evento-tareas" })
+  const { items: recepciones } = useCrudResource<Recepcion>({ endpoint: "/recepciones" })
+  const { items: incidentes } = useCrudResource<IncidenteItem>({ endpoint: "/incidentes" })
+
+  const data: PeriodData = useMemo(() => {
+    const vendido = ventas.reduce((acc, v) => acc + (v.totalNum || 0), 0)
+    const cobrado = ventas.reduce((acc, v) => {
+      if (v.estadoPago === "Pagado") return acc + (v.totalNum || 0)
+      if (v.estadoPago === "Parcial") return acc + Math.round((v.totalNum || 0) * 0.5)
+      return acc
+    }, 0)
+    const porCobrar = Math.max(0, vendido - cobrado)
+    const porPagarProveedores = abonos
+      .filter((a) => a.tipoCartera === "Proveedores" && a.estadoSaldo === "Pendiente")
+      .reduce((acc, a) => acc + (a.saldoNum || 0), 0)
+    const eventosTotal = eventos.length
+    const eventosConfirmados = eventos.filter((e) => e.estado !== "Cancelado").length
+
+    const evClientes = eventos.filter((e) => e.modalidad === "Cliente")
+    const evPropios = eventos.filter((e) => e.modalidad === "Propio")
+
+    return {
+      ...baseData,
+      vendido,
+      cobrado,
+      porCobrar,
+      porPagarProveedores,
+      eventosTotal,
+      eventosConfirmados,
+      modalidadEventos:
+        eventosTotal > 0
+          ? [
+              {
+                label: "Eventos para Clientes",
+                cantidad: evClientes.length,
+                porcentaje: Math.round((evClientes.length / eventosTotal) * 100),
+                ingresos: Number(
+                  (
+                    evClientes.reduce((s, e) => s + (e.presupuesto_estimado || 0), 0) /
+                    MILLON
+                  ).toFixed(1),
+                ),
+                color: "#7C3AED",
+              },
+              {
+                label: "Eventos Propios",
+                cantidad: evPropios.length,
+                porcentaje: Math.round((evPropios.length / eventosTotal) * 100),
+                ingresos: Number(
+                  (
+                    evPropios.reduce((s, e) => s + (e.presupuesto_estimado || 0), 0) /
+                    MILLON
+                  ).toFixed(1),
+                ),
+                color: "#10B981",
+              },
+            ]
+          : [],
+      operacionStats: [
+        {
+          categoria: "Equipos Técnicos",
+          completado: equipos.filter((e) => e.estadoOperativo === "Disponible").length,
+          pendiente: equipos.filter(
+            (e) => e.estadoOperativo === "En Evento" || e.estadoOperativo === "Prestado",
+          ).length,
+          alerta: equipos.filter(
+            (e) =>
+              e.estadoOperativo === "En Mantenimiento" || e.estadoOperativo === "De Baja",
+          ).length,
+          unidad: "equipos",
+        },
+        {
+          categoria: "Tareas Operativas",
+          completado: tareas.filter((t) => t.estado === "Completada").length,
+          pendiente: tareas.filter((t) => t.estado !== "Completada").length,
+          alerta: 0,
+          unidad: "tareas",
+        },
+        {
+          categoria: "Actas de Recepción",
+          completado: recepciones.filter(
+            (r) => r.estado === "Conforme" || r.estado === "Cerrada",
+          ).length,
+          pendiente: recepciones.filter((r) => r.estado === "Pendiente").length,
+          alerta: recepciones.filter((r) => r.estado === "Anulada").length,
+          unidad: "actas",
+        },
+        {
+          categoria: "Incidentes Reportados",
+          completado: incidentes.filter((i) => i.estado === "Solucionado").length,
+          pendiente: incidentes.filter(
+            (i) => i.estado === "Reportado" || i.estado === "En Atención",
+          ).length,
+          alerta: incidentes.filter((i) => i.estado === "Escalado").length,
+          unidad: "casos",
+        },
+      ],
+    }
+  }, [baseData, ventas, abonos, eventos, equipos, tareas, recepciones, incidentes])
 
   // Cerrar el selector al hacer clic fuera o con Esc
   useEffect(() => {
@@ -65,10 +176,12 @@ export default function DashboardPage({
   }, [isPeriodDropdown])
 
   // Métricas derivadas delimitadas por el período seleccionado
-  const cobradoPct = Math.round((data.cobrado / data.vendido) * 100)
-  const porCobrarPct = Math.round((data.porCobrar / data.vendido) * 100)
+  const cobradoPct = data.vendido > 0 ? Math.round((data.cobrado / data.vendido) * 100) : 0
+  const porCobrarPct = data.vendido > 0 ? Math.round((data.porCobrar / data.vendido) * 100) : 0
   const crecMensual =
-    ((data.cobrado - data.cobradoMesAnterior) / data.cobradoMesAnterior) * 100
+    data.cobradoMesAnterior > 0
+      ? ((data.cobrado - data.cobradoMesAnterior) / data.cobradoMesAnterior) * 100
+      : 0
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
   const mesActualLabel = capitalize(data.monthName)

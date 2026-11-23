@@ -8,12 +8,11 @@ import type {
   CotizacionItem,
   CotizacionFormData,
 } from "../types"
-import { INITIAL_CLIENTS } from "../../clientes/data"
-import {
-  getEmpleadosCatalogo,
-  getServiciosCatalogo,
-  type ServicioCatalogoItem,
-} from "../../eventos/catalogStore"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { ClienteItem } from "../../clientes/types"
+import type { EmpleadoItem } from "../../empleados/types"
+import { getEmpleadoFullName } from "../../empleados/utils"
+import type { ServicioItem } from "../../servicios/types"
 
 interface CotizacionFormDrawerProps {
   isOpen: boolean
@@ -44,13 +43,26 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
 }) => {
   const [selectedServiceToAdd, setSelectedServiceToAdd] = useState("")
 
-  // Catálogos maestros existentes
-  const empleadosCatalogo = useMemo(() => getEmpleadosCatalogo(), [isOpen])
-  const serviciosCatalogo = useMemo(() => getServiciosCatalogo(), [isOpen])
+  // Catálogos maestros reales desde la API
+  const { items: rawClientes } = useCrudResource<ClienteItem>({ endpoint: "/clientes" })
+  const { items: rawEmpleados } = useCrudResource<EmpleadoItem>({ endpoint: "/empleados" })
+  const { items: serviciosCatalogo } = useCrudResource<ServicioItem>({ endpoint: "/servicios" })
 
-  // Opciones de Clientes (previamente creados)
+  const empleadosCatalogo = useMemo(
+    () =>
+      rawEmpleados.map((e) => ({
+        id: e.id,
+        nombre: getEmpleadoFullName(e),
+        cargo: e.cargo,
+        correo: e.correo,
+        telefono: e.telefono,
+      })),
+    [rawEmpleados],
+  )
+
+  // Opciones de Clientes (desde la BD)
   const clienteOptions = useMemo<SelectOption[]>(() => {
-    return INITIAL_CLIENTS.map((c) => {
+    return rawClientes.map((c) => {
       const nombre =
         c.tipo_cliente === "Empresa"
           ? c.razon_social || "Empresa"
@@ -64,7 +76,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
         }`,
       }
     })
-  }, [])
+  }, [rawClientes])
 
   // Opciones de Empleados / Asesores (previamente creados)
   const asesorOptions = useMemo<SelectOption[]>(() => {
@@ -87,7 +99,7 @@ export const CotizacionFormDrawer: React.FC<CotizacionFormDrawerProps> = ({
   }, [serviciosCatalogo])
 
   const handleSelectCliente = (clientName: string) => {
-    const client = INITIAL_CLIENTS.find((c) => {
+    const client = rawClientes.find((c) => {
       const n =
         c.tipo_cliente === "Empresa"
           ? c.razon_social

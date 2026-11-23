@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from "react"
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { useToast } from "../../components/Toast"
 import type { UsuarioItem, UsuarioDrawerMode, UsuarioFormData } from "./types"
+import type { Rol } from "../roles/types"
 import {
   INITIAL_USERS,
-  ROL_FILTER_OPTIONS,
   ESTADO_FILTER_OPTIONS,
 } from "./data"
 import { getUsuarioFullName } from "./utils"
@@ -16,7 +17,19 @@ import { UsuarioFormDrawer } from "./drawers/UsuarioFormDrawer"
 import { UsuarioDetailDrawer } from "./drawers/UsuarioDetailDrawer"
 
 export default function UsuariosPage() {
-  const [users, setUsers] = useState<UsuarioItem[]>(INITIAL_USERS)
+  const { items: users, setItems: setUsers } = useCrudResource<UsuarioItem>({
+    endpoint: "/usuarios",
+    storageKey: "high_events_usuarios_v1",
+    initialData: INITIAL_USERS,
+  })
+  const { items: rawRoles } = useCrudResource<Rol>({ endpoint: "/roles" })
+  const rolFilterOptions = useMemo(
+    () => [
+      { label: "Todos los Roles", value: "Todos" },
+      ...rawRoles.map((r) => ({ label: r.nombre, value: r.nombre })),
+    ],
+    [rawRoles],
+  )
   const toast = useToast()
 
   // Search & Pagination
@@ -82,7 +95,7 @@ export default function UsuariosPage() {
       segundo_apellido: "",
       correo: "",
       telefono: "",
-      rol: "Operador",
+      rol: rawRoles[0]?.nombre || "",
       contrasena: "",
       estado: "Activo",
     })
@@ -170,7 +183,7 @@ export default function UsuariosPage() {
         segundo_apellido: formState.segundo_apellido || "",
         correo: formState.correo || "",
         telefono: formState.telefono || "",
-        rol: formState.rol || "Operador",
+        rol: formState.rol || rawRoles[0]?.nombre || "",
         ultimoAcceso: "Nunca",
         estado: "Activo",
         fecha_creacion: new Date().toISOString(),
@@ -272,7 +285,7 @@ export default function UsuariosPage() {
                 setFilterRol(val)
                 setCurrentPage(1)
               }}
-              options={ROL_FILTER_OPTIONS}
+              options={rolFilterOptions}
             />
           </div>
 

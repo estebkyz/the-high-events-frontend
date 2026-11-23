@@ -3,8 +3,11 @@ import { Trash2, Boxes } from "lucide-react"
 import { Drawer } from "../../../components/Drawer"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
-import { EVENTOS_MOCK, AVAILABLE_EMPLOYEES } from "../../eventos/data"
-import { INITIAL_EQUIPOS } from "../../equipos/data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { EventoItem } from "../../eventos/types"
+import type { EmpleadoItem } from "../../empleados/types"
+import { getEmpleadoFullName } from "../../empleados/utils"
+import type { EquipoItem } from "../../equipos/types"
 import type { PrestamoItem, PrestamoFormData, EquipoPrestado } from "../types"
 
 interface PrestamoFormDrawerProps {
@@ -28,41 +31,54 @@ export function PrestamoFormDrawer({
 }: PrestamoFormDrawerProps) {
   const isEdit = mode === "edit"
   const selectedEquipos: EquipoPrestado[] = formData.equipos ?? []
+  const { items: rawEmpleados } = useCrudResource<EmpleadoItem>({ endpoint: "/empleados" })
+  const { items: rawEventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const { items: rawEquipos } = useCrudResource<EquipoItem>({ endpoint: "/equipos" })
+
+  const availableEmployees = useMemo(
+    () =>
+      rawEmpleados.map((e) => ({
+        id: e.id,
+        nombre: getEmpleadoFullName(e),
+        cargo: e.cargo,
+      })),
+    [rawEmpleados],
+  )
 
   const empleadoOptions = useMemo<SelectOption[]>(
     () =>
-      AVAILABLE_EMPLOYEES.map((emp) => ({
+      availableEmployees.map((emp) => ({
         label: emp.nombre,
         value: emp.nombre,
         sublabel: emp.cargo,
       })),
-    [],
+    [availableEmployees],
   )
 
   const eventoOptions = useMemo<SelectOption[]>(
     () =>
-      EVENTOS_MOCK.map((ev) => ({
+      rawEventos.map((ev) => ({
         label: ev.nombre,
         value: ev.nombre,
         sublabel: `${ev.cliente_nombre} · ${ev.direccion}`,
       })),
-    [],
+    [rawEventos],
   )
 
   // Equipos propios disponibles para préstamo
   const equipoCatalogOptions = useMemo<SelectOption[]>(() => {
     const selectedIds = new Set(selectedEquipos.map((e) => e.id))
-    return INITIAL_EQUIPOS.filter(
-      (eq) => eq.propiedad === "Propio" && !selectedIds.has(eq.id),
-    ).map((eq) => ({
-      label: `${eq.nombre} (${eq.serie})`,
-      value: eq.id,
-      sublabel: `${eq.categoria} · Estado: ${eq.estadoOperativo}`,
-    }))
-  }, [selectedEquipos])
+    return rawEquipos
+      .filter((eq) => eq.propiedad === "Propio" && !selectedIds.has(eq.id))
+      .map((eq) => ({
+        label: `${eq.nombre} (${eq.serie})`,
+        value: eq.id,
+        sublabel: `${eq.categoria} · Estado: ${eq.estadoOperativo}`,
+      }))
+  }, [selectedEquipos, rawEquipos])
 
   const handleAddEquipo = (eqId: string) => {
-    const found = INITIAL_EQUIPOS.find((e) => e.id === eqId)
+    const found = rawEquipos.find((e) => e.id === eqId)
     if (!found) return
     const nuevo: EquipoPrestado = {
       id: found.id,
@@ -116,7 +132,7 @@ export function PrestamoFormDrawer({
               searchable={true}
               placeholder="Seleccionar colaborador..."
               onChange={(val) => {
-                const matched = AVAILABLE_EMPLOYEES.find((e) => e.nombre === val)
+                const matched = availableEmployees.find((e) => e.nombre === val)
                 setFormData((f) => ({
                   ...f,
                   responsable: val,
@@ -136,7 +152,7 @@ export function PrestamoFormDrawer({
               searchable={true}
               placeholder="Seleccionar evento..."
               onChange={(val) => {
-                const matched = EVENTOS_MOCK.find((ev) => ev.nombre === val)
+                const matched = rawEventos.find((ev) => ev.nombre === val)
                 setFormData((f) => ({
                   ...f,
                   evento: val,

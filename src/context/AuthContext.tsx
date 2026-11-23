@@ -6,37 +6,72 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { apiClient } from "../services/apiClient"
 
 export interface UserProfile {
+  id?: string
   name: string
   email: string
+  role?: string
+}
+
+interface LoginResponse {
+  token: string
+  user: UserProfile
 }
 
 interface AuthContextValue {
   isAuthenticated: boolean
   user: UserProfile
-  login: () => void
+  login: (email?: string, password?: string) => Promise<void>
   logout: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const DEFAULT_USER: UserProfile = {
-  name: "Esteban D",
-  email: "juanestebancasta2007@gmail.com",
+const EMPTY_USER: UserProfile = {
+  name: "Usuario",
+  email: "",
 }
 
-/**
- * Autenticación simulada (mockup). Cuando exista backend, reemplazar el
- * contenido de `login`/`logout` por las llamadas reales sin tocar a los consumidores.
- */
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(true)
-  const [user] = useState<UserProfile>(DEFAULT_USER)
+  const [user, setUser] = useState<UserProfile>(() => {
+    try {
+      const raw = sessionStorage.getItem("auth_user")
+      if (raw) return JSON.parse(raw)
+    } catch {
+      // ignore
+    }
+    return EMPTY_USER
+  })
 
-  const login = useCallback(() => setIsAuthenticated(true), [])
-  const logout = useCallback(() => setIsAuthenticated(false), [])
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return Boolean(sessionStorage.getItem("auth_token"))
+  })
+
+  const login = useCallback(async (email?: string, password?: string) => {
+    if (email && password) {
+      const res = await apiClient.post<LoginResponse>("/auth/login", {
+        email,
+        password,
+      })
+      sessionStorage.setItem("auth_token", res.token)
+      sessionStorage.setItem("auth_user", JSON.stringify(res.user))
+      localStorage.setItem("auth_token", res.token)
+      setUser(res.user)
+      setIsAuthenticated(true)
+      return
+    }
+    setIsAuthenticated(true)
+  }, [])
+
+  const logout = useCallback(() => {
+    sessionStorage.removeItem("auth_token")
+    sessionStorage.removeItem("auth_user")
+    localStorage.removeItem("auth_token")
+    setUser(EMPTY_USER)
+    setIsAuthenticated(false)
+  }, [])
 
   const value = useMemo(
     () => ({ isAuthenticated, user, login, logout }),

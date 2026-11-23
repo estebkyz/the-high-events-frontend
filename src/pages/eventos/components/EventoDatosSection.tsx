@@ -12,9 +12,12 @@ import {
   Check,
 } from "lucide-react"
 import type { ReactNode, Dispatch, SetStateAction } from "react"
-import type { ModalidadEvento, EstadoEvento, EventoFormValues } from "../types"
+import type { ModalidadEvento, EstadoEvento, EventoFormValues, CotizacionCatalogoItem } from "../types"
 import { ESTADOS_EVENTO } from "../types"
-import { CLIENTES_CATALOGO, COTIZACIONES_CATALOGO } from "../data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { ClienteItem } from "../../clientes/types"
+import { getClienteDisplayName } from "../../clientes/utils"
+import type { CotizacionItem } from "../../cotizaciones/types"
 import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
 
 interface EventoDatosSectionProps {
@@ -246,28 +249,68 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
   const esPropio = modalidad === "Propio"
   const esCliente = modalidad === "Cliente"
 
+  const { items: rawClientes } = useCrudResource<ClienteItem>({ endpoint: "/clientes" })
+  const { items: rawCotizaciones } = useCrudResource<CotizacionItem>({ endpoint: "/cotizaciones" })
+
+  const clientesCatalogo = useMemo(
+    () =>
+      rawClientes.map((c) => ({
+        id: c.id,
+        nombre: getClienteDisplayName(c),
+      })),
+    [rawClientes],
+  )
+
+  const cotizacionesCatalogo: CotizacionCatalogoItem[] = useMemo(
+    () =>
+      rawCotizaciones.map((q) => ({
+        id: q.id,
+        codigo: q.codigo,
+        cliente_id: q.cliente_id || "",
+        cliente_nombre: q.cliente,
+        nombre_evento: q.nombre_evento,
+        fecha_evento: q.fecha_evento || q.fecha,
+        fecha_emision: q.fecha,
+        fecha_vencimiento: q.fechaVence,
+        direccion: q.direccion || "",
+        hora_inicio: q.hora_inicio || "18:00",
+        hora_fin: q.hora_fin || "23:00",
+        aforo_esperado: q.aforo_esperado || 100,
+        observaciones: q.notas,
+        servicios: q.servicios || [],
+        total: q.totalNum || 0,
+        desc: `${q.codigo} — ${q.nombre_evento} (${q.total})`,
+        estado: q.estado,
+      })),
+    [rawCotizaciones],
+  )
+
   const cotizacionesDelCliente = useMemo(() => {
     if (!form.cliente_id) return []
-    return COTIZACIONES_CATALOGO.filter(
-      (c) => c.cliente_id === form.cliente_id && c.id !== COTIZACION_EVENTO_PROPIO_ID,
+    const cli = clientesCatalogo.find((c) => c.id === form.cliente_id)
+    return cotizacionesCatalogo.filter(
+      (c) =>
+        (c.cliente_id === form.cliente_id ||
+          (cli && c.cliente_nombre === cli.nombre)) &&
+        c.id !== COTIZACION_EVENTO_PROPIO_ID,
     )
-  }, [form.cliente_id])
+  }, [form.cliente_id, clientesCatalogo, cotizacionesCatalogo])
 
   const clienteSeleccionado = useMemo(
-    () => CLIENTES_CATALOGO.find((c) => c.id === form.cliente_id),
-    [form.cliente_id],
+    () => clientesCatalogo.find((c) => c.id === form.cliente_id),
+    [form.cliente_id, clientesCatalogo],
   )
 
   const cotizacionSeleccionada = useMemo(() => {
     if (esPropio) {
-      return COTIZACIONES_CATALOGO.find((c) => c.id === COTIZACION_EVENTO_PROPIO_ID)
+      return cotizacionesCatalogo.find((c) => c.id === COTIZACION_EVENTO_PROPIO_ID)
     }
-    return COTIZACIONES_CATALOGO.find((c) => c.id === form.cotizacion_id)
-  }, [esPropio, form.cotizacion_id])
+    return cotizacionesCatalogo.find((c) => c.id === form.cotizacion_id)
+  }, [esPropio, form.cotizacion_id, cotizacionesCatalogo])
 
   const clienteOptions: SelectOption[] = useMemo(
-    () => CLIENTES_CATALOGO.map((c) => ({ label: c.nombre, value: c.id })),
-    [],
+    () => clientesCatalogo.map((c) => ({ label: c.nombre, value: c.id })),
+    [clientesCatalogo],
   )
 
   const cotizacionOptions: SelectOption[] = useMemo(
@@ -300,7 +343,7 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
     }
 
     if (nueva === "Propio") {
-      const cotPropia = COTIZACIONES_CATALOGO.find((c) => c.id === COTIZACION_EVENTO_PROPIO_ID)
+      const cotPropia = cotizacionesCatalogo.find((c) => c.id === COTIZACION_EVENTO_PROPIO_ID)
       setForm((f) => ({
         ...f,
         modalidad: "Propio",
@@ -347,7 +390,7 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
 
   const aplicarCotizacion = (
     f: EventoFormValues,
-    cot: (typeof COTIZACIONES_CATALOGO)[number],
+    cot: CotizacionCatalogoItem,
   ): EventoFormValues => ({
     ...f,
     cotizacion_id: cot.id,
@@ -364,10 +407,12 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
   })
 
   const handleCliente = (clienteId: string) => {
-    const cots = COTIZACIONES_CATALOGO.filter(
-      (c) => c.cliente_id === clienteId && c.id !== COTIZACION_EVENTO_PROPIO_ID,
+    const cli = clientesCatalogo.find((c) => c.id === clienteId)
+    const cots = cotizacionesCatalogo.filter(
+      (c) =>
+        (c.cliente_id === clienteId || (cli && c.cliente_nombre === cli.nombre)) &&
+        c.id !== COTIZACION_EVENTO_PROPIO_ID,
     )
-    const cli = CLIENTES_CATALOGO.find((c) => c.id === clienteId)
     const primeraCot = cots[0]
 
     if (primeraCot) {
@@ -397,7 +442,7 @@ export function EventoDatosSection({ form, setForm }: EventoDatosSectionProps) {
   }
 
   const handleCotizacion = (cotId: string) => {
-    const cot = COTIZACIONES_CATALOGO.find((c) => c.id === cotId)
+    const cot = cotizacionesCatalogo.find((c) => c.id === cotId)
     if (cot) setForm((f) => aplicarCotizacion(f, cot))
   }
 

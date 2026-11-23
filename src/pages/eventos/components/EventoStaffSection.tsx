@@ -2,12 +2,10 @@ import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Trash2, UserPlus, X, Undo2, BookOpen } from "lucide-react"
 import type { AsignacionesMap, FaseTareaEvento } from "../types"
 import { FASES_TAREA } from "../types"
-import {
-  getEmpleadosCatalogo,
-  getTareasCatalogo,
-  addTareaCatalogo,
-  type TareaCatalogoItem,
-} from "../catalogStore"
+import { type TareaCatalogoItem } from "../catalogStore"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { EmpleadoItem } from "../../empleados/types"
+import { getEmpleadoFullName } from "../../empleados/utils"
 import {
   CustomSelect,
   type SelectOption,
@@ -36,15 +34,29 @@ export function EventoStaffSection({
   onGoToCreateEmpleado,
 }: EventoStaffSectionProps) {
   const [showSelector, setShowSelector] = useState(false)
-  const [tareasCatalogo, setTareasCatalogo] = useState<TareaCatalogoItem[]>(() =>
-    getTareasCatalogo(),
-  )
+  const { items: tareasCatalogo, setItems: setTareasCatalogo } =
+    useCrudResource<TareaCatalogoItem>({
+      endpoint: "/tareas-catalogo",
+    })
+  const { items: rawEmpleados } = useCrudResource<EmpleadoItem>({
+    endpoint: "/empleados",
+  })
   const [lastRemoved, setLastRemoved] = useState<{
     empId: string
     nombre: string
   } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const catalog = getEmpleadosCatalogo()
+  const catalog = useMemo(
+    () =>
+      rawEmpleados.map((e) => ({
+        id: e.id,
+        nombre: getEmpleadoFullName(e),
+        cargo: e.cargo,
+        telefono: e.telefono,
+        correo: e.correo,
+      })),
+    [rawEmpleados],
+  )
 
   useEffect(() => {
     return () => {
@@ -161,12 +173,14 @@ export function EventoStaffSection({
     const cleanName = query.trim()
     if (!cleanName) return
     const currentFase = assignments[empId]?.fase || "Montaje"
-    const created = addTareaCatalogo({
+    const created: TareaCatalogoItem = {
+      id: String(Date.now()),
+      codigo: `TAR-${String(tareasCatalogo.length + 1).padStart(3, "0")}`,
       nombre_tarea: cleanName,
       descripcion: `Tarea operativa creada al planificar evento (${currentFase}).`,
       fase_sugerida: currentFase,
-    })
-    setTareasCatalogo(getTareasCatalogo())
+    }
+    setTareasCatalogo((prev) => [created, ...prev])
     setAssignments((prev) => ({
       ...prev,
       [empId]: {

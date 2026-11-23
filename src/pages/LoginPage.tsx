@@ -1,31 +1,39 @@
 import React, { useState } from "react"
-import { Eye, EyeOff, Check } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
 
 interface Props {
   onLoginSuccess?: () => void
 }
 
 export default function LoginPage({ onLoginSuccess }: Props) {
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("admin@thehighevents.com")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [remember, setRemember] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (onLoginSuccess) {
-      onLoginSuccess()
-    } else {
-      alert("Sesión iniciada correctamente")
+    setErrorMsg(null)
+    setLoading(true)
+    try {
+      await login(email.trim(), password)
+      if (onLoginSuccess) {
+        onLoginSuccess()
+      }
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "No se pudo autenticar con el servidor de base de datos",
+      )
+    } finally {
+      setLoading(false)
     }
   }
-
-  const features = [
-    "Gestión completa de eventos y producción",
-    "Control financiero y abonos en tiempo real",
-    "Inventario y logística centralizada",
-    "Trazabilidad operativa con RBAC y auditoría",
-  ]
 
   return (
     <div className="flex min-h-screen w-full">
@@ -33,7 +41,10 @@ export default function LoginPage({ onLoginSuccess }: Props) {
       <div className="hidden md:flex md:w-1/2 bg-[#111318] flex-col relative overflow-hidden">
         <div
           className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
-          style={{ background: "linear-gradient(to top, rgba(124,58,237,0.10) 0%, transparent 100%)" }}
+          style={{
+            background:
+              "linear-gradient(to top, rgba(124,58,237,0.10) 0%, transparent 100%)",
+          }}
         />
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.03]"
@@ -51,7 +62,8 @@ export default function LoginPage({ onLoginSuccess }: Props) {
               className="w-16 h-16 rounded-2xl bg-[#7C3AED] flex items-center justify-center font-black text-white select-none"
               style={{
                 fontSize: "28px",
-                boxShadow: "0 0 40px rgba(124,58,237,0.45), 0 0 80px rgba(124,58,237,0.15)",
+                boxShadow:
+                  "0 0 40px rgba(124,58,237,0.45), 0 0 80px rgba(124,58,237,0.15)",
               }}
             >
               TH
@@ -72,7 +84,12 @@ export default function LoginPage({ onLoginSuccess }: Props) {
             >
               The High
               <br />
-              <span style={{ color: "#7C3AED", textShadow: "0 0 40px rgba(124,58,237,0.6)" }}>
+              <span
+                style={{
+                  color: "#7C3AED",
+                  textShadow: "0 0 40px rgba(124,58,237,0.6)",
+                }}
+              >
                 Events
               </span>
             </h1>
@@ -83,7 +100,7 @@ export default function LoginPage({ onLoginSuccess }: Props) {
         </div>
       </div>
 
-      {/* ── Right login panel (Limpio y centrado) ── */}
+      {/* ── Right login panel ── */}
       <div className="flex-1 md:w-1/2 bg-[#1A1D23] flex flex-col items-center justify-center px-6 py-12">
         <div className="md:hidden flex flex-col items-center gap-2 mb-10">
           <div
@@ -101,11 +118,17 @@ export default function LoginPage({ onLoginSuccess }: Props) {
               Panel de Administración
             </h2>
             <p className="text-[13px] text-[#64748B]">
-              Ingresa tus datos para continuar.
+              Ingresa tus credenciales registradas en la base de datos.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-[#EF4444]/15 border border-[#EF4444]/40 text-xs text-[#FCA5A5]">
+                {errorMsg}
+              </div>
+            )}
+
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-[13px] font-semibold text-[#F1F5F9] block">
@@ -156,21 +179,15 @@ export default function LoginPage({ onLoginSuccess }: Props) {
                 />
                 Recordarme
               </label>
-              <button
-                type="button"
-                onClick={() => alert("Instrucciones de recuperación enviadas a tu correo")}
-                className="text-[12px] text-[#A78BFA] hover:text-[#7C3AED] hover:underline transition-colors"
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              className="w-full h-[46px] bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold rounded-xl text-[13px] tracking-wide transition-all shadow-lg hover:shadow-violet-900/40"
+              disabled={loading}
+              className="w-full h-[46px] bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-60 text-white font-semibold rounded-xl text-[13px] tracking-wide transition-all shadow-lg hover:shadow-violet-900/40 cursor-pointer"
             >
-              Iniciar sesión
+              {loading ? "Verificando credenciales..." : "Iniciar sesión"}
             </button>
           </form>
         </div>

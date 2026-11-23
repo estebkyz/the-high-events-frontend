@@ -4,18 +4,9 @@ import { ChevronRight, ArrowLeft, Plus } from "lucide-react"
 import { useToast } from "../../components/Toast"
 import { CustomSelect, type SelectOption } from "../../components/CustomSelect"
 import { EVENTO_PATHS } from "../../routes/paths"
-import { addServicioCatalogo, addServicioToDraft } from "./catalogStore"
-
-const CATEGORIAS_SERVICIOS = [
-  "Sonido",
-  "Iluminación",
-  "DJ",
-  "Pantallas",
-  "Video",
-  "Fotografía",
-  "Logística",
-  "Escenografía",
-]
+import { useCrudResource } from "../../hooks/useCrudResource"
+import type { CategoriaServicioItem, ServicioItem } from "../servicios/types"
+import { addServicioToDraft } from "./catalogStore"
 
 const LABEL_CLASS = "text-[13px] font-medium text-[#F8FAFC] block mb-1.5"
 const INPUT_BASE =
@@ -42,26 +33,35 @@ export default function CrearServicioEventoPage() {
   const initialNombre = searchParams.get("nombre")?.trim() || ""
 
   const [nombre, setNombre] = useState(initialNombre)
-  const [categorias, setCategorias] = useState<string[]>(CATEGORIAS_SERVICIOS)
-  const [categoria, setCategoria] = useState("Sonido")
+  const { items: rawCategorias, createItem: createCategoriaApi } =
+    useCrudResource<CategoriaServicioItem>({
+      endpoint: "/categorias-servicio",
+    })
+  const { createItem: createServicioApi } = useCrudResource<ServicioItem>({
+    endpoint: "/servicios",
+  })
+  const [categoria, setCategoria] = useState("")
   const [precioDigits, setPrecioDigits] = useState("2500000")
   const [descripcion, setDescripcion] = useState("")
 
   const categoriaOptions = useMemo<SelectOption[]>(
-    () => categorias.map((cat) => ({ label: cat, value: cat })),
-    [categorias],
+    () => rawCategorias.map((cat) => ({ label: cat.nombre, value: cat.nombre })),
+    [rawCategorias],
   )
 
   const handleCreateCategoria = (nuevaCat: string) => {
     const clean = nuevaCat.trim()
     if (!clean) return
-    if (!categorias.includes(clean)) {
-      setCategorias((prev) => [...prev, clean])
-    }
+    void createCategoriaApi({
+      id: String(Date.now()),
+      nombre: clean,
+      descripcion: "Categoría de servicios comerciales",
+      estado: "Activo",
+    })
     setCategoria(clean)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!nombre.trim()) {
@@ -71,19 +71,30 @@ export default function CrearServicioEventoPage() {
 
     const numPrecio = Number(precioDigits.replace(/\D/g, "")) || 0
     const precioFormatted = `$ ${numPrecio.toLocaleString("es-CO")}`
+    const finalCat = categoria || rawCategorias[0]?.nombre || "General"
 
-    const nuevoServicio = addServicioCatalogo({
+    const saved = await createServicioApi({
+      id: String(Date.now()),
       nombre: nombre.trim(),
-      categoria,
+      categoria: finalCat,
+      tipo_cobro: "por_evento",
       precioBase: precioFormatted,
+      precioBaseNum: numPrecio,
       descripcion: descripcion.trim(),
+      estado: "Activo",
     })
 
     // Lo agregamos automáticamente al borrador del evento
-    addServicioToDraft(nuevoServicio)
+    addServicioToDraft({
+      id: saved.id,
+      nombre: saved.nombre,
+      categoria: saved.categoria,
+      precioBase: saved.precioBase,
+      descripcion: saved.descripcion,
+    })
 
     toast.success(
-      `Servicio "${nuevoServicio.nombre}" creado y agregado al evento`,
+      `Servicio "${saved.nombre}" creado y agregado al evento`,
     )
     navigate(returnPath)
   }

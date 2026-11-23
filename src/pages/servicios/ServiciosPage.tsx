@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { Layers, Edit2, Trash2 } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
@@ -19,10 +20,18 @@ import type {
 
 export default function ServiciosPage() {
   const toast = useToast()
-  const [services, setServices] = useState<ServicioItem[]>(INITIAL_SERVICES)
-  const [categorias, setCategorias] = useState<CategoriaServicioItem[]>(
-    INITIAL_CATEGORIAS_SERVICIO,
-  )
+  const { items: services, setItems: setServices } =
+    useCrudResource<ServicioItem>({
+      endpoint: "/servicios",
+      storageKey: "high_events_servicios_v1",
+      initialData: INITIAL_SERVICES,
+    })
+  const { items: categorias, setItems: setCategorias } =
+    useCrudResource<CategoriaServicioItem>({
+      endpoint: "/categorias-servicio",
+      storageKey: "high_events_categorias_servicio_v1",
+      initialData: INITIAL_CATEGORIAS_SERVICIO,
+    })
 
   // Estado para formulario de Categorías (tabla categorias_servicio)
   const [catNombre, setCatNombre] = useState("")
@@ -88,7 +97,7 @@ export default function ServiciosPage() {
     setIsEditing(false)
     setEditForm({
       nombre: "",
-      categoria: nombresCategorias[0] || "Sonido",
+      categoria: nombresCategorias[0] || "",
       tipo_cobro: "por_evento",
       descripcion: "",
       precioBase: "",

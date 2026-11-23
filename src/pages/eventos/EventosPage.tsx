@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { LayoutGrid, List, CalendarDays } from "lucide-react"
@@ -22,8 +23,11 @@ export default function EventosPage() {
   const navigate = useNavigate()
   const toast = useToast()
 
-  // Datos de ejemplo: los cambios viven solo en memoria mientras la página está abierta.
-  const [events, setEvents] = useState<EventoItem[]>(EVENTOS_MOCK)
+  const { items: events, setItems: setEvents } = useCrudResource<EventoItem>({
+    endpoint: "/eventos",
+    storageKey: "high_events_eventos_v1",
+    initialData: EVENTOS_MOCK,
+  })
   const [activeTab, setActiveTab] = useState<ModalidadTab>("Todos")
   const [filterEstado, setFilterEstado] = useState("Todos")
   const [search, setSearch] = useState("")

@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import { PageHeader } from "../../components/PageHeader"
@@ -6,6 +7,7 @@ import { CustomSelect } from "../../components/CustomSelect"
 import { IndexTabs } from "../../components/IndexTabs"
 import { BulkActionsBar } from "../../components/BulkActionsBar"
 import { useToast } from "../../components/Toast"
+import { printDocumentPdf } from "../../utils/printDocumentPdf"
 import { CheckCircle2, Send, Trash2 } from "lucide-react"
 import type {
   CotizacionItem,
@@ -21,7 +23,12 @@ import { CotizacionFormDrawer } from "./drawers/CotizacionFormDrawer"
 export default function CotizacionesPage() {
   const toast = useToast()
   const location = useLocation()
-  const [quotes, setQuotes] = useState<CotizacionItem[]>(INITIAL_QUOTES)
+  const { items: quotes, setItems: setQuotes } =
+    useCrudResource<CotizacionItem>({
+      endpoint: "/cotizaciones",
+      storageKey: "high_events_cotizaciones_v1",
+      initialData: INITIAL_QUOTES,
+    })
   const [selectedQuote, setSelectedQuote] = useState<CotizacionItem | null>(
     null,
   )
@@ -79,14 +86,13 @@ export default function CotizacionesPage() {
     }
   }, [location.state])
 
-  const clienteFilterOptions = useMemo(
-    () =>
-      ALL_CLIENTS.map((c) => ({
-        label: c === "Todos" ? "Todos los Clientes" : c,
-        value: c,
-      })),
-    [],
-  )
+  const clienteFilterOptions = useMemo(() => {
+    const names = Array.from(new Set(["Todos", ...quotes.map((q) => q.cliente).filter(Boolean)]))
+    return names.map((c) => ({
+      label: c === "Todos" ? "Todos los Clientes" : c,
+      value: c,
+    }))
+  }, [quotes])
 
   const statusCounts = useMemo(() => {
     return {
@@ -431,7 +437,23 @@ export default function CotizacionesPage() {
           onEdit={openEdit}
           onDelete={handleDelete}
           onSend={sendQuote}
-          onDownloadPdf={(row) => toast.info(`Descargando PDF — ${row.codigo}`)}
+          onDownloadPdf={(row) =>
+            printDocumentPdf({
+              tipoDocumento: "Cotización Comercial",
+              codigo: row.codigo,
+              fecha: row.fecha,
+              terceroLabel: "Cliente",
+              terceroNombre: row.cliente,
+              evento: row.nombre_evento,
+              estado: row.estado,
+              total: row.total,
+              items: (row.servicios || []).map((s, idx) => ({
+                descripcion: s,
+                valor: row.montos?.[idx] || row.total,
+              })),
+              notas: row.notas,
+            })
+          }
         />
       </main>
 
@@ -468,10 +490,26 @@ export default function CotizacionesPage() {
         quote={selectedQuote}
         onClose={closeDrawer}
         onAdvanceEstado={advanceEstado}
-        onSendEmail={(q) =>
-          toast.info(`Enviando ${q.codigo} por email a ${q.cliente}...`)
+        onSendEmail={(q) => {
+          window.location.href = `mailto:?subject=${encodeURIComponent(`Cotización ${q.codigo} - The High Events`)}&body=${encodeURIComponent(`Hola ${q.cliente},\n\nAdjuntamos los detalles de la cotización ${q.codigo} para el evento "${q.nombre_evento}" por un total de ${q.total}.`)}`
+        }}
+        onDownloadPdf={(q) =>
+          printDocumentPdf({
+            tipoDocumento: "Cotización Comercial",
+            codigo: q.codigo,
+            fecha: q.fecha,
+            terceroLabel: "Cliente",
+            terceroNombre: q.cliente,
+            evento: q.nombre_evento,
+            estado: q.estado,
+            total: q.total,
+            items: (q.servicios || []).map((s, idx) => ({
+              descripcion: s,
+              valor: q.montos?.[idx] || q.total,
+            })),
+            notas: q.notas,
+          })
         }
-        onDownloadPdf={(q) => toast.info(`Descargando PDF de ${q.codigo}...`)}
         onOpenEdit={openEdit}
       />
 

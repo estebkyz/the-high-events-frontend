@@ -1,10 +1,12 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { BulkActionsBar } from "../../components/BulkActionsBar"
 import { useToast } from "../../components/Toast"
+import { printDocumentPdf } from "../../utils/printDocumentPdf"
 import { CheckCircle2, Download, Trash2 } from "lucide-react"
 import { INITIAL_SALES, ESTADO_PAGO_OPTIONS } from "./data"
 import { VentaTable } from "./components/VentaTable"
@@ -22,7 +24,11 @@ import type {
 
 export default function VentasPage() {
   const toast = useToast()
-  const [sales, setSales] = useState<VentaItem[]>(INITIAL_SALES)
+  const { items: sales, setItems: setSales } = useCrudResource<VentaItem>({
+    endpoint: "/ventas",
+    storageKey: "high_events_ventas_v1",
+    initialData: INITIAL_SALES,
+  })
 
   // Selection for Bulk Actions (Shopify Polaris)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -143,7 +149,15 @@ export default function VentasPage() {
   }
 
   const handleDownloadInvoice = (sale: VentaItem) => {
-    toast.info(`Generando comprobante para ${sale.clienteEvento}...`)
+    printDocumentPdf({
+      tipoDocumento: "Factura de Venta",
+      codigo: sale.numero_factura || sale.codigo,
+      fecha: sale.fecha,
+      terceroLabel: sale.tipo === "Propio" ? "Evento Propio" : "Cliente / Evento",
+      terceroNombre: sale.clienteEvento,
+      estado: sale.estadoPago,
+      total: sale.total,
+    })
   }
 
   const openCreate = () => {

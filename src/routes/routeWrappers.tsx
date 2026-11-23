@@ -11,7 +11,7 @@ export function DashboardRoute() {
 }
 
 export function LoginRoute() {
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
   if (isAuthenticated) return <Navigate to={ROUTE_PATHS.dashboard} replace />
@@ -20,7 +20,6 @@ export function LoginRoute() {
     <div className="min-h-screen bg-[#0B0D11] font-['Inter',sans-serif] text-[#F1F5F9] flex flex-col">
       <LoginPage
         onLoginSuccess={() => {
-          login()
           navigate(ROUTE_PATHS.dashboard, { replace: true })
         }}
       />

@@ -1,9 +1,11 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { Drawer } from "../../../components/Drawer"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect } from "../../../components/CustomSelect"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { ServicioItem, CategoriaServicioItem } from "../../servicios/types"
 import type { ProveedorItem, ProveedorFormData } from "../types"
-import { ALL_SERVICIOS, ESTADO_OPTIONS } from "../data"
+import { ESTADO_OPTIONS } from "../data"
 
 interface ProveedorFormDrawerProps {
   isOpen: boolean
@@ -23,6 +25,20 @@ export const ProveedorFormDrawer: React.FC<ProveedorFormDrawerProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { items: rawServices } = useCrudResource<ServicioItem>({ endpoint: "/servicios" })
+  const { items: rawCatServices } = useCrudResource<CategoriaServicioItem>({
+    endpoint: "/categorias-servicio",
+  })
+  const availableServicios = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...rawServices.map((s) => s.nombre),
+          ...rawCatServices.map((c) => c.nombre),
+        ]),
+      ).filter(Boolean),
+    [rawServices, rawCatServices],
+  )
   return (
     <Drawer
       isOpen={isOpen}
@@ -148,30 +164,36 @@ export const ProveedorFormDrawer: React.FC<ProveedorFormDrawerProps> = ({
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5 p-3 bg-[#111318] border border-[#262D3D] rounded-xl">
-            {ALL_SERVICIOS.map((s) => {
-              const selected = (formState.servicios || []).includes(s)
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() =>
-                    setFormState((f) => ({
-                      ...f,
-                      servicios: selected
-                        ? (f.servicios || []).filter((x) => x !== s)
-                        : [...(f.servicios || []), s],
-                    }))
-                  }
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
-                    selected
-                      ? "bg-[#7C3AED]/20 text-[#A78BFA] border-[#7C3AED]/50 font-semibold"
-                      : "bg-[#181B22] text-[#94A3B8] border-[#262D3D] hover:border-[#3B4254] hover:text-[#F1F5F9]"
-                  }`}
-                >
-                  {s}
-                </button>
-              )
-            })}
+            {availableServicios.length === 0 ? (
+              <span className="text-xs text-[#64748B]">
+                Crea servicios o categorías de servicio en el módulo de Servicios para asignarlos al proveedor.
+              </span>
+            ) : (
+              availableServicios.map((s) => {
+                const selected = (formState.servicios || []).includes(s)
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() =>
+                      setFormState((f) => ({
+                        ...f,
+                        servicios: selected
+                          ? (f.servicios || []).filter((x) => x !== s)
+                          : [...(f.servicios || []), s],
+                      }))
+                    }
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
+                      selected
+                        ? "bg-[#7C3AED]/20 text-[#A78BFA] border-[#7C3AED]/50 font-semibold"
+                        : "bg-[#181B22] text-[#94A3B8] border-[#262D3D] hover:border-[#3B4254] hover:text-[#F1F5F9]"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                )
+              })
+            )}
           </div>
         </div>
 

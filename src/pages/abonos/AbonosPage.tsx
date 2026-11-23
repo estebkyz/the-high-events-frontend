@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import { Users, Truck, CheckCircle2, Download, Trash2 } from "lucide-react"
@@ -7,6 +8,7 @@ import { IndexTabs } from "../../components/IndexTabs"
 import { CustomSelect } from "../../components/CustomSelect"
 import { BulkActionsBar } from "../../components/BulkActionsBar"
 import { useToast } from "../../components/Toast"
+import { printDocumentPdf } from "../../utils/printDocumentPdf"
 import { INITIAL_ABONOS } from "./data"
 import { AbonoTable } from "./components/AbonoTable"
 import { AbonosKPIs } from "./components/AbonosKPIs"
@@ -25,7 +27,11 @@ import type {
 export default function AbonosPage() {
   const toast = useToast()
   const location = useLocation()
-  const [abonos, setAbonos] = useState<AbonoItem[]>(INITIAL_ABONOS)
+  const { items: abonos, setItems: setAbonos } = useCrudResource<AbonoItem>({
+    endpoint: "/abonos",
+    storageKey: "high_events_abonos_v1",
+    initialData: INITIAL_ABONOS,
+  })
   const [selectedAbono, setSelectedAbono] = useState<AbonoItem | null>(null)
   const [drawerMode, setDrawerMode] = useState<AbonoDrawerMode>("create")
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -594,7 +600,21 @@ export default function AbonosPage() {
           onEdit={openEdit}
           onDelete={handleDelete}
           onGenerarRecibo={(row) =>
-            toast.info(`Generando comprobante en PDF para ${row.evento}...`)
+            printDocumentPdf({
+              tipoDocumento: "Comprobante de Abono / Pago",
+              codigo: `ABO-${row.id}`,
+              fecha: row.fechaPago,
+              terceroLabel: row.tipoCartera === "Clientes" ? "Cliente" : "Proveedor",
+              terceroNombre: row.cliente || row.proveedor || row.evento,
+              evento: row.evento,
+              estado: `${row.porcentaje}% Liquidado`,
+              total: row.total,
+              items: [
+                { descripcion: `Anticipo 50% (${row.estadoAnticipo})`, valor: row.anticipo },
+                { descripcion: `Saldo 50% (${row.estadoSaldo})`, valor: row.saldo },
+              ],
+              notas: row.observaciones,
+            })
           }
         />
       </main>
@@ -641,8 +661,33 @@ export default function AbonosPage() {
         setPagoForm={setPagoForm}
         onPagoSubmit={handlePagoSubmit}
         onGenerarRecibo={() => {
-          if (selectedAbono)
-            toast.success(`Comprobante generado para ${selectedAbono.evento}`)
+          if (selectedAbono) {
+            printDocumentPdf({
+              tipoDocumento: "Comprobante de Abono / Pago",
+              codigo: `ABO-${selectedAbono.id}`,
+              fecha: selectedAbono.fechaPago,
+              terceroLabel:
+                selectedAbono.tipoCartera === "Clientes" ? "Cliente" : "Proveedor",
+              terceroNombre:
+                selectedAbono.cliente ||
+                selectedAbono.proveedor ||
+                selectedAbono.evento,
+              evento: selectedAbono.evento,
+              estado: `${selectedAbono.porcentaje}% Liquidado`,
+              total: selectedAbono.total,
+              items: [
+                {
+                  descripcion: `Anticipo 50% (${selectedAbono.estadoAnticipo})`,
+                  valor: selectedAbono.anticipo,
+                },
+                {
+                  descripcion: `Saldo 50% (${selectedAbono.estadoSaldo})`,
+                  valor: selectedAbono.saldo,
+                },
+              ],
+              notas: selectedAbono.observaciones,
+            })
+          }
         }}
       />
 

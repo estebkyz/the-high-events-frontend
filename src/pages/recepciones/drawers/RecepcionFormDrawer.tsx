@@ -2,10 +2,11 @@ import React, { useId, useMemo } from "react"
 import { Plus, Trash2, Camera, CheckCircle2 } from "lucide-react"
 import { Drawer } from "../../../components/Drawer"
 import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
-import { EVENTOS_DISPONIBLES, TIPOS_OPTIONS, ESTADOS_OPTIONS } from "../data"
-import { INITIAL_PROVIDERS } from "../../proveedores/data"
-import { EVENTOS_MOCK } from "../../eventos/data"
-import { INITIAL_EQUIPOS } from "../../equipos/data"
+import { TIPOS_OPTIONS, ESTADOS_OPTIONS } from "../data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { ProveedorItem } from "../../proveedores/types"
+import type { EventoItem } from "../../eventos/types"
+import type { EquipoItem } from "../../equipos/types"
 import type { Recepcion, NewItem } from "../types"
 
 interface RecepcionFormDrawerProps {
@@ -54,34 +55,33 @@ export function RecepcionFormDrawer({
   onSubmit,
 }: RecepcionFormDrawerProps) {
   const uid = useId()
+  const { items: rawEventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const { items: rawProveedores } = useCrudResource<ProveedorItem>({ endpoint: "/proveedores" })
+  const { items: rawEquipos } = useCrudResource<EquipoItem>({ endpoint: "/equipos" })
 
   const eventoOptions = useMemo<SelectOption[]>(() => {
-    const names = new Set<string>([
-      ...EVENTOS_MOCK.map((e) => e.nombre),
-      ...EVENTOS_DISPONIBLES.map((e) => e.value),
-    ])
-    return Array.from(names).map((n) => ({ label: n, value: n }))
-  }, [])
+    return rawEventos.map((e) => ({ label: e.nombre, value: e.nombre }))
+  }, [rawEventos])
 
   const proveedorOptions = useMemo<SelectOption[]>(
     () =>
-      INITIAL_PROVIDERS.map((p) => ({
+      rawProveedores.map((p) => ({
         label: p.razon_social,
         value: p.razon_social,
         sublabel: `NIT ${p.nit_documento} · ${(p.servicios || []).join(", ")}`,
       })),
-    [],
+    [rawProveedores],
   )
 
   // Sugerencias de equipos alquilados del proveedor seleccionado
   const equiposDelProveedor = useMemo(() => {
-    return INITIAL_EQUIPOS.filter(
+    return rawEquipos.filter(
       (eq) =>
         eq.propiedad === "Alquilado" &&
         (!formValues.proveedor ||
           eq.proveedor_nombre === formValues.proveedor),
     )
-  }, [formValues.proveedor])
+  }, [formValues.proveedor, rawEquipos])
 
   const addItem = () => {
     setItems((prev) => [

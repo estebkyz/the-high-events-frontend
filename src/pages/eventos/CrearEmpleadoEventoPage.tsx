@@ -12,8 +12,9 @@ import {
 import { useToast } from "../../components/Toast"
 import { CustomSelect, type SelectOption } from "../../components/CustomSelect"
 import { EVENTO_PATHS } from "../../routes/paths"
-import { addEmpleadoCatalogo, addEmpleadoToDraft } from "./catalogStore"
-import { TAREAS_CATALOGO } from "./data"
+import { useCrudResource } from "../../hooks/useCrudResource"
+import type { EmpleadoItem, TipoDocumentoEmpleado } from "../empleados/types"
+import { addEmpleadoToDraft, type TareaCatalogoItem } from "./catalogStore"
 import { FASES_TAREA, type FaseTareaEvento } from "./types"
 
 const CARGOS_DISPONIBLES = [
@@ -101,7 +102,13 @@ export default function CrearEmpleadoEventoPage() {
   )
 
   // Asignación directa para el evento
-  const [tareaId, setTareaId] = useState(TAREAS_CATALOGO[0].id)
+  const { items: rawTareasCatalogo } = useCrudResource<TareaCatalogoItem>({
+    endpoint: "/tareas-catalogo",
+  })
+  const { createItem: createEmpleadoApi } = useCrudResource<EmpleadoItem>({
+    endpoint: "/empleados",
+  })
+  const [tareaId, setTareaId] = useState("")
   const [fase, setFase] = useState<FaseTareaEvento>("Montaje")
 
   const cargoOptions = useMemo<SelectOption[]>(
@@ -111,11 +118,11 @@ export default function CrearEmpleadoEventoPage() {
 
   const tareaOptions = useMemo<SelectOption[]>(
     () =>
-      TAREAS_CATALOGO.map((t) => ({
+      rawTareasCatalogo.map((t) => ({
         label: t.nombre_tarea,
         value: t.id,
       })),
-    [],
+    [rawTareasCatalogo],
   )
 
   const faseOptions = useMemo<SelectOption[]>(
@@ -132,7 +139,7 @@ export default function CrearEmpleadoEventoPage() {
     setCargo(clean)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!nombres.trim() || !apellidos.trim()) {
@@ -145,16 +152,30 @@ export default function CrearEmpleadoEventoPage() {
       " ",
     )
 
-    const nuevoEmpleado = addEmpleadoCatalogo({
-      nombre: nombreCompleto,
+    const saved = await createEmpleadoApi({
+      id: String(Date.now()),
+      primer_nombre: nombres.trim(),
+      primer_apellido: apellidos.trim(),
       cargo,
       telefono: telefono.trim(),
       correo: correo.trim(),
-      tipo_documento: tipoDocumento,
-      numero_documento: numeroDocumento.trim(),
+      tipo_documento: tipoDocumento as TipoDocumentoEmpleado,
+      numero_documento: numeroDocumento.trim() || "0",
+      estado: "Activo",
+      vinculacion,
     })
 
-    addEmpleadoToDraft(nuevoEmpleado, tareaId, fase)
+    addEmpleadoToDraft(
+      {
+        id: saved.id,
+        nombre: nombreCompleto,
+        cargo: saved.cargo,
+        telefono: saved.telefono,
+        correo: saved.correo,
+      },
+      tareaId || rawTareasCatalogo[0]?.id || "1",
+      fase,
+    )
 
     toast.success(`Colaborador "${nombreCompleto}" creado y asignado al evento`)
     navigate(returnPath)

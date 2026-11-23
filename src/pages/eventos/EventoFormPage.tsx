@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { Navigate, useNavigate, useParams, useLocation } from "react-router-dom"
 import { ChevronRight, Layers, Boxes, UserCheck } from "lucide-react"
 import { useToast } from "../../components/Toast"
+import { apiClient } from "../../services/apiClient"
 import { ROUTE_PATHS, EVENTO_PATHS } from "../../routes/paths"
 import {
   EVENTOS_MOCK,
@@ -153,71 +154,74 @@ export default function EventoFormPage() {
 
   if (isEditing && !existing) return <Navigate to={EVENTO_PATHS.list} replace />
 
-  const executeSave = () => {
+  const executeSave = async () => {
     const error = validateEventoForm(form, equiposAsignados, assignments)
     if (error) {
       toast.error(error)
       return
     }
 
-    if (!isEditing) {
-      const clienteEncontrado = CLIENTES_CATALOGO.find(
-        (c) => c.id === form.cliente_id,
-      )
-      const newEvent: EventoItem = {
-        id: `ev-${Date.now()}`,
-        cliente_id: form.modalidad === "Propio" ? null : (form.cliente_id ?? null),
-        cliente_nombre:
-          form.modalidad === "Propio"
-            ? "The High Events"
-            : clienteEncontrado?.nombre || "Cliente General",
-        cotizacion_id: form.cotizacion_id || "",
-        cotizacion_codigo: form.cotizacion_codigo || "",
-        modalidad: form.modalidad || "Cliente",
-        nombre: (form.nombre || "").trim(),
-        direccion: (form.direccion || "").trim(),
-        hora_inicio: form.hora_inicio || "",
-        hora_fin: form.hora_fin || "",
-        presupuesto_estimado: Number(form.presupuesto_estimado) || 0,
-        estado: (form.estado as any) || "Confirmado",
-        fecha_creacion: new Date().toISOString().replace("T", " ").slice(0, 19),
-        aforo_esperado: form.aforo_esperado || "200 personas",
-        concepto_espectaculo: form.concepto_espectaculo || "",
-        observaciones: form.observaciones || "",
-        servicios: form.servicios || [],
-        equiposAsignados,
-        empleadosAsignados: Object.entries(assignments)
-          .filter(([_, a]) => a.checked)
-          .map(([empId, a]) => {
-            const emp = AVAILABLE_EMPLOYEES.find((e) => e.id === empId)
-            const tarea = TAREAS_CATALOGO.find((t) => t.id === a.tarea_id)
-            return {
-              empleado_id: empId,
-              nombre: emp?.nombre || "Empleado",
-              cargo: emp?.cargo || "Personal",
-              fase: a.fase,
-              tarea_id: a.tarea_id,
-              nombre_tarea: tarea?.nombre_tarea || "Personal de evento",
-              estado: "Pendiente",
-            }
-          }),
-      }
-      EVENTOS_MOCK.unshift(newEvent)
+    const clienteEncontrado = CLIENTES_CATALOGO.find(
+      (c) => c.id === form.cliente_id,
+    )
+    const payload: Partial<EventoItem> = {
+      cliente_id: form.modalidad === "Propio" ? null : (form.cliente_id ?? null),
+      cliente_nombre:
+        form.modalidad === "Propio"
+          ? "The High Events"
+          : clienteEncontrado?.nombre || "Cliente General",
+      cotizacion_id: form.cotizacion_id || "",
+      cotizacion_codigo: form.cotizacion_codigo || "",
+      modalidad: form.modalidad || "Cliente",
+      nombre: (form.nombre || "").trim(),
+      direccion: (form.direccion || "").trim(),
+      hora_inicio: form.hora_inicio || "",
+      hora_fin: form.hora_fin || "",
+      presupuesto_estimado: Number(form.presupuesto_estimado) || 0,
+      estado: (form.estado as any) || "Confirmado",
+      aforo_esperado: form.aforo_esperado || "200 personas",
+      concepto_espectaculo: form.concepto_espectaculo || "",
+      observaciones: form.observaciones || "",
+      servicios: form.servicios || [],
+      equiposAsignados,
+      empleadosAsignados: Object.entries(assignments)
+        .filter(([_, a]) => a.checked)
+        .map(([empId, a]) => {
+          const emp = AVAILABLE_EMPLOYEES.find((e) => e.id === empId)
+          const tarea = TAREAS_CATALOGO.find((t) => t.id === a.tarea_id)
+          return {
+            empleado_id: empId,
+            nombre: emp?.nombre || "Empleado",
+            cargo: emp?.cargo || "Personal",
+            fase: a.fase,
+            tarea_id: a.tarea_id,
+            nombre_tarea: tarea?.nombre_tarea || "Personal de evento",
+            estado: "Pendiente",
+          }
+        }),
     }
 
-    syncEventoTareasFromEvento(
-      form.nombre?.trim() || "Evento Principal",
-      form.hora_inicio,
-      assignments,
-    )
-    clearEventoFormDraft()
-    setIsDirty(false)
-    toast.success(
-      isEditing
-        ? "Evento y tareas asignadas actualizados correctamente"
-        : "Evento creado y tareas asignadas enviadas al tablero operativo",
-    )
-    navigate(EVENTO_PATHS.list)
+    try {
+      if (isEditing && id) {
+        await apiClient.put(`/eventos/${id}`, payload)
+      } else {
+        await apiClient.post("/eventos", payload)
+      }
+      clearEventoFormDraft()
+      setIsDirty(false)
+      toast.success(
+        isEditing
+          ? "Evento actualizado en la base de datos"
+          : "Evento creado en la base de datos",
+      )
+      navigate(EVENTO_PATHS.list)
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "No se pudo guardar el evento en la base de datos",
+      )
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {

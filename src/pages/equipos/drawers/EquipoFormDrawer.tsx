@@ -2,8 +2,9 @@ import React from "react"
 import { Drawer } from "../../../components/Drawer"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect } from "../../../components/CustomSelect"
-import { CATEGORIA_OPTIONS, ESTADO_OPERATIVO_OPTIONS, PROPIEDAD_OPTIONS } from "../data"
-import { INITIAL_PROVIDERS } from "../../proveedores/data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import { ESTADO_OPERATIVO_OPTIONS, PROPIEDAD_OPTIONS } from "../data"
+import type { ProveedorItem } from "../../proveedores/types"
 import type {
   EquipoItem,
   EquipoFormData,
@@ -34,14 +35,6 @@ const PROPIEDAD_SELECT_OPTIONS = PROPIEDAD_OPTIONS.map((p) => ({
   label: p === "Propio" ? "Propio (The High Events)" : "Alquilado (Proveedor Externo)",
 }))
 
-const PROVEEDOR_SELECT_OPTIONS = [
-  { value: "", label: "Seleccionar proveedor propietario..." },
-  ...INITIAL_PROVIDERS.map((prov) => ({
-    value: prov.razon_social,
-    label: `${prov.razon_social} (NIT ${prov.nit_documento})`,
-  })),
-]
-
 export function EquipoFormDrawer({
   mode,
   isOpen,
@@ -50,10 +43,20 @@ export function EquipoFormDrawer({
   formData,
   setFormData,
   onSubmit,
-  categorias = CATEGORIA_OPTIONS,
+  categorias = [],
   onCreateCategoria,
 }: EquipoFormDrawerProps) {
   const isEdit = mode === "edit"
+  const { items: rawProviders } = useCrudResource<ProveedorItem>({
+    endpoint: "/proveedores",
+  })
+  const proveedorSelectOptions = [
+    { value: "", label: "Seleccionar proveedor propietario..." },
+    ...rawProviders.map((prov) => ({
+      value: prov.razon_social,
+      label: `${prov.razon_social} (NIT ${prov.nit_documento})`,
+    })),
+  ]
 
   const categoriaSelectOptions = categorias.map((c) => ({
     value: c,
@@ -107,12 +110,13 @@ export function EquipoFormDrawer({
               Categoría (FK id_categoria)
             </label>
             <CustomSelect
-              value={formData.categoria ?? categorias[0] ?? "Audio"}
+              value={formData.categoria ?? categorias[0] ?? ""}
               onChange={(val) =>
                 setFormData((f) => ({ ...f, categoria: val as Categoria }))
               }
               options={categoriaSelectOptions}
               searchable={true}
+              placeholder="Selecciona o crea una categoría"
               allowCreate={Boolean(onCreateCategoria)}
               createLabel="Crear nueva categoría"
               onCreate={(newCat) => {
@@ -176,7 +180,7 @@ export function EquipoFormDrawer({
               <CustomSelect
                 value={formData.proveedor_nombre ?? ""}
                 onChange={(val) => {
-                  const matched = INITIAL_PROVIDERS.find(
+                  const matched = rawProviders.find(
                     (p) => p.razon_social === val,
                   )
                   setFormData((f) => ({
@@ -185,7 +189,7 @@ export function EquipoFormDrawer({
                     proveedor_nombre: val,
                   }))
                 }}
-                options={PROVEEDOR_SELECT_OPTIONS}
+                options={proveedorSelectOptions}
                 searchable={true}
               />
             </div>

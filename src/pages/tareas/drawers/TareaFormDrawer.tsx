@@ -5,11 +5,11 @@ import { FormInput } from "../../../components/FormInput"
 import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
 import type { TareaItem, TareaFormData, Fase, Prioridad } from "../types"
 import { FASE_OPTIONS, PRIORIDAD_OPTIONS } from "../data"
-import { EVENTOS_MOCK } from "../../eventos/data"
-import {
-  getEmpleadosCatalogo,
-  type TareaCatalogoItem,
-} from "../../eventos/catalogStore"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { EventoItem } from "../../eventos/types"
+import type { EmpleadoItem } from "../../empleados/types"
+import { getEmpleadoFullName } from "../../empleados/utils"
+import type { TareaCatalogoItem } from "../../eventos/catalogStore"
 
 interface TareaFormDrawerProps {
   isOpen: boolean
@@ -46,7 +46,19 @@ export const TareaFormDrawer: React.FC<TareaFormDrawerProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const empleadosCatalogo = useMemo(() => getEmpleadosCatalogo(), [isOpen])
+  const { items: rawEmpleados } = useCrudResource<EmpleadoItem>({ endpoint: "/empleados" })
+  const { items: rawEventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const empleadosCatalogo = useMemo(
+    () =>
+      rawEmpleados.map((e) => ({
+        id: e.id,
+        nombre: getEmpleadoFullName(e),
+        cargo: e.cargo,
+        telefono: e.telefono,
+        correo: e.correo,
+      })),
+    [rawEmpleados],
+  )
 
   const tareaCatalogoOptions = useMemo<SelectOption[]>(
     () =>
@@ -60,11 +72,11 @@ export const TareaFormDrawer: React.FC<TareaFormDrawerProps> = ({
   )
 
   const eventoOptions = useMemo<SelectOption[]>(() => {
-    const base: SelectOption[] = EVENTOS_MOCK.map((ev) => ({
+    const base: SelectOption[] = rawEventos.map((ev) => ({
       label: ev.nombre,
       value: ev.nombre,
       badge: ev.modalidad,
-      sublabel: `${ev.hora_inicio.split("T")[0]} · ${ev.direccion}`,
+      sublabel: `${(ev.hora_inicio || "").split("T")[0]} · ${ev.direccion}`,
     }))
     if (
       editForm.evento &&
@@ -78,7 +90,7 @@ export const TareaFormDrawer: React.FC<TareaFormDrawerProps> = ({
       })
     }
     return base
-  }, [editForm.evento])
+  }, [editForm.evento, rawEventos])
 
   const empleadoOptions = useMemo<SelectOption[]>(() => {
     const base = empleadosCatalogo.map((emp) => ({
@@ -125,7 +137,7 @@ export const TareaFormDrawer: React.FC<TareaFormDrawerProps> = ({
   }
 
   const handleSelectEvento = (eventoNombre: string) => {
-    const ev = EVENTOS_MOCK.find((e) => e.nombre === eventoNombre)
+    const ev = rawEventos.find((e) => e.nombre === eventoNombre)
     setEditForm((f) => ({
       ...f,
       evento: eventoNombre,

@@ -1,8 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Trash2, PackagePlus, Undo2, Lock, Search, Truck } from "lucide-react"
 import type { EventoFormValues, ServicioDetalleEvento } from "../types"
-import { getServiciosCatalogo } from "../catalogStore"
-import { INITIAL_PROVIDERS } from "../../proveedores/data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { ServicioItem } from "../../servicios/types"
+import type { ProveedorItem } from "../../proveedores/types"
 import type { Dispatch, SetStateAction } from "react"
 
 interface EventoServiciosSectionProps {
@@ -43,7 +44,19 @@ export function EventoServiciosSection({
     index: number
   } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const catalog = getServiciosCatalogo()
+  const { items: rawServices } = useCrudResource<ServicioItem>({ endpoint: "/servicios" })
+  const { items: rawProviders } = useCrudResource<ProveedorItem>({ endpoint: "/proveedores" })
+  const catalog = useMemo(
+    () =>
+      rawServices.map((s) => ({
+        id: s.id,
+        nombre: s.nombre,
+        categoria: s.categoria,
+        descripcion: s.descripcion,
+        precioBase: s.precioBase,
+      })),
+    [rawServices],
+  )
 
   // Mismo criterio que la sección de datos: sin modalidad definida se asume "Cliente"
   const esCliente = (form.modalidad || "Cliente") === "Cliente"
@@ -165,8 +178,8 @@ export function EventoServiciosSection({
   }
 
   const activeProviders = useMemo(
-    () => INITIAL_PROVIDERS.filter((p) => p.estado === "Activo"),
-    [],
+    () => rawProviders.filter((p) => p.estado === "Activo"),
+    [rawProviders],
   )
 
   const handleAssignProvider = (detalle: ServicioDetalleEvento, providerId: string) => {

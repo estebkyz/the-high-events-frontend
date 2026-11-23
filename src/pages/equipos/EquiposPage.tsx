@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { Layers, Plus, Trash2, Edit2, Check } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
@@ -20,51 +21,21 @@ import type {
   CategoriaEquipoItem,
 } from "./types"
 
-const INITIAL_CATEGORIAS_EQUIPO: CategoriaEquipoItem[] = [
-  {
-    id: "1",
-    nombre: "Audio",
-    descripcion: "Consolas digitales, cabinas line array, subwoofers y micrófonos",
-    estado: "Activo",
-  },
-  {
-    id: "2",
-    nombre: "Iluminación",
-    descripcion: "Cabezas móviles Beam/Wash, barras LED, láseres y consolas DMX",
-    estado: "Activo",
-  },
-  {
-    id: "3",
-    nombre: "Video",
-    descripcion: "Módulos de pantalla LED P3/P2, procesadores y proyectores",
-    estado: "Activo",
-  },
-  {
-    id: "4",
-    nombre: "Estructuras",
-    descripcion: "Truss de aluminio, torres de elevación, tarimas y rigging",
-    estado: "Activo",
-  },
-  {
-    id: "5",
-    nombre: "Efectos Especiales / Humo",
-    descripcion: "Máquinas de humo, hazer, CO2, chispas frías y confeti",
-    estado: "Activo",
-  },
-  {
-    id: "6",
-    nombre: "Accesorios y Cableado",
-    descripcion: "Cajas directas, snakes, acometidas eléctricas y soportes",
-    estado: "Activo",
-  },
-]
+const INITIAL_CATEGORIAS_EQUIPO: CategoriaEquipoItem[] = []
 
 export default function EquiposPage() {
   const toast = useToast()
-  const [equipos, setEquipos] = useState<EquipoItem[]>(INITIAL_EQUIPMENT)
-  const [categorias, setCategorias] = useState<CategoriaEquipoItem[]>(
-    INITIAL_CATEGORIAS_EQUIPO,
-  )
+  const { items: equipos, setItems: setEquipos } = useCrudResource<EquipoItem>({
+    endpoint: "/equipos",
+    storageKey: "high_events_equipos_v1",
+    initialData: INITIAL_EQUIPMENT,
+  })
+  const { items: categorias, setItems: setCategorias } =
+    useCrudResource<CategoriaEquipoItem>({
+      endpoint: "/categorias-equipo",
+      storageKey: "high_events_categorias_equipo_v1",
+      initialData: INITIAL_CATEGORIAS_EQUIPO,
+    })
 
   //Estado para formulario de Categorías (tabla categorias_equipo)
   const [catNombre, setCatNombre] = useState("")
@@ -296,7 +267,7 @@ export default function EquiposPage() {
     setEditForm({
       nombre: "",
       serie: "",
-      categoria: nombresCategorias[0] || "Audio",
+      categoria: nombresCategorias[0] || "",
       estadoOperativo: "Disponible",
       propiedad: "Propio",
       proveedor_id: null,

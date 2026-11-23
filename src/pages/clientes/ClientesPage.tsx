@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
@@ -17,7 +18,16 @@ import { ClienteDetailDrawer } from "./drawers/ClienteDetailDrawer"
 import { ClienteFormDrawer } from "./drawers/ClienteFormDrawer"
 
 export default function ClientesPage() {
-  const [clients, setClients] = useState<ClienteItem[]>(INITIAL_CLIENTS)
+  const {
+    items: clients,
+    createItem,
+    updateItem,
+    removeItem,
+  } = useCrudResource<ClienteItem>({
+    endpoint: "/clientes",
+    storageKey: "high_events_clientes_v1",
+    initialData: INITIAL_CLIENTS,
+  })
   const [selectedClient, setSelectedClient] = useState<ClienteItem | null>(null)
   const toast = useToast()
   const [drawerMode, setDrawerMode] = useState<ClienteDrawerMode>("create")
@@ -115,11 +125,7 @@ export default function ClientesPage() {
   } = usePagination(filteredData)
 
   const setClientEstado = (id: string, estado: string) => {
-    setClients((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, estado: estado as "Activo" | "Inactivo" } : c,
-      ),
-    )
+    void updateItem(id, { estado: estado as "Activo" | "Inactivo" })
     setSelectedClient((prev) =>
       prev && prev.id === id
         ? { ...prev, estado: estado as "Activo" | "Inactivo" }
@@ -133,7 +139,7 @@ export default function ClientesPage() {
 
   const handleDelete = (c: ClienteItem) => {
     if (confirm(`¿Eliminar cliente ${getClienteDisplayName(c)}?`)) {
-      setClients((prev) => prev.filter((item) => item.id !== c.id))
+      void removeItem(c.id)
       toast.success("Cliente eliminado")
     }
   }
@@ -181,16 +187,10 @@ export default function ClientesPage() {
         estado: "Activo",
         fecha_creacion: new Date().toISOString(),
       }
-      setClients([newClient, ...clients])
+      void createItem(newClient)
       toast.success("Cliente creado exitosamente")
     } else if (drawerMode === "edit" && selectedClient) {
-      setClients(
-        clients.map((c) =>
-          c.id === selectedClient.id
-            ? { ...c, ...formState } as ClienteItem
-            : c,
-        ),
-      )
+      void updateItem(selectedClient.id, formState)
       toast.success("Cliente actualizado correctamente")
     }
 

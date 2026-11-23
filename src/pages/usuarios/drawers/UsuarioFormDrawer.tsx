@@ -1,10 +1,12 @@
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { Drawer } from "../../../components/Drawer"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect } from "../../../components/CustomSelect"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { Rol } from "../../roles/types"
 import type { UsuarioItem, TipoDocumentoUsuario } from "../types"
-import { TIPO_DOC_OPTIONS, ROL_OPTIONS, ESTADO_OPTIONS } from "../data"
+import { TIPO_DOC_OPTIONS, ESTADO_OPTIONS } from "../data"
 
 interface UsuarioFormDrawerProps {
   isOpen: boolean
@@ -24,6 +26,15 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
   onSubmit,
 }) => {
   const [showPassword, setShowPassword] = useState(false)
+  const { items: rawRoles } = useCrudResource<Rol>({ endpoint: "/roles" })
+
+  const rolOptions = useMemo(
+    () =>
+      rawRoles
+        .filter((r) => r.estado === "Activo")
+        .map((r) => ({ label: r.nombre, value: r.nombre })),
+    [rawRoles],
+  )
 
   return (
     <Drawer
@@ -130,9 +141,10 @@ export const UsuarioFormDrawer: React.FC<UsuarioFormDrawerProps> = ({
               Rol de acceso <span className="text-[#EF4444]">*</span>
             </label>
             <CustomSelect
-              value={formState.rol || "Operador"}
+              value={formState.rol || rolOptions[0]?.value || ""}
               onChange={(val) => setFormState((f) => ({ ...f, rol: val }))}
-              options={ROL_OPTIONS}
+              options={rolOptions}
+              placeholder="Selecciona un rol creado"
             />
           </div>
 

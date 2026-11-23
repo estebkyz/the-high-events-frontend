@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import {
   LayoutGrid,
@@ -60,26 +61,17 @@ function mapEventoFaseToTareaFase(f: string): Fase {
 }
 
 export default function TareasPage() {
-  const [tasks, setTasksState] = useState<TareaItem[]>(() =>
-    getEventoTareasStore(),
-  )
-  const [catalogo, setCatalogo] = useState<TareaCatalogoItem[]>(() =>
-    getTareasCatalogo(),
-  )
+  const { items: tasks, setItems: setTasks } = useCrudResource<TareaItem>({
+    endpoint: "/evento-tareas",
+  })
+  const { items: catalogo, setItems: setCatalogo } =
+    useCrudResource<TareaCatalogoItem>({
+      endpoint: "/tareas-catalogo",
+    })
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "catalogo">(
     "kanban",
   )
   const toast = useToast()
-
-  const setTasks: React.Dispatch<React.SetStateAction<TareaItem[]>> = (
-    updater,
-  ) => {
-    setTasksState((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater
-      saveEventoTareasStore(next)
-      return next
-    })
-  }
 
   // Selection for Bulk Actions (Shopify Polaris)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -331,8 +323,7 @@ export default function TareasPage() {
       return
     }
     if (confirm(`¿Eliminar "${item.nombre_tarea}" del catálogo maestro?`)) {
-      const updated = deleteTareaCatalogo(item.id)
-      setCatalogo(updated)
+      setCatalogo((prev) => prev.filter((c) => c.id !== item.id))
       toast.success("Plantilla eliminada del catálogo de tareas")
     }
   }
@@ -341,12 +332,14 @@ export default function TareasPage() {
     nombre: string,
     faseActual: Fase,
   ): TareaCatalogoItem => {
-    const created = addTareaCatalogo({
+    const created: TareaCatalogoItem = {
+      id: String(Date.now()),
+      codigo: `TAR-${String(catalogo.length + 1).padStart(3, "0")}`,
       nombre_tarea: nombre,
       descripcion: `Actividad técnica estándar (${faseActual}).`,
       fase_sugerida: mapFaseToEventoFase(faseActual),
-    })
-    setCatalogo(getTareasCatalogo())
+    }
+    setCatalogo((prev) => [created, ...prev])
     toast.success(`"${created.nombre_tarea}" agregada al catálogo maestro`)
     return created
   }
@@ -358,12 +351,18 @@ export default function TareasPage() {
       return
     }
     if (drawerMode === "edit_catalogo" && catalogoForm.id) {
-      const updated = updateTareaCatalogo(catalogoForm.id, {
-        nombre_tarea: catalogoForm.nombre_tarea.trim(),
-        descripcion: catalogoForm.descripcion.trim(),
-        fase_sugerida: mapFaseToEventoFase(catalogoForm.fase_sugerida),
-      })
-      setCatalogo(updated)
+      setCatalogo((prev) =>
+        prev.map((c) =>
+          c.id === catalogoForm.id
+            ? {
+                ...c,
+                nombre_tarea: catalogoForm.nombre_tarea.trim(),
+                descripcion: catalogoForm.descripcion.trim(),
+                fase_sugerida: mapFaseToEventoFase(catalogoForm.fase_sugerida),
+              }
+            : c,
+        ),
+      )
       // Propagar cambio de nombre a las tareas en curso vinculadas
       setTasks((prev) =>
         prev.map((t) =>
@@ -378,12 +377,14 @@ export default function TareasPage() {
       )
       toast.success("Plantilla del catálogo actualizada")
     } else {
-      addTareaCatalogo({
+      const nuevaPlantilla: TareaCatalogoItem = {
+        id: String(Date.now()),
+        codigo: `TAR-${String(catalogo.length + 1).padStart(3, "0")}`,
         nombre_tarea: catalogoForm.nombre_tarea.trim(),
         descripcion: catalogoForm.descripcion.trim(),
         fase_sugerida: mapFaseToEventoFase(catalogoForm.fase_sugerida),
-      })
-      setCatalogo(getTareasCatalogo())
+      }
+      setCatalogo((prev) => [nuevaPlantilla, ...prev])
       toast.success(
         "Tarea agregada al catálogo (disponible al crear eventos)",
       )

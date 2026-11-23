@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
@@ -24,8 +25,12 @@ const BLANK_ITEM: NewItem = { nombre: "", cantidad: "1", estado: "Bueno" }
 export default function RecepcionesPage() {
   const toast = useToast()
 
-  const [recepciones, setRecepciones] =
-    useState<Recepcion[]>(INITIAL_RECEPCIONES)
+  const { items: recepciones, setItems: setRecepciones } =
+    useCrudResource<Recepcion>({
+      endpoint: "/recepciones",
+      storageKey: "high_events_recepciones_v1",
+      initialData: INITIAL_RECEPCIONES,
+    })
   const [drawerMode, setDrawerMode] = useState<RecepcionDrawerMode>(null)
   const [selectedRcp, setSelectedRcp] = useState<Recepcion | null>(null)
   const [devolucionParent, setDevolucionParent] = useState<Recepcion | null>(

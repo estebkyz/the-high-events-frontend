@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { CustomSelect } from "../../components/CustomSelect"
@@ -23,7 +24,12 @@ import { IncidenteDetailDrawer } from "./drawers/IncidenteDetailDrawer"
 import { IncidenteFormDrawer } from "./drawers/IncidenteFormDrawer"
 
 export default function IncidentesPage() {
-  const [incidents, setIncidents] = useState<IncidenteItem[]>(INITIAL_INCIDENTS)
+  const { items: incidents, setItems: setIncidents } =
+    useCrudResource<IncidenteItem>({
+      endpoint: "/incidentes",
+      storageKey: "high_events_incidentes_v1",
+      initialData: INITIAL_INCIDENTS,
+    })
   const [history, setHistory] =
     useState<Record<string, HistoryEntry[]>>(INITIAL_HISTORY)
   const toast = useToast()

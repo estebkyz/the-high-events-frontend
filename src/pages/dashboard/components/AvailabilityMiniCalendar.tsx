@@ -10,6 +10,8 @@ import {
 import type { RouteId, CalendarActivityItem } from "../types"
 import { STATUS_META, PERIOD_DATA } from "../data"
 import { pad } from "../utils"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { AgendaEvent } from "../../agendamiento/types"
 
 const CALENDAR_MONTH_KEYS = [
   "ago-2026",
@@ -36,7 +38,36 @@ export const AvailabilityMiniCalendar: React.FC<AvailabilityMiniCalendarProps> =
   const year = calData.year
   const monthIndex = calData.monthIndex
   const monthName = calData.monthName
-  const calendarDays = calData.calendarDays
+  const { items: agendaEvents } = useCrudResource<AgendaEvent>({
+    endpoint: "/agendamientos",
+  })
+
+  const calendarDays = useMemo(() => {
+    const map = new Map<number, CalendarActivityItem[]>()
+    agendaEvents
+      .filter((ev) => ev.year === year && ev.month === monthIndex)
+      .forEach((ev) => {
+        const list = map.get(ev.day) || []
+        list.push({
+          id: ev.id,
+          type:
+            ev.tipo_agendamiento === "visita_tecnica" ||
+            ev.tipo_agendamiento === "reunion_cliente" ||
+            ev.kind === "cita"
+              ? "technical_visit"
+              : "booked",
+          title: ev.title,
+          time: ev.time,
+          locacion: ev.venue || ev.modalidadCita || "Por definir",
+          responsable: ev.client,
+        })
+        map.set(ev.day, list)
+      })
+    return Array.from(map.entries()).map(([day, activities]) => ({
+      day,
+      activities,
+    }))
+  }, [agendaEvents, year, monthIndex])
 
   const today = new Date()
   const todayDay =

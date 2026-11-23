@@ -1,6 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import { Plus, Trash2, Boxes, Undo2 } from "lucide-react"
-import { AVAILABLE_EQUIPMENT } from "../data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { EquipoItem } from "../../equipos/types"
+import type { EquipoCatalogoItem } from "../types"
 import type { Dispatch, SetStateAction } from "react"
 
 interface EventoEquiposSectionProps {
@@ -21,6 +23,21 @@ export function EventoEquiposSection({
     index: number
   } | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { items: rawEquipos } = useCrudResource<EquipoItem>({ endpoint: "/equipos" })
+  const availableEquipment: EquipoCatalogoItem[] = useMemo(
+    () =>
+      rawEquipos.map((e) => ({
+        id: e.id,
+        codigo: e.codigo || `EQ-${e.id}`,
+        nombre: e.nombre,
+        categoria: e.categoria,
+        disponible: e.estadoOperativo === "Disponible",
+        propiedad: e.propiedad,
+        proveedor_id: e.proveedor_id ? String(e.proveedor_id) : undefined,
+        proveedor_nombre: e.proveedor_nombre,
+      })),
+    [rawEquipos],
+  )
 
   useEffect(() => {
     return () => {
@@ -30,13 +47,13 @@ export function EventoEquiposSection({
 
   const assignedItems = useMemo(() => {
     return equiposAsignados
-      .map((id) => AVAILABLE_EQUIPMENT.find((eq) => eq.id === id))
-      .filter((eq): eq is (typeof AVAILABLE_EQUIPMENT)[number] => Boolean(eq))
-  }, [equiposAsignados])
+      .map((id) => availableEquipment.find((eq) => eq.id === id))
+      .filter((eq): eq is EquipoCatalogoItem => Boolean(eq))
+  }, [equiposAsignados, availableEquipment])
 
   const availableToAdd = useMemo(() => {
-    return AVAILABLE_EQUIPMENT.filter((eq) => !equiposAsignados.includes(eq.id))
-  }, [equiposAsignados])
+    return availableEquipment.filter((eq) => !equiposAsignados.includes(eq.id))
+  }, [equiposAsignados, availableEquipment])
 
   const clearUndo = () => {
     if (undoTimer.current) clearTimeout(undoTimer.current)

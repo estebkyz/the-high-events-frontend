@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import { Eye, Edit2, Trash2 } from "lucide-react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
@@ -11,7 +12,11 @@ import type { Rol, PermsMap } from "./types"
 
 export default function RolesPage() {
   const toast = useToast()
-  const [roles, setRoles] = useState<Rol[]>(INITIAL_ROLES)
+  const { items: roles, setItems: setRoles } = useCrudResource<Rol>({
+    endpoint: "/roles",
+    storageKey: "high_events_roles_v1",
+    initialData: INITIAL_ROLES,
+  })
   const [perms, setPerms] = useState<PermsMap>(buildInitialPerms)
   const [search, setSearch] = useState("")
   const [filterEstado, setFilterEstado] = useState("Todos")

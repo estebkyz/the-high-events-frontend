@@ -1,4 +1,5 @@
 import { usePagination } from "../../hooks/usePagination"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import React, { useState, useMemo } from "react"
 import { PageHeader } from "../../components/PageHeader"
 import { IndexTabs } from "../../components/IndexTabs"
@@ -38,7 +39,12 @@ const INITIAL_FORM: EmpleadoFormData = {
 export default function EmpleadosPage() {
   const toast = useToast()
 
-  const [employees, setEmployees] = useState<EmpleadoItem[]>(INITIAL_EMPLOYEES)
+  const { items: employees, setItems: setEmployees } =
+    useCrudResource<EmpleadoItem>({
+      endpoint: "/empleados",
+      storageKey: "high_events_empleados_v1",
+      initialData: INITIAL_EMPLOYEES,
+    })
   const [selectedEmp, setSelectedEmp] = useState<EmpleadoItem | null>(null)
   const [drawerMode, setDrawerMode] = useState<EmpleadoDrawerMode>(null)
 

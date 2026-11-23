@@ -2,7 +2,7 @@ import React from "react"
 import { Drawer } from "../../../components/Drawer"
 import { FormInput } from "../../../components/FormInput"
 import { CustomSelect } from "../../../components/CustomSelect"
-import { CATEGORIES, ESTADO_SERVICIOS_OPTIONS, TIPO_COBRO_OPTIONS } from "../data"
+import { ESTADO_SERVICIOS_OPTIONS, TIPO_COBRO_OPTIONS } from "../data"
 import type { ServicioItem, ServicioFormData, TipoCobroServicio } from "../types"
 
 interface ServicioFormDrawerProps {
@@ -17,11 +17,6 @@ interface ServicioFormDrawerProps {
   onCreateCategoria?: (nombre: string) => void
 }
 
-const CATEGORY_SELECT_OPTIONS = CATEGORIES.map((c) => ({
-  value: c,
-  label: c,
-}))
-
 const ESTADO_SELECT_OPTIONS = ESTADO_SERVICIOS_OPTIONS.map((e) => ({
   value: e,
   label: e,
@@ -35,10 +30,10 @@ export function ServicioFormDrawer({
   formData,
   setFormData,
   onSubmit,
-  categorias,
+  categorias = [],
   onCreateCategoria,
 }: ServicioFormDrawerProps) {
-  const categoryOptions = (categorias && categorias.length > 0 ? categorias : CATEGORIES).map((c) => ({
+  const categoryOptions = categorias.map((c) => ({
     value: c,
     label: c,
   }))
@@ -69,10 +64,11 @@ export function ServicioFormDrawer({
                 Categoría
               </label>
               <CustomSelect
-                value={formData.categoria || (categoryOptions[0]?.value ?? "Sonido")}
+                value={formData.categoria || (categoryOptions[0]?.value ?? "")}
                 onChange={(val) => setFormData((f) => ({ ...f, categoria: val }))}
                 options={categoryOptions}
                 searchable
+                placeholder="Selecciona o crea una categoría"
                 allowCreate={!!onCreateCategoria}
                 createLabel="Crear categoría"
                 onCreate={(newCat) => {

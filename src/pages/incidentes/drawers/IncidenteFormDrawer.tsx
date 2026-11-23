@@ -4,8 +4,11 @@ import { FormInput } from "../../../components/FormInput"
 import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
 import type { IncidenteFormData, Criticidad, TipoIncidente } from "../types"
 import { CRITICIDAD_OPTIONS, TIPO_INCIDENTE_OPTIONS } from "../data"
-import { EVENTOS_MOCK, AVAILABLE_EMPLOYEES } from "../../eventos/data"
-import { INITIAL_EVENTS } from "../../agendamiento/data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { EventoItem } from "../../eventos/types"
+import type { EmpleadoItem } from "../../empleados/types"
+import { getEmpleadoFullName } from "../../empleados/utils"
+import type { AgendaEvent } from "../../agendamiento/types"
 
 interface IncidenteFormDrawerProps {
   isOpen: boolean
@@ -22,31 +25,38 @@ export const IncidenteFormDrawer: React.FC<IncidenteFormDrawerProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { items: rawEventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const { items: rawAgenda } = useCrudResource<AgendaEvent>({ endpoint: "/agendamientos" })
+  const { items: rawEmpleados } = useCrudResource<EmpleadoItem>({ endpoint: "/empleados" })
+
   const eventoOptions = useMemo<SelectOption[]>(() => {
-    const fromEventos = EVENTOS_MOCK.map((ev) => ({
+    const fromEventos = rawEventos.map((ev) => ({
       label: ev.nombre,
       value: ev.nombre,
       sublabel: `${ev.cliente_nombre} · ${ev.direccion}`,
     }))
     const seen = new Set(fromEventos.map((e) => e.value))
-    const fromAgenda = INITIAL_EVENTS.filter(
-      (ag) => ag.kind === "evento" && !seen.has(ag.title),
-    ).map((ag) => ({
-      label: ag.title,
-      value: ag.title,
-      sublabel: `${ag.client} · ${ag.venue || "Agendado"}`,
-    }))
+    const fromAgenda = rawAgenda
+      .filter((ag) => ag.kind === "evento" && !seen.has(ag.title))
+      .map((ag) => ({
+        label: ag.title,
+        value: ag.title,
+        sublabel: `${ag.client} · ${ag.venue || "Agendado"}`,
+      }))
     return [...fromEventos, ...fromAgenda]
-  }, [])
+  }, [rawEventos, rawAgenda])
 
   const empleadoOptions = useMemo<SelectOption[]>(
     () =>
-      AVAILABLE_EMPLOYEES.map((emp) => ({
-        label: emp.nombre,
-        value: emp.nombre,
-        sublabel: emp.cargo,
-      })),
-    [],
+      rawEmpleados.map((emp) => {
+        const nombre = getEmpleadoFullName(emp)
+        return {
+          label: nombre,
+          value: nombre,
+          sublabel: emp.cargo,
+        }
+      }),
+    [rawEmpleados],
   )
 
   return (

@@ -12,7 +12,11 @@ import {
   TIPOS_EVENTO_OPTIONS,
   ESTADOS_EVENTO_OPTIONS,
 } from "../data"
-import { EVENTOS_MOCK, CLIENTES_CATALOGO, COTIZACIONES_CATALOGO } from "../../eventos/data"
+import { useCrudResource } from "../../../hooks/useCrudResource"
+import type { EventoItem } from "../../eventos/types"
+import type { ClienteItem } from "../../clientes/types"
+import { getClienteDisplayName } from "../../clientes/utils"
+import type { CotizacionItem } from "../../cotizaciones/types"
 import type { AgendaEvent, AgendaFormData, AgendaKind } from "../types"
 
 interface AgendamientoFormDrawerProps {
@@ -79,38 +83,51 @@ export function AgendamientoFormDrawer({
     )
   }, [existingEvents, editingEventId, formData.dateISO, formData.time])
 
-  // Catálogo unificado de eventos y cotizaciones aprobadas vinculadas a su cliente
+  // Catálogo unificado de eventos y cotizaciones aprobadas vinculadas a su cliente desde la API
+  const { items: rawEventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const { items: rawClientes } = useCrudResource<ClienteItem>({ endpoint: "/clientes" })
+  const { items: rawCotizaciones } = useCrudResource<CotizacionItem>({ endpoint: "/cotizaciones" })
+
+  const clientesCatalogo = useMemo(
+    () =>
+      rawClientes.map((c) => ({
+        id: c.id,
+        nombre: getClienteDisplayName(c),
+      })),
+    [rawClientes],
+  )
+
   const registrosEventos = useMemo(() => {
-    const fromEventos = EVENTOS_MOCK.map((ev) => ({
+    const fromEventos = rawEventos.map((ev) => ({
       id: ev.id,
       codigo: ev.cotizacion_codigo || `EV-${ev.id}`,
       nombre: ev.nombre,
       cliente_id: ev.cliente_id || "propio",
       cliente_nombre: ev.cliente_nombre,
-      fecha: ev.hora_inicio.split("T")[0] || formData.dateISO,
-      hora: (ev.hora_inicio.split("T")[1] || "18:00").slice(0, 5),
+      fecha: (ev.hora_inicio || "").split("T")[0] || formData.dateISO,
+      hora: ((ev.hora_inicio || "").split("T")[1] || "18:00").slice(0, 5),
       direccion: ev.direccion,
     }))
 
     const existingNames = new Set(fromEventos.map((e) => e.nombre))
-    const fromCotizaciones = COTIZACIONES_CATALOGO.filter(
-      (c) => !existingNames.has(c.nombre_evento),
-    ).map((c) => {
-      const cli = CLIENTES_CATALOGO.find((cl) => cl.id === c.cliente_id)
-      return {
-        id: `cot-${c.id}`,
-        codigo: c.codigo,
-        nombre: c.nombre_evento,
-        cliente_id: c.cliente_id,
-        cliente_nombre: cli?.nombre || "The High Events",
-        fecha: c.fecha_evento,
-        hora: c.hora_inicio,
-        direccion: c.direccion,
-      }
-    })
+    const fromCotizaciones = rawCotizaciones
+      .filter((c) => !existingNames.has(c.nombre_evento))
+      .map((c) => {
+        const cli = clientesCatalogo.find((cl) => cl.id === c.cliente_id)
+        return {
+          id: `cot-${c.id}`,
+          codigo: c.codigo,
+          nombre: c.nombre_evento,
+          cliente_id: c.cliente_id || "",
+          cliente_nombre: cli?.nombre || c.cliente || "The High Events",
+          fecha: c.fecha_evento || c.fecha,
+          hora: c.hora_inicio || "18:00",
+          direccion: c.direccion || "",
+        }
+      })
 
     return [...fromEventos, ...fromCotizaciones]
-  }, [formData.dateISO])
+  }, [formData.dateISO, rawEventos, rawCotizaciones, clientesCatalogo])
 
   // Si hay un cliente seleccionado, filtra solo los eventos/cotizaciones de dicho cliente
   const eventosFiltradosPorCliente = useMemo(() => {
@@ -134,7 +151,7 @@ export function AgendamientoFormDrawer({
   )
 
   const handleSelectClienteEvento = (clientName: string) => {
-    const cli = CLIENTES_CATALOGO.find((c) => c.nombre === clientName)
+    const cli = clientesCatalogo.find((c) => c.nombre === clientName)
     const eventosDelCliente = registrosEventos.filter(
       (r) =>
         r.cliente_nombre.toLowerCase() === clientName.toLowerCase() ||

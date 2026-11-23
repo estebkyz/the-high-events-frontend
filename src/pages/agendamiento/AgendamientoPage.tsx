@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react"
+import { useCrudResource } from "../../hooks/useCrudResource"
 import {
   MapPin,
   X,
@@ -53,7 +54,11 @@ const focusRing =
 export default function AgendamientoPage() {
   const toast = useToast()
 
-  const [events, setEvents] = useState<AgendaEvent[]>(INITIAL_EVENTS)
+  const { items: events, setItems: setEvents } = useCrudResource<AgendaEvent>({
+    endpoint: "/agendamientos",
+    storageKey: "high_events_agendamientos_v1",
+    initialData: INITIAL_EVENTS,
+  })
   const [currentYear, setCurrentYear] = useState(TODAY_YEAR)
   const [currentMonth, setCurrentMonth] = useState(TODAY_MONTH)
   const [selectedDay, setSelectedDay] = useState<number>(TODAY_DAY)
