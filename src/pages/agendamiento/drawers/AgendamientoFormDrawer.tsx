@@ -1,5 +1,5 @@
 import React, { useId, useMemo } from "react"
-import { Lock, MapPin, CheckCircle2 } from "lucide-react"
+import { Lock, MapPin, CheckCircle2, AlertTriangle } from "lucide-react"
 import { Drawer } from "../../../components/Drawer"
 import {
   CustomSelect,
@@ -13,7 +13,7 @@ import {
   ESTADOS_EVENTO_OPTIONS,
 } from "../data"
 import { EVENTOS_MOCK, CLIENTES_CATALOGO, COTIZACIONES_CATALOGO } from "../../eventos/data"
-import type { AgendaFormData, AgendaKind } from "../types"
+import type { AgendaEvent, AgendaFormData, AgendaKind } from "../types"
 
 interface AgendamientoFormDrawerProps {
   isOpen: boolean
@@ -27,6 +27,8 @@ interface AgendamientoFormDrawerProps {
   onAddVenue: (venueName: string) => void
   onSwitchKind: (kind: AgendaKind) => void
   onSubmit: (e: React.FormEvent) => void
+  existingEvents?: AgendaEvent[]
+  editingEventId?: string
 }
 
 const LABEL_CLASS = "text-[12.5px] font-medium text-[#F8FAFC] block mb-1"
@@ -49,9 +51,33 @@ export function AgendamientoFormDrawer({
   onAddClient,
   onSwitchKind,
   onSubmit,
+  existingEvents = [],
+  editingEventId = "",
 }: AgendamientoFormDrawerProps) {
   const uid = useId()
   const isCita = formData.kind === "cita"
+
+  const scheduleConflict = useMemo(() => {
+    if (!formData.dateISO || !formData.time) return null
+    const [yStr, mStr, dStr] = formData.dateISO.split("-")
+    const y = Number(yStr)
+    const m = Number(mStr) - 1
+    const d = Number(dStr)
+    const t = formData.time.slice(0, 5)
+    if (!y || Number.isNaN(m) || !d) return null
+    return (
+      existingEvents.find(
+        (ev) =>
+          ev.id !== editingEventId &&
+          ev.year === y &&
+          ev.month === m &&
+          ev.day === d &&
+          ev.time.slice(0, 5) === t &&
+          ev.estado !== "Cancelado" &&
+          ev.estado !== "Cancelada",
+      ) ?? null
+    )
+  }, [existingEvents, editingEventId, formData.dateISO, formData.time])
 
   // Catálogo unificado de eventos y cotizaciones aprobadas vinculadas a su cliente
   const registrosEventos = useMemo(() => {
@@ -169,8 +195,10 @@ export function AgendamientoFormDrawer({
       title={isEditing ? "Editar agendamiento" : "Crear agendamiento"}
     >
       <form onSubmit={onSubmit} className="space-y-3.5">
-        {/* Fila superior: Tipo (Cita vs Evento) + Actividad/Motivo + Estado en 3 columnas */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+        {/* Fila superior: Tipo (Cita vs Evento) + Actividad/Motivo + Estado (solo edición) */}
+        <div
+          className={`grid grid-cols-1 ${isEditing ? "sm:grid-cols-3" : "sm:grid-cols-2"} gap-3 items-end`}
+        >
           <div>
             <span className={LABEL_CLASS}>Tipo de agendamiento</span>
             <div className="grid grid-cols-2 gap-1 p-1 h-[38px] bg-[#111318] border border-[#262D3D] rounded-xl">
@@ -211,15 +239,17 @@ export function AgendamientoFormDrawer({
             />
           </div>
 
-          <div>
-            <label className={LABEL_CLASS}>Estado del agendamiento</label>
-            <CustomSelect
-              options={isCita ? ESTADOS_CITA_OPTIONS : ESTADOS_EVENTO_OPTIONS}
-              value={formData.estado}
-              onChange={(val) => setFormData((f) => ({ ...f, estado: val }))}
-              placeholder="Seleccionar estado..."
-            />
-          </div>
+          {isEditing && (
+            <div>
+              <label className={LABEL_CLASS}>Estado del agendamiento</label>
+              <CustomSelect
+                options={isCita ? ESTADOS_CITA_OPTIONS : ESTADOS_EVENTO_OPTIONS}
+                value={formData.estado}
+                onChange={(val) => setFormData((f) => ({ ...f, estado: val }))}
+                placeholder="Seleccionar estado..."
+              />
+            </div>
+          )}
         </div>
 
         {/* ── MODO EVENTO: Conectado a Cliente + Evento/Cotización (Hereda Nombre, Fecha, Hora y Dirección) ── */}
@@ -470,6 +500,25 @@ export function AgendamientoFormDrawer({
                 }
                 className={`${INPUT_BASE} px-3`}
               />
+            </div>
+          </div>
+        )}
+
+        {scheduleConflict && (
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 p-3 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/30 text-xs text-[#FCA5A5]"
+          >
+            <AlertTriangle size={15} className="text-[#EF4444] shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="font-semibold text-[#F87171]">
+                Conflicto de horario detectado
+              </p>
+              <p className="mt-0.5">
+                Ya existe {scheduleConflict.kind === "cita" ? "una cita" : "un evento"} (
+                <span className="font-semibold text-[#F8FAFC]">{scheduleConflict.title}</span>) el{" "}
+                {formData.dateISO} a las {formData.time.slice(0, 5)}. Cambia la hora para evitar doble reserva.
+              </p>
             </div>
           </div>
         )}

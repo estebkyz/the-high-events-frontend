@@ -503,16 +503,8 @@ export default function TareasPage() {
         {/* ── Top Bar con PageHeader estandarizado ── */}
         <PageHeader
           title="Tareas"
-          actionLabel={
-            viewMode === "catalogo"
-              ? "Crear tarea"
-              : "Asignar tarea"
-          }
-          onAction={
-            viewMode === "catalogo"
-              ? openCreateCatalogo
-              : () => openCreateAssignment()
-          }
+          actionLabel={viewMode === "catalogo" ? "Crear tarea" : undefined}
+          onAction={viewMode === "catalogo" ? openCreateCatalogo : undefined}
           searchValue={search}
           onSearchChange={(val) => {
             setSearch(val)
@@ -727,7 +719,6 @@ export default function TareasPage() {
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
               onToggleSelectAll={handleToggleSelectAll}
-              onEmptyAction={() => openCreateAssignment()}
               onResetFilters={resetFilters}
               isFiltered={isFiltered}
               onPageSizeChange={(newSize) => {

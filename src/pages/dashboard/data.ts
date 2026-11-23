@@ -1,4 +1,9 @@
-import type { PeriodData, PeriodOption, EventoDraftFormState } from "./types"
+import type {
+  PeriodData,
+  PeriodOption,
+  EventoDraftFormState,
+  DashboardRangeType,
+} from "./types"
 
 export const PERIOD_OPTIONS: readonly PeriodOption[] = [
   { id: "nov-2026", label: "Noviembre 2026", monthIndex: 10, year: 2026 },
@@ -7,6 +12,35 @@ export const PERIOD_OPTIONS: readonly PeriodOption[] = [
   { id: "ago-2026", label: "Agosto 2026", monthIndex: 7, year: 2026 },
   { id: "dic-2026", label: "Diciembre 2026", monthIndex: 11, year: 2026 },
 ] as const
+
+export const PERIOD_OPTIONS_BY_RANGE: Record<
+  DashboardRangeType,
+  readonly PeriodOption[]
+> = {
+  dia: [
+    { id: "dia-21-nov-2026", label: "Sáb 21 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "hoy-2026", label: "Vie 20 Nov 2026 (Hoy)", monthIndex: 10, year: 2026 },
+    { id: "dia-19-nov-2026", label: "Jue 19 Nov 2026 (Ayer)", monthIndex: 10, year: 2026 },
+    { id: "dia-18-nov-2026", label: "Mié 18 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "dia-14-nov-2026", label: "Sáb 14 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "dia-31-oct-2026", label: "Sáb 31 Oct 2026", monthIndex: 9, year: 2026 },
+  ],
+  semana: [
+    { id: "sem-4-nov-2026", label: "Sem 23 - 29 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "sem-2026", label: "Sem 16 - 22 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "sem-2-nov-2026", label: "Sem 09 - 15 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "sem-1-nov-2026", label: "Sem 02 - 08 Nov 2026", monthIndex: 10, year: 2026 },
+    { id: "sem-4-oct-2026", label: "Sem 26 Oct - 01 Nov 2026", monthIndex: 9, year: 2026 },
+    { id: "sem-3-oct-2026", label: "Sem 19 - 25 Oct 2026", monthIndex: 9, year: 2026 },
+  ],
+  mes: PERIOD_OPTIONS,
+  anio: [
+    { id: "anio-2027", label: "Año 2027 (Proyección)", monthIndex: 10, year: 2027 },
+    { id: "anio-2026", label: "Año 2026", monthIndex: 10, year: 2026 },
+    { id: "anio-2025", label: "Año 2025", monthIndex: 11, year: 2025 },
+    { id: "anio-2024", label: "Año 2024", monthIndex: 11, year: 2024 },
+  ],
+}
 
 export const MILLON = 1_000_000
 
@@ -120,8 +154,8 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
       { categoria: "Estructuras, Efectos & Logística", monto: 2.6, porcentaje: 8, eventos: 2, color: "#EC4899" },
     ],
     modalidadEventos: [
-      { label: "Eventos para Clientes (Confirmados)", cantidad: 3, porcentaje: 60, ingresos: 21.3, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 1, porcentaje: 20, ingresos: 8.5, color: "#10B981" },
+      { label: "Eventos para Clientes", cantidad: 3, porcentaje: 60, ingresos: 21.3, color: "#7C3AED" },
+      { label: "Eventos propios", cantidad: 1, porcentaje: 20, ingresos: 8.5, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 1, porcentaje: 20, ingresos: 3.0, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -222,7 +256,7 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
     ],
     modalidadEventos: [
       { label: "Eventos para Clientes (Confirmados)", cantidad: 84, porcentaje: 64, ingresos: 412.0, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 28, porcentaje: 21, ingresos: 168.5, color: "#10B981" },
+      { label: "Eventos Propios", cantidad: 28, porcentaje: 21, ingresos: 168.5, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 20, porcentaje: 15, ingresos: 61.5, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -304,7 +338,7 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
     ],
     modalidadEventos: [
       { label: "Eventos para Clientes (Confirmados)", cantidad: 8, porcentaje: 50, ingresos: 42.4, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 3, porcentaje: 19, ingresos: 21.5, color: "#10B981" },
+      { label: "Eventos Propios", cantidad: 3, porcentaje: 19, ingresos: 21.5, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 5, porcentaje: 31, ingresos: 12.5, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -528,7 +562,7 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
     ],
     modalidadEventos: [
       { label: "Eventos para Clientes (Confirmados)", cantidad: 6, porcentaje: 43, ingresos: 36.2, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 4, porcentaje: 29, ingresos: 20.8, color: "#10B981" },
+      { label: "Eventos Propios", cantidad: 4, porcentaje: 29, ingresos: 20.8, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 4, porcentaje: 28, ingresos: 11.0, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -653,7 +687,7 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
     ],
     modalidadEventos: [
       { label: "Eventos para Clientes (Confirmados)", cantidad: 7, porcentaje: 54, ingresos: 33.5, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 2, porcentaje: 15, ingresos: 15.0, color: "#10B981" },
+      { label: "Eventos Propios", cantidad: 2, porcentaje: 15, ingresos: 15.0, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 4, porcentaje: 31, ingresos: 10.0, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -735,7 +769,7 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
     ],
     modalidadEventos: [
       { label: "Eventos para Clientes (Confirmados)", cantidad: 5, porcentaje: 45, ingresos: 24.2, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 3, porcentaje: 27, ingresos: 17.0, color: "#10B981" },
+      { label: "Eventos Propios", cantidad: 3, porcentaje: 27, ingresos: 17.0, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 3, porcentaje: 28, ingresos: 8.0, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -805,7 +839,7 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
     ],
     modalidadEventos: [
       { label: "Eventos para Clientes (Confirmados)", cantidad: 11, porcentaje: 61, ingresos: 58.0, color: "#7C3AED" },
-      { label: "Producción Propia The High", cantidad: 3, porcentaje: 17, ingresos: 24.0, color: "#10B981" },
+      { label: "Eventos Propios", cantidad: 3, porcentaje: 17, ingresos: 24.0, color: "#10B981" },
       { label: "En Planificación / Cotización", cantidad: 4, porcentaje: 22, ingresos: 12.0, color: "#F59E0B" },
     ],
     operacionStats: [
@@ -848,6 +882,944 @@ export const PERIOD_DATA: Record<string, PeriodData> = {
       },
     ],
   },
+
+  /* ── DÍAS ADICIONALES ── */
+  "dia-21-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "sáb 21 nov",
+    previousMonthName: "vie 20 nov",
+    vendido: 18_200_000,
+    cobrado: 13_400_000,
+    ticket: 9_100_000,
+    eventosConfirmados: 2,
+    eventosTotal: 2,
+    porCobrar: 4_800_000,
+    porPagarProveedores: 2_300_000,
+    rentabilidad: 7_800_000,
+    metaCobrado: 12_500_000,
+    cobradoMesAnterior: 9_800_000,
+    monthComparison: [
+      { label: "08:00", actual: 2.1, anterior: 1.5 },
+      { label: "12:00", actual: 5.8, anterior: 4.2 },
+      { label: "16:00", actual: 9.6, anterior: 7.1 },
+      { label: "20:00", actual: 13.4, anterior: 9.8 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 3.1, anterior: 2.5 },
+      { day: "Mar", actual: 4.8, anterior: 4.2 },
+      { day: "Mié", actual: 7.4, anterior: 6.8 },
+      { day: "Jue", actual: 13.5, anterior: 12.2 },
+      { day: "Vie", actual: 14.5, anterior: 12.0 },
+      { day: "Sáb", actual: 18.2, anterior: 18.5 },
+      { day: "Dom", actual: 0, anterior: 8.8 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 6.8, porcentaje: 37, eventos: 2, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 4.9, porcentaje: 27, eventos: 2, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 3.3, porcentaje: 18, eventos: 1, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 2.0, porcentaje: 11, eventos: 2, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 1.2, porcentaje: 7, eventos: 1, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (21 Nov)", cantidad: 1, porcentaje: 50, ingresos: 10.7, color: "#7C3AED" },
+      { label: "Eventos Propios (21 Nov)", cantidad: 1, porcentaje: 50, ingresos: 7.5, color: "#10B981" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 45, pendiente: 5, alerta: 1, unidad: "equipos" },
+      { categoria: "Tareas del Día", completado: 12, pendiente: 2, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 3, pendiente: 1, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 0, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 21,
+        activities: [
+          {
+            id: "nov-21-a",
+            type: "booked",
+            title: "Matrimonio Villa & Soto",
+            time: "17:00",
+            locacion: "Jardín Botánico · Orquideorama",
+            responsable: "Alejandra Osorio",
+          },
+          {
+            id: "nov-21-b",
+            type: "own_event",
+            title: "Sunset Electronic Rooftop",
+            time: "19:00",
+            locacion: "Discoteca Mijito · Provenza",
+            responsable: "Carlos Ruiz",
+          },
+        ],
+      },
+    ],
+  },
+  "dia-19-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "jue 19 nov",
+    previousMonthName: "mié 18 nov",
+    vendido: 11_200_000,
+    cobrado: 8_200_000,
+    ticket: 5_600_000,
+    eventosConfirmados: 2,
+    eventosTotal: 2,
+    porCobrar: 3_000_000,
+    porPagarProveedores: 1_400_000,
+    rentabilidad: 4_300_000,
+    metaCobrado: 8_500_000,
+    cobradoMesAnterior: 6_900_000,
+    monthComparison: [
+      { label: "08:00", actual: 1.2, anterior: 0.9 },
+      { label: "12:00", actual: 3.5, anterior: 2.8 },
+      { label: "16:00", actual: 5.8, anterior: 4.9 },
+      { label: "20:00", actual: 8.2, anterior: 6.9 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 3.1, anterior: 2.5 },
+      { day: "Mar", actual: 4.8, anterior: 4.2 },
+      { day: "Mié", actual: 7.4, anterior: 6.8 },
+      { day: "Jue", actual: 11.2, anterior: 12.2 },
+      { day: "Vie", actual: 0, anterior: 12.0 },
+      { day: "Sáb", actual: 0, anterior: 18.5 },
+      { day: "Dom", actual: 0, anterior: 8.8 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 4.1, porcentaje: 37, eventos: 2, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 2.8, porcentaje: 25, eventos: 1, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 2.2, porcentaje: 20, eventos: 1, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 1.3, porcentaje: 11, eventos: 1, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 0.8, porcentaje: 7, eventos: 1, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos Corporativos (19 Nov)", cantidad: 2, porcentaje: 100, ingresos: 11.2, color: "#7C3AED" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 38, pendiente: 6, alerta: 1, unidad: "equipos" },
+      { categoria: "Tareas del Día", completado: 8, pendiente: 1, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 2, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 0, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 19,
+        activities: [
+          {
+            id: "nov-19-a",
+            type: "booked",
+            title: "Foro Innovación EAFIT",
+            time: "15:00",
+            locacion: "Auditorio Fundadores · EAFIT",
+            responsable: "Sofía Martínez",
+          },
+        ],
+      },
+    ],
+  },
+  "dia-18-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "mié 18 nov",
+    previousMonthName: "mar 17 nov",
+    vendido: 8_600_000,
+    cobrado: 6_900_000,
+    ticket: 4_300_000,
+    eventosConfirmados: 1,
+    eventosTotal: 2,
+    porCobrar: 1_700_000,
+    porPagarProveedores: 950_000,
+    rentabilidad: 3_600_000,
+    metaCobrado: 7_000_000,
+    cobradoMesAnterior: 5_400_000,
+    monthComparison: [
+      { label: "08:00", actual: 0.9, anterior: 0.7 },
+      { label: "12:00", actual: 2.8, anterior: 2.1 },
+      { label: "16:00", actual: 4.9, anterior: 3.8 },
+      { label: "20:00", actual: 6.9, anterior: 5.4 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 3.1, anterior: 2.5 },
+      { day: "Mar", actual: 4.8, anterior: 4.2 },
+      { day: "Mié", actual: 8.6, anterior: 6.8 },
+      { day: "Jue", actual: 0, anterior: 12.2 },
+      { day: "Vie", actual: 0, anterior: 12.0 },
+      { day: "Sáb", actual: 0, anterior: 18.5 },
+      { day: "Dom", actual: 0, anterior: 8.8 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 3.2, porcentaje: 37, eventos: 1, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 2.1, porcentaje: 24, eventos: 1, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 1.8, porcentaje: 21, eventos: 1, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 0.9, porcentaje: 11, eventos: 1, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 0.6, porcentaje: 7, eventos: 1, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (18 Nov)", cantidad: 1, porcentaje: 50, ingresos: 6.2, color: "#7C3AED" },
+      { label: "Visitas / Cotizaciones (18 Nov)", cantidad: 1, porcentaje: 50, ingresos: 2.4, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 36, pendiente: 4, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas del Día", completado: 7, pendiente: 1, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 1, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 0, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 18,
+        activities: [
+          {
+            id: "nov-18-a",
+            type: "technical_visit",
+            title: "Reunión y Visita Técnica: Graduación San José",
+            time: "14:30",
+            locacion: "Club Campestre Medellín",
+            responsable: "Andrés Vera",
+          },
+        ],
+      },
+    ],
+  },
+  "dia-14-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "sáb 14 nov",
+    previousMonthName: "vie 13 nov",
+    vendido: 21_400_000,
+    cobrado: 16_800_000,
+    ticket: 10_700_000,
+    eventosConfirmados: 2,
+    eventosTotal: 2,
+    porCobrar: 4_600_000,
+    porPagarProveedores: 2_600_000,
+    rentabilidad: 9_100_000,
+    metaCobrado: 15_000_000,
+    cobradoMesAnterior: 13_200_000,
+    monthComparison: [
+      { label: "08:00", actual: 2.6, anterior: 2.1 },
+      { label: "12:00", actual: 6.9, anterior: 5.4 },
+      { label: "16:00", actual: 11.8, anterior: 9.2 },
+      { label: "20:00", actual: 16.8, anterior: 13.2 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 2.8, anterior: 2.4 },
+      { day: "Mar", actual: 4.1, anterior: 3.8 },
+      { day: "Mié", actual: 6.5, anterior: 5.9 },
+      { day: "Jue", actual: 11.4, anterior: 10.2 },
+      { day: "Vie", actual: 15.6, anterior: 13.8 },
+      { day: "Sáb", actual: 21.4, anterior: 18.0 },
+      { day: "Dom", actual: 8.2, anterior: 7.4 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 7.8, porcentaje: 36, eventos: 2, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 5.6, porcentaje: 26, eventos: 2, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 4.1, porcentaje: 19, eventos: 2, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 2.4, porcentaje: 11, eventos: 2, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 1.5, porcentaje: 8, eventos: 1, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (14 Nov)", cantidad: 1, porcentaje: 50, ingresos: 12.9, color: "#7C3AED" },
+      { label: "Eventos Propios (14 Nov)", cantidad: 1, porcentaje: 50, ingresos: 8.5, color: "#10B981" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 48, pendiente: 2, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas del Día", completado: 14, pendiente: 0, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 4, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 1, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 14,
+        activities: [
+          {
+            id: "nov-14-a",
+            type: "booked",
+            title: "Boda Campestre Mejía - Restrepo",
+            time: "16:00",
+            locacion: "Hacienda Fizebad · Llanogrande",
+            responsable: "Alejandra Osorio",
+          },
+          {
+            id: "nov-14-b",
+            type: "own_event",
+            title: "High Techno Showcase",
+            time: "22:00",
+            locacion: "Discoteca La Pista · Provenza",
+            responsable: "Felipe Gómez",
+          },
+        ],
+      },
+    ],
+  },
+  "dia-31-oct-2026": {
+    monthIndex: 9,
+    year: 2026,
+    monthName: "sáb 31 oct",
+    previousMonthName: "vie 30 oct",
+    vendido: 24_800_000,
+    cobrado: 21_500_000,
+    ticket: 8_266_666,
+    eventosConfirmados: 3,
+    eventosTotal: 3,
+    porCobrar: 3_300_000,
+    porPagarProveedores: 2_900_000,
+    rentabilidad: 11_400_000,
+    metaCobrado: 20_000_000,
+    cobradoMesAnterior: 17_800_000,
+    monthComparison: [
+      { label: "08:00", actual: 3.4, anterior: 2.8 },
+      { label: "12:00", actual: 8.9, anterior: 7.1 },
+      { label: "16:00", actual: 15.2, anterior: 12.4 },
+      { label: "20:00", actual: 21.5, anterior: 17.8 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 3.5, anterior: 3.0 },
+      { day: "Mar", actual: 5.2, anterior: 4.5 },
+      { day: "Mié", actual: 8.1, anterior: 7.2 },
+      { day: "Jue", actual: 14.0, anterior: 11.8 },
+      { day: "Vie", actual: 19.4, anterior: 16.5 },
+      { day: "Sáb", actual: 24.8, anterior: 20.1 },
+      { day: "Dom", actual: 9.8, anterior: 8.4 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 8.9, porcentaje: 36, eventos: 3, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 6.7, porcentaje: 27, eventos: 3, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 4.5, porcentaje: 18, eventos: 2, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 3.0, porcentaje: 12, eventos: 3, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 1.7, porcentaje: 7, eventos: 2, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Producción Propia Halloween", cantidad: 2, porcentaje: 67, ingresos: 17.6, color: "#10B981" },
+      { label: "Eventos Clientes Halloween", cantidad: 1, porcentaje: 33, ingresos: 7.2, color: "#7C3AED" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 50, pendiente: 0, alerta: 1, unidad: "equipos" },
+      { categoria: "Tareas del Día", completado: 18, pendiente: 0, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 5, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 1, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 31,
+        activities: [
+          {
+            id: "oct-31-a",
+            type: "own_event",
+            title: "Halloween Secret Warehouse",
+            time: "21:00",
+            locacion: "Bodega Industrial · Perpetuo Socorro",
+            responsable: "Carlos Ruiz",
+          },
+          {
+            id: "oct-31-b",
+            type: "booked",
+            title: "Fiesta Corporativa Halloween Globant",
+            time: "19:30",
+            locacion: "Rooftop Vizcaya · El Poblado",
+            responsable: "Alejandra Osorio",
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ── SEMANAS ADICIONALES ── */
+  "sem-4-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "sem 23-29 nov",
+    previousMonthName: "sem 16-22 nov",
+    vendido: 36_400_000,
+    cobrado: 27_900_000,
+    ticket: 7_280_000,
+    eventosConfirmados: 5,
+    eventosTotal: 6,
+    porCobrar: 8_500_000,
+    porPagarProveedores: 3_900_000,
+    rentabilidad: 14_800_000,
+    metaCobrado: 27_000_000,
+    cobradoMesAnterior: 24_600_000,
+    monthComparison: [
+      { label: "Lun-Mar", actual: 6.2, anterior: 5.4 },
+      { label: "Mié-Jue", actual: 14.5, anterior: 12.8 },
+      { label: "Vie", actual: 21.4, anterior: 18.9 },
+      { label: "Sáb-Dom", actual: 27.9, anterior: 24.6 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 3.4, anterior: 3.1 },
+      { day: "Mar", actual: 5.2, anterior: 4.8 },
+      { day: "Mié", actual: 8.1, anterior: 7.4 },
+      { day: "Jue", actual: 14.8, anterior: 13.5 },
+      { day: "Vie", actual: 21.9, anterior: 19.8 },
+      { day: "Sáb", actual: 28.5, anterior: 26.2 },
+      { day: "Dom", actual: 10.9, anterior: 9.6 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 12.7, porcentaje: 35, eventos: 5, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 9.1, porcentaje: 25, eventos: 5, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 7.3, porcentaje: 20, eventos: 4, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 4.4, porcentaje: 12, eventos: 4, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 2.9, porcentaje: 8, eventos: 3, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 4, porcentaje: 67, ingresos: 24.8, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 1, porcentaje: 17, ingresos: 8.2, color: "#10B981" },
+      { label: "En Planificación / Cotización", cantidad: 1, porcentaje: 16, ingresos: 3.4, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 42, pendiente: 8, alerta: 1, unidad: "equipos" },
+      { categoria: "Tareas de la Semana", completado: 15, pendiente: 9, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 4, pendiente: 3, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 1, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 27,
+        activities: [
+          {
+            id: "nov-27-a",
+            type: "booked",
+            title: "Gala Reconocimiento Cámara de Comercio",
+            time: "19:00",
+            locacion: "Centro de Eventos El Tesoro",
+          },
+        ],
+      },
+      {
+        day: 28,
+        activities: [
+          {
+            id: "nov-28-a",
+            type: "booked",
+            title: "Boda Londoño - Vélez",
+            time: "16:30",
+            locacion: "Forest Campestre · Envigado",
+          },
+          {
+            id: "nov-28-b",
+            type: "own_event",
+            title: "Closing November Sessions",
+            time: "22:00",
+            locacion: "Discoteca 360 · Medellín",
+          },
+        ],
+      },
+    ],
+  },
+  "sem-2-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "sem 09-15 nov",
+    previousMonthName: "sem 02-08 nov",
+    vendido: 28_500_000,
+    cobrado: 21_400_000,
+    ticket: 5_700_000,
+    eventosConfirmados: 4,
+    eventosTotal: 5,
+    porCobrar: 7_100_000,
+    porPagarProveedores: 2_900_000,
+    rentabilidad: 11_200_000,
+    metaCobrado: 22_000_000,
+    cobradoMesAnterior: 18_800_000,
+    monthComparison: [
+      { label: "Lun-Mar", actual: 4.8, anterior: 4.1 },
+      { label: "Mié-Jue", actual: 11.2, anterior: 9.6 },
+      { label: "Vie", actual: 16.5, anterior: 14.2 },
+      { label: "Sáb-Dom", actual: 21.4, anterior: 18.8 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 2.5, anterior: 2.1 },
+      { day: "Mar", actual: 4.2, anterior: 3.7 },
+      { day: "Mié", actual: 6.8, anterior: 5.9 },
+      { day: "Jue", actual: 12.2, anterior: 10.5 },
+      { day: "Vie", actual: 18.5, anterior: 15.8 },
+      { day: "Sáb", actual: 24.0, anterior: 21.0 },
+      { day: "Dom", actual: 8.8, anterior: 7.6 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 10.0, porcentaje: 35, eventos: 4, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 7.1, porcentaje: 25, eventos: 4, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 5.7, porcentaje: 20, eventos: 3, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 3.4, porcentaje: 12, eventos: 3, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 2.3, porcentaje: 8, eventos: 2, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 3, porcentaje: 60, ingresos: 18.5, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 1, porcentaje: 20, ingresos: 7.2, color: "#10B981" },
+      { label: "En Planificación / Cotización", cantidad: 1, porcentaje: 20, ingresos: 2.8, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 47, pendiente: 3, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas de la Semana", completado: 22, pendiente: 1, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 6, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 1, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 14,
+        activities: [
+          {
+            id: "nov-14-a",
+            type: "booked",
+            title: "Boda Campestre Mejía - Restrepo",
+            time: "16:00",
+            locacion: "Hacienda Fizebad · Llanogrande",
+          },
+          {
+            id: "nov-14-b",
+            type: "own_event",
+            title: "High Techno Showcase",
+            time: "22:00",
+            locacion: "Discoteca La Pista · Provenza",
+          },
+        ],
+      },
+    ],
+  },
+  "sem-1-nov-2026": {
+    monthIndex: 10,
+    year: 2026,
+    monthName: "sem 02-08 nov",
+    previousMonthName: "sem 26 oct-01 nov",
+    vendido: 24_200_000,
+    cobrado: 18_800_000,
+    ticket: 6_050_000,
+    eventosConfirmados: 3,
+    eventosTotal: 4,
+    porCobrar: 5_400_000,
+    porPagarProveedores: 2_400_000,
+    rentabilidad: 9_600_000,
+    metaCobrado: 19_000_000,
+    cobradoMesAnterior: 17_200_000,
+    monthComparison: [
+      { label: "Lun-Mar", actual: 4.1, anterior: 3.8 },
+      { label: "Mié-Jue", actual: 9.6, anterior: 8.9 },
+      { label: "Vie", actual: 14.2, anterior: 13.1 },
+      { label: "Sáb-Dom", actual: 18.8, anterior: 17.2 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 2.1, anterior: 2.0 },
+      { day: "Mar", actual: 3.7, anterior: 3.4 },
+      { day: "Mié", actual: 5.9, anterior: 5.5 },
+      { day: "Jue", actual: 10.5, anterior: 9.8 },
+      { day: "Vie", actual: 15.8, anterior: 14.6 },
+      { day: "Sáb", actual: 21.0, anterior: 19.4 },
+      { day: "Dom", actual: 7.6, anterior: 7.0 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 8.5, porcentaje: 35, eventos: 3, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 6.1, porcentaje: 25, eventos: 3, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 4.8, porcentaje: 20, eventos: 2, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 2.9, porcentaje: 12, eventos: 3, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 1.9, porcentaje: 8, eventos: 2, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 2, porcentaje: 50, ingresos: 14.8, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 1, porcentaje: 25, ingresos: 6.4, color: "#10B981" },
+      { label: "En Planificación / Cotización", cantidad: 1, porcentaje: 25, ingresos: 3.0, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 48, pendiente: 2, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas de la Semana", completado: 19, pendiente: 0, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 4, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 0, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 7,
+        activities: [
+          {
+            id: "nov-07-a",
+            type: "booked",
+            title: "Congreso Médico Colombiano",
+            time: "18:00",
+            locacion: "Plaza Mayor · Medellín",
+          },
+        ],
+      },
+    ],
+  },
+  "sem-4-oct-2026": {
+    monthIndex: 9,
+    year: 2026,
+    monthName: "sem 26 oct-01 nov",
+    previousMonthName: "sem 19-25 oct",
+    vendido: 31_000_000,
+    cobrado: 25_400_000,
+    ticket: 6_200_000,
+    eventosConfirmados: 5,
+    eventosTotal: 5,
+    porCobrar: 5_600_000,
+    porPagarProveedores: 3_100_000,
+    rentabilidad: 13_400_000,
+    metaCobrado: 24_000_000,
+    cobradoMesAnterior: 21_800_000,
+    monthComparison: [
+      { label: "Lun-Mar", actual: 5.2, anterior: 4.5 },
+      { label: "Mié-Jue", actual: 12.4, anterior: 10.8 },
+      { label: "Vie", actual: 19.1, anterior: 16.4 },
+      { label: "Sáb-Dom", actual: 25.4, anterior: 21.8 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 2.9, anterior: 2.5 },
+      { day: "Mar", actual: 4.6, anterior: 4.0 },
+      { day: "Mié", actual: 7.2, anterior: 6.3 },
+      { day: "Jue", actual: 12.8, anterior: 11.2 },
+      { day: "Vie", actual: 19.4, anterior: 16.8 },
+      { day: "Sáb", actual: 25.4, anterior: 21.8 },
+      { day: "Dom", actual: 9.2, anterior: 8.1 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 10.9, porcentaje: 35, eventos: 5, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 7.8, porcentaje: 25, eventos: 5, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 6.2, porcentaje: 20, eventos: 3, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 3.7, porcentaje: 12, eventos: 4, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 2.4, porcentaje: 8, eventos: 3, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 3, porcentaje: 60, ingresos: 18.2, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 2, porcentaje: 40, ingresos: 12.8, color: "#10B981" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 49, pendiente: 1, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas de la Semana", completado: 26, pendiente: 0, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 7, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 1, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 31,
+        activities: [
+          {
+            id: "oct-31-a",
+            type: "own_event",
+            title: "Halloween Secret Warehouse",
+            time: "21:00",
+            locacion: "Bodega Industrial · Perpetuo Socorro",
+          },
+        ],
+      },
+    ],
+  },
+  "sem-3-oct-2026": {
+    monthIndex: 9,
+    year: 2026,
+    monthName: "sem 19-25 oct",
+    previousMonthName: "sem 12-18 oct",
+    vendido: 26_800_000,
+    cobrado: 21_800_000,
+    ticket: 6_700_000,
+    eventosConfirmados: 4,
+    eventosTotal: 4,
+    porCobrar: 5_000_000,
+    porPagarProveedores: 2_600_000,
+    rentabilidad: 11_100_000,
+    metaCobrado: 21_000_000,
+    cobradoMesAnterior: 19_500_000,
+    monthComparison: [
+      { label: "Lun-Mar", actual: 4.5, anterior: 4.0 },
+      { label: "Mié-Jue", actual: 10.8, anterior: 9.7 },
+      { label: "Vie", actual: 16.4, anterior: 14.8 },
+      { label: "Sáb-Dom", actual: 21.8, anterior: 19.5 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 2.5, anterior: 2.2 },
+      { day: "Mar", actual: 4.0, anterior: 3.6 },
+      { day: "Mié", actual: 6.3, anterior: 5.7 },
+      { day: "Jue", actual: 11.2, anterior: 10.1 },
+      { day: "Vie", actual: 16.8, anterior: 15.2 },
+      { day: "Sáb", actual: 21.8, anterior: 19.5 },
+      { day: "Dom", actual: 8.1, anterior: 7.3 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 9.4, porcentaje: 35, eventos: 4, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 6.7, porcentaje: 25, eventos: 4, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 5.4, porcentaje: 20, eventos: 3, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 3.2, porcentaje: 12, eventos: 3, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 2.1, porcentaje: 8, eventos: 2, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 3, porcentaje: 75, ingresos: 20.1, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 1, porcentaje: 25, ingresos: 6.7, color: "#10B981" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 48, pendiente: 2, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas de la Semana", completado: 21, pendiente: 0, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 5, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 0, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 24,
+        activities: [
+          {
+            id: "oct-24-a",
+            type: "booked",
+            title: "Lanzamiento Marca Automotriz",
+            time: "19:00",
+            locacion: "Centro de Convenciones Plaza Mayor",
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ── AÑOS ADICIONALES ── */
+  "anio-2027": {
+    monthIndex: 10,
+    year: 2027,
+    monthName: "año 2027",
+    previousMonthName: "año 2026",
+    vendido: 785_000_000,
+    cobrado: 672_000_000,
+    ticket: 5_304_054,
+    eventosConfirmados: 128,
+    eventosTotal: 148,
+    porCobrar: 113_000_000,
+    porPagarProveedores: 44_200_000,
+    rentabilidad: 328_000_000,
+    metaCobrado: 680_000_000,
+    cobradoMesAnterior: 548_500_000,
+    monthComparison: [
+      { label: "Q1", actual: 145.0, anterior: 118.0 },
+      { label: "Q2", actual: 312.0, anterior: 254.5 },
+      { label: "Q3", actual: 504.0, anterior: 412.0 },
+      { label: "Q4", actual: 672.0, anterior: 548.5 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 29.5, anterior: 24.5 },
+      { day: "Mar", actual: 45.8, anterior: 38.2 },
+      { day: "Mié", actual: 68.4, anterior: 56.4 },
+      { day: "Jue", actual: 118.0, anterior: 98.5 },
+      { day: "Vie", actual: 176.5, anterior: 145.0 },
+      { day: "Sáb", actual: 241.0, anterior: 198.4 },
+      { day: "Dom", actual: 98.8, anterior: 81.0 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 274.8, porcentaje: 35, eventos: 132, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 196.3, porcentaje: 25, eventos: 124, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 157.0, porcentaje: 20, eventos: 98, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 94.2, porcentaje: 12, eventos: 108, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 62.7, porcentaje: 8, eventos: 86, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 96, porcentaje: 65, ingresos: 510.0, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 32, porcentaje: 22, ingresos: 204.0, color: "#10B981" },
+      { label: "En Planificación / Cotización", cantidad: 20, porcentaje: 13, ingresos: 71.0, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 52, pendiente: 4, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas Anuales", completado: 468, pendiente: 24, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 156, pendiente: 6, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 28, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 15,
+        activities: [
+          {
+            id: "2027-15-a",
+            type: "booked",
+            title: "Cumbre Empresarial Antioquia 2027",
+            time: "18:00",
+            locacion: "Plaza Mayor · Medellín",
+          },
+        ],
+      },
+    ],
+  },
+  "anio-2025": {
+    monthIndex: 11,
+    year: 2025,
+    monthName: "año 2025",
+    previousMonthName: "año 2024",
+    vendido: 534_000_000,
+    cobrado: 462_000_000,
+    ticket: 4_525_423,
+    eventosConfirmados: 104,
+    eventosTotal: 118,
+    porCobrar: 72_000_000,
+    porPagarProveedores: 29_800_000,
+    rentabilidad: 218_500_000,
+    metaCobrado: 450_000_000,
+    cobradoMesAnterior: 384_000_000,
+    monthComparison: [
+      { label: "Q1", actual: 96.5, anterior: 78.0 },
+      { label: "Q2", actual: 212.0, anterior: 174.5 },
+      { label: "Q3", actual: 348.5, anterior: 289.0 },
+      { label: "Q4", actual: 462.0, anterior: 384.0 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 19.8, anterior: 16.5 },
+      { day: "Mar", actual: 31.5, anterior: 26.2 },
+      { day: "Mié", actual: 48.0, anterior: 39.8 },
+      { day: "Jue", actual: 84.2, anterior: 70.4 },
+      { day: "Vie", actual: 122.5, anterior: 102.0 },
+      { day: "Sáb", actual: 168.0, anterior: 141.5 },
+      { day: "Dom", actual: 69.5, anterior: 58.0 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 186.9, porcentaje: 35, eventos: 102, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 133.5, porcentaje: 25, eventos: 96, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 106.8, porcentaje: 20, eventos: 74, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 64.1, porcentaje: 12, eventos: 82, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 42.7, porcentaje: 8, eventos: 64, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 76, porcentaje: 64, ingresos: 342.0, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 28, porcentaje: 24, ingresos: 142.0, color: "#10B981" },
+      { label: "En Planificación / Cotización", cantidad: 14, porcentaje: 12, ingresos: 50.0, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 44, pendiente: 2, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas Anuales", completado: 368, pendiente: 4, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 122, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 29, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 20,
+        activities: [
+          {
+            id: "2025-20-a",
+            type: "booked",
+            title: "Cierre Corporativo Fin de Año 2025",
+            time: "19:30",
+            locacion: "Hotel Intercontinental · Medellín",
+          },
+        ],
+      },
+    ],
+  },
+  "anio-2024": {
+    monthIndex: 11,
+    year: 2024,
+    monthName: "año 2024",
+    previousMonthName: "año 2023",
+    vendido: 438_000_000,
+    cobrado: 384_000_000,
+    ticket: 4_294_117,
+    eventosConfirmados: 92,
+    eventosTotal: 102,
+    porCobrar: 54_000_000,
+    porPagarProveedores: 22_400_000,
+    rentabilidad: 179_000_000,
+    metaCobrado: 380_000_000,
+    cobradoMesAnterior: 315_000_000,
+    monthComparison: [
+      { label: "Q1", actual: 78.0, anterior: 64.0 },
+      { label: "Q2", actual: 174.5, anterior: 142.0 },
+      { label: "Q3", actual: 289.0, anterior: 236.5 },
+      { label: "Q4", actual: 384.0, anterior: 315.0 },
+    ],
+    weekComparison: [
+      { day: "Lun", actual: 16.5, anterior: 13.8 },
+      { day: "Mar", actual: 26.2, anterior: 21.9 },
+      { day: "Mié", actual: 39.8, anterior: 33.2 },
+      { day: "Jue", actual: 70.4, anterior: 58.6 },
+      { day: "Vie", actual: 102.0, anterior: 85.4 },
+      { day: "Sáb", actual: 141.5, anterior: 118.0 },
+      { day: "Dom", actual: 58.0, anterior: 48.5 },
+    ],
+    serviciosRevenue: [
+      { categoria: "Sonido Profesional Line Array", monto: 153.3, porcentaje: 35, eventos: 88, color: "#7C3AED" },
+      { categoria: "Iluminación Robótica & Láser", monto: 109.5, porcentaje: 25, eventos: 82, color: "#3B82F6" },
+      { categoria: "Pantallas LED & Visuales", monto: 87.6, porcentaje: 20, eventos: 64, color: "#10B981" },
+      { categoria: "DJs, Artistas & Animación", monto: 52.6, porcentaje: 12, eventos: 70, color: "#F59E0B" },
+      { categoria: "Estructuras, Efectos & Logística", monto: 35.0, porcentaje: 8, eventos: 54, color: "#EC4899" },
+    ],
+    modalidadEventos: [
+      { label: "Eventos para Clientes (Confirmados)", cantidad: 66, porcentaje: 65, ingresos: 284.7, color: "#7C3AED" },
+      { label: "Eventos Propios", cantidad: 26, porcentaje: 25, ingresos: 113.3, color: "#10B981" },
+      { label: "En Planificación / Cotización", cantidad: 10, porcentaje: 10, ingresos: 40.0, color: "#F59E0B" },
+    ],
+    operacionStats: [
+      { categoria: "Equipos Técnicos", completado: 40, pendiente: 0, alerta: 0, unidad: "equipos" },
+      { categoria: "Tareas Anuales", completado: 310, pendiente: 0, alerta: 0, unidad: "tareas" },
+      { categoria: "Actas de Recepción", completado: 102, pendiente: 0, alerta: 0, unidad: "actas" },
+      { categoria: "Incidentes Reportados", completado: 21, pendiente: 0, alerta: 0, unidad: "casos" },
+    ],
+    calendarDays: [
+      {
+        day: 16,
+        activities: [
+          {
+            id: "2024-16-a",
+            type: "booked",
+            title: "Festival Corporativo Fin de Año 2024",
+            time: "18:30",
+            locacion: "Jardín Botánico · Medellín",
+          },
+        ],
+      },
+    ],
+  },
+}
+
+const MONTH_SHORT_NAMES = [
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic",
+]
+
+/** Obtiene los datos del período o genera métricas determinísticas si se elige una fecha libre (custom-dia-YYYY-MM-DD). */
+export function getDashboardPeriodData(periodId: string): PeriodData {
+  if (PERIOD_DATA[periodId]) {
+    return PERIOD_DATA[periodId]
+  }
+  if (periodId.startsWith("custom-dia-")) {
+    const iso = periodId.replace("custom-dia-", "")
+    const [yStr, mStr, dStr] = iso.split("-")
+    const year = Number(yStr) || 2026
+    const monthIndex = Math.max(0, Math.min(11, (Number(mStr) || 11) - 1))
+    const day = Math.max(1, Math.min(31, Number(dStr) || 20))
+    const mShort = MONTH_SHORT_NAMES[monthIndex]
+    const prevDay = day > 1 ? day - 1 : 28
+    const factor = 0.75 + ((day * 7 + monthIndex * 3) % 10) * 0.08
+    const vendido = Math.round(14_500_000 * factor)
+    const cobrado = Math.round(9_800_000 * factor)
+    const porCobrar = vendido - cobrado
+    return {
+      ...PERIOD_DATA["hoy-2026"],
+      monthIndex,
+      year,
+      monthName: `${day} ${mShort}`,
+      previousMonthName: `${prevDay} ${mShort}`,
+      vendido,
+      cobrado,
+      porCobrar,
+      ticket: Math.round(vendido / 2),
+      porPagarProveedores: Math.round(1_900_000 * factor),
+      rentabilidad: Math.round(5_400_000 * factor),
+      metaCobrado: Math.round(10_000_000 * factor),
+      cobradoMesAnterior: Math.round(8_200_000 * factor),
+      calendarDays: [
+        {
+          day,
+          activities: [
+            {
+              id: `custom-${iso}-a`,
+              type: "booked",
+              title: `Evento Corporativo (${day} ${mShort.toUpperCase()})`,
+              time: "18:30",
+              locacion: "Hotel Dann Carlton · El Poblado",
+              responsable: "Alejandra Osorio",
+            },
+          ],
+        },
+      ],
+    }
+  }
+  return PERIOD_DATA["nov-2026"]
 }
 
 export const CAL_YEAR = 2026
@@ -858,31 +1830,31 @@ export const STATUS_META = {
   booked: {
     label: "Evento de cliente",
     legend: "Evento cliente",
-    description: "Evento contratado por un cliente externo con reserva confirmada",
+    description: "Evento contratado por un cliente con cotización confirmada",
     glyph: "●",
     dotColor: "bg-[#A78BFA]",
     cell: "bg-[#7C3AED]/25 text-[#F8FAFC] font-semibold border-[#7C3AED]/40",
-    badge: "bg-[#7C3AED]/20 text-[#A78BFA] border border-[#7C3AED]/30",
+    badge: "bg-[#7C3AED]/20 text-[#A78BFA]",
     swatch: "bg-[#7C3AED]",
   },
   own_event: {
-    label: "Evento propio (The High)",
+    label: "Evento propio",
     legend: "Evento propio",
-    description: "Producción propia organizada por The High Events (venta de boletería)",
+    description: "Producción propia organizada por The High Events",
     glyph: "■",
     dotColor: "bg-[#34D399]",
     cell: "bg-[#10B981]/20 text-[#34D399] font-semibold border-[#10B981]/40",
-    badge: "bg-[#10B981]/20 text-[#34D399] border border-[#10B981]/30",
+    badge: "bg-[#10B981]/20 text-[#34D399]",
     swatch: "bg-[#10B981]",
   },
   technical_visit: {
     label: "Visita técnica / Reunión",
     legend: "Visita / Reunión",
-    description: "Inspección técnica en lugar del evento o cita comercial de cotización",
+    description: "Inspección técnica en lugar del evento o reunión de cotización",
     glyph: "▲",
     dotColor: "bg-[#FBBF24]",
     cell: "bg-[#F59E0B]/20 text-[#FBBF24] font-semibold border-[#F59E0B]/40",
-    badge: "bg-[#F59E0B]/20 text-[#FBBF24] border border-[#F59E0B]/30",
+    badge: "bg-[#F59E0B]/20 text-[#FBBF24]",
     swatch: "bg-[#F59E0B]",
   },
   free: {

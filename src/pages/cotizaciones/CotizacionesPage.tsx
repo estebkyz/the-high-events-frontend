@@ -310,7 +310,7 @@ export default function CotizacionesPage() {
         montos: formState.montos || ["$ 0"],
         total: formState.total || "$ 0",
         totalNum: formState.totalNum ?? 0,
-        estado: (formState.estado as EstadoCotizacion) || "Borrador",
+        estado: "Borrador",
         notas: formState.notas || "",
       }
       setQuotes([newQuote, ...quotes])

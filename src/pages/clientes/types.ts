@@ -1,5 +1,5 @@
 export type TipoCliente = "Empresa" | "Natural"
-export type TipoDocumentoCliente = "NIT" | "CC" | "CE" | "Pasaporte"
+export type TipoDocumentoCliente = "CC" | "CE" | "NIT" | "PASAPORTE"
 
 export interface ClienteItem {
   id: string; tipo_cliente: TipoCliente

@@ -1,0 +1,17 @@
+export {
+  DetailHeader,
+  DetailSection,
+  DetailGrid,
+  DetailField,
+  DetailHighlight,
+  DetailList,
+  DetailEmptyNote,
+  type DetailHeaderProps,
+  type DetailSectionProps,
+  type DetailGridProps,
+  type DetailFieldProps,
+  type DetailHighlightTone,
+  type DetailHighlightProps,
+  type DetailListProps,
+  type DetailEmptyNoteProps,
+} from "./DetailPrimitives"

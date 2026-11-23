@@ -94,13 +94,6 @@ export const TareaCatalogoView: React.FC<TareaCatalogoViewProps> = ({
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => onAssignToEvent(item)}
-                      className="px-2.5 py-1 text-[11px] font-semibold text-[#A78BFA] bg-[#7C3AED]/15 hover:bg-[#7C3AED]/25 rounded-lg transition-colors cursor-pointer"
-                    >
-                      Asignar a evento
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => onEditCatalogo(item)}
                       aria-label={`Editar ${item.nombre_tarea}`}
                       className="p-1.5 text-[#94A3B8] hover:text-[#60A5FA] hover:bg-[#3B82F6]/20 rounded-lg transition-colors cursor-pointer"
@@ -217,15 +210,6 @@ export const TareaCatalogoView: React.FC<TareaCatalogoViewProps> = ({
                       </td>
                       <td className="py-4 px-4 text-right">
                         <div className="inline-flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => onAssignToEvent(item)}
-                            title="Asignar esta tarea a un evento"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#7C3AED]/15 text-[#A78BFA] hover:bg-[#7C3AED] hover:text-white transition-colors cursor-pointer"
-                          >
-                            <PlusCircle size={13} />
-                            <span>Asignar</span>
-                          </button>
                           <button
                             type="button"
                             onClick={() => onEditCatalogo(item)}

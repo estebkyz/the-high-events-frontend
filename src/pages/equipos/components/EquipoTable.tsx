@@ -120,21 +120,15 @@ export const EquipoTable: React.FC<EquipoTableProps> = ({
                     <td className="py-3.5 px-4">
                       {e.propiedad === "Alquilado" ? (
                         <div>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30">
+                          <span className="font-medium text-[#F1F5F9]">
                             Alquilado
                           </span>
-                          <p className="text-[11px] text-[#94A3B8] mt-0.5 font-medium">
-                            {e.proveedor_nombre || "Proveedor externo"}
-                          </p>
                         </div>
                       ) : (
                         <div>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
+                          <span className="font-medium text-[#F1F5F9]">
                             Propio
                           </span>
-                          <p className="text-[11px] text-[#64748B] mt-0.5">
-                            The High Events
-                          </p>
                         </div>
                       )}
                     </td>

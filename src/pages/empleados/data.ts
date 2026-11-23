@@ -18,9 +18,10 @@ export const CARGOS_OPTIONS: SelectOption[] = CARGOS.map((c) => ({
 }))
 
 export const TIPOS_DOCUMENTO_OPTIONS: SelectOption[] = [
-  { label: "Cédula de Ciudadanía (CC)", value: "CC" },
-  { label: "Cédula de Extranjería (CE)", value: "CE" },
-  { label: "Pasaporte", value: "Pasaporte" },
+  { label: "CC", value: "CC" },
+  { label: "CE", value: "CE" },
+  { label: "NIT", value: "NIT" },
+  { label: "Pasaporte", value: "PASAPORTE" },
 ]
 
 export const VINCULACION_OPTIONS: SelectOption[] = [

@@ -175,7 +175,7 @@ export default function EmpleadosPage() {
         telefono: formState.telefono.trim(),
         correo: formState.correo.trim(),
         vinculacion: formState.vinculacion,
-        estado: formState.estado,
+        estado: "Activo",
         emergenciaNombre: formState.emergenciaNombre.trim() || undefined,
         emergenciaTel: formState.emergenciaTel.trim() || undefined,
         emergenciaParentesco:

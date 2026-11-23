@@ -16,6 +16,8 @@ interface DrawerProps {
   size?: DrawerSize
   /** Posición: 'side' (panel lateral derecho) o 'center' (modal centrado en pantalla para crear/editar) */
   position?: DrawerPosition
+  /** Contenido fijo opcional al pie del panel */
+  footer?: React.ReactNode
 }
 
 const SIZE_CLASSES: Record<DrawerSize, string> = {
@@ -37,6 +39,7 @@ export function Drawer({
   width,
   size = "detail",
   position,
+  footer,
 }: DrawerProps) {
   // Lock body scroll when drawer/sheet is open
   useEffect(() => {
@@ -165,6 +168,13 @@ export function Drawer({
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 sm:space-y-4 overscroll-contain">
           {children}
         </div>
+
+        {/* Drawer Optional Footer */}
+        {footer && (
+          <div className="shrink-0 border-t border-[#2D3748]/70 bg-[#181B22] px-4 sm:px-5 py-3">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

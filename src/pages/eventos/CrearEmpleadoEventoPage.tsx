@@ -30,9 +30,10 @@ const CARGOS_DISPONIBLES = [
 ]
 
 const TIPOS_DOCUMENTO: SelectOption[] = [
-  { label: "Cédula de Ciudadanía (CC)", value: "CC" },
-  { label: "Cédula de Extranjería (CE)", value: "CE" },
-  { label: "Pasaporte (PA)", value: "Pasaporte" },
+  { label: "CC", value: "CC" },
+  { label: "CE", value: "CE" },
+  { label: "NIT", value: "NIT" },
+  { label: "Pasaporte", value: "PASAPORTE" },
 ]
 
 const MODALIDADES_VINCULACION: SelectOption[] = [

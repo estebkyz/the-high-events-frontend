@@ -10,8 +10,8 @@ import {
 import { useNavigate } from "react-router-dom"
 import { KPICard } from "../../components/KPICard"
 import { EVENTO_PATHS } from "../../routes/paths"
-import type { DashboardPageProps } from "./types"
-import { PERIOD_OPTIONS, PERIOD_DATA } from "./data"
+import type { DashboardPageProps, DashboardRangeType } from "./types"
+import { PERIOD_OPTIONS_BY_RANGE, getDashboardPeriodData } from "./data"
 import { formatCOP, fmtPct } from "./utils"
 import { ChartCard } from "./components/ChartCard"
 import { AvailabilityMiniCalendar } from "./components/AvailabilityMiniCalendar"
@@ -21,23 +21,29 @@ export default function DashboardPage({
   onNavigate,
 }: DashboardPageProps) {
   const navigate = useNavigate()
-  const [rangeType, setRangeType] = useState<"dia" | "semana" | "mes" | "anio">("mes")
-  const [monthPeriodId, setMonthPeriodId] = useState("nov-2026")
+  const [rangeType, setRangeType] = useState<DashboardRangeType>("mes")
+  const [selectedPeriods, setSelectedPeriods] = useState<
+    Record<DashboardRangeType, string>
+  >({
+    dia: "hoy-2026",
+    semana: "sem-2026",
+    mes: "nov-2026",
+    anio: "anio-2026",
+  })
+  const [customDateIso, setCustomDateIso] = useState("2026-11-20")
   const [isPeriodDropdown, setIsPeriodDropdown] = useState(false)
   const periodRef = useRef<HTMLDivElement>(null)
 
-  const activePeriodId =
-    rangeType === "dia"
-      ? "hoy-2026"
-      : rangeType === "semana"
-        ? "sem-2026"
-        : rangeType === "anio"
-          ? "anio-2026"
-          : monthPeriodId
+  const currentOptions = PERIOD_OPTIONS_BY_RANGE[rangeType]
+  const activePeriodId = selectedPeriods[rangeType]
+  const matchedOption = currentOptions.find((p) => p.id === activePeriodId)
+  const activePeriodLabel = matchedOption
+    ? matchedOption.label
+    : activePeriodId.startsWith("custom-dia-")
+      ? `Fecha: ${activePeriodId.replace("custom-dia-", "")}`
+      : currentOptions[0].label
 
-  const period =
-    PERIOD_OPTIONS.find((p) => p.id === monthPeriodId) ?? PERIOD_OPTIONS[0]
-  const data = PERIOD_DATA[activePeriodId] ?? PERIOD_DATA["nov-2026"]
+  const data = getDashboardPeriodData(activePeriodId)
 
   // Cerrar el selector al hacer clic fuera o con Esc
   useEffect(() => {
@@ -58,16 +64,38 @@ export default function DashboardPage({
     }
   }, [isPeriodDropdown])
 
-  // Métricas derivadas delimitadas por el mes seleccionado
+  // Métricas derivadas delimitadas por el período seleccionado
   const cobradoPct = Math.round((data.cobrado / data.vendido) * 100)
   const porCobrarPct = Math.round((data.porCobrar / data.vendido) * 100)
-  const desvMeta = ((data.cobrado - data.metaCobrado) / data.metaCobrado) * 100
   const crecMensual =
     ((data.cobrado - data.cobradoMesAnterior) / data.cobradoMesAnterior) * 100
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
   const mesActualLabel = capitalize(data.monthName)
   const mesAnteriorLabel = capitalize(data.previousMonthName)
+
+  const eventosKpiTitle =
+    rangeType === "dia"
+      ? "Eventos del Día"
+      : rangeType === "semana"
+        ? "Eventos de la Semana"
+        : rangeType === "anio"
+          ? "Eventos del Año"
+          : "Eventos del Mes"
+
+  const cobradoChartTitle =
+    rangeType === "dia"
+      ? `Cobrado Día contra Día (${mesActualLabel} vs ${mesAnteriorLabel})`
+      : rangeType === "semana"
+        ? `Cobrado Semana contra Semana (${mesActualLabel} vs ${mesAnteriorLabel})`
+        : rangeType === "anio"
+          ? `Cobrado Año contra Año (${mesActualLabel} vs ${mesAnteriorLabel})`
+          : `Cobrado Mes contra Mes (${mesActualLabel} vs ${mesAnteriorLabel})`
+
+  const handleSelectPeriod = (id: string) => {
+    setSelectedPeriods((prev) => ({ ...prev, [rangeType]: id }))
+    setIsPeriodDropdown(false)
+  }
 
   const handleOpenCreateEvent = (fecha = "") => {
     if (fecha) {
@@ -84,7 +112,7 @@ export default function DashboardPage({
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
       <main className="flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
-        {/* ── Encabezado con Selector de Rango Mensual ── */}
+        {/* ── Encabezado con Selector de Rango (Día | Semana | Mes | Año) ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-[24px] font-bold text-[#F8FAFC] tracking-tight">
@@ -112,7 +140,7 @@ export default function DashboardPage({
                   type="button"
                   onClick={() => {
                     setRangeType(item.id)
-                    if (item.id !== "mes") setIsPeriodDropdown(false)
+                    setIsPeriodDropdown(false)
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     rangeType === item.id
@@ -125,50 +153,73 @@ export default function DashboardPage({
               ))}
             </div>
 
-            {/* Selector de mes específico cuando el filtro es Mensual */}
-            {rangeType === "mes" && (
-              <div ref={periodRef} className="relative">
-                <button
-                  type="button"
-                  aria-haspopup="listbox"
-                  aria-expanded={isPeriodDropdown}
-                  onClick={() => setIsPeriodDropdown((o) => !o)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181B22] border border-[#262D3D] text-xs font-medium text-[#F8FAFC] hover:border-[#7C3AED] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/60"
-                >
-                  <Calendar size={13} className="text-[#A78BFA] shrink-0" />
-                  <span>{period.label}</span>
-                  <ChevronDown size={13} className="text-[#94A3B8] ml-0.5 shrink-0" />
-                </button>
+            {/* Selector específico para Día, Semana, Mes o Año */}
+            <div ref={periodRef} className="relative">
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={isPeriodDropdown}
+                onClick={() => setIsPeriodDropdown((o) => !o)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181B22] border border-[#262D3D] text-xs font-medium text-[#F8FAFC] hover:border-[#7C3AED] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED]/60"
+              >
+                <Calendar size={13} className="text-[#A78BFA] shrink-0" />
+                <span>{activePeriodLabel}</span>
+                <ChevronDown size={13} className="text-[#94A3B8] ml-0.5 shrink-0" />
+              </button>
 
-                {isPeriodDropdown && (
-                  <div
-                    role="listbox"
-                    aria-label="Seleccionar mes del año"
-                    className="absolute right-0 top-full mt-1 w-40 bg-[#181B22] border border-[#262D3D] rounded-xl shadow-xl py-1 z-30 text-xs"
-                  >
-                    {PERIOD_OPTIONS.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        role="option"
-                        aria-selected={monthPeriodId === p.id}
-                        onClick={() => {
-                          setMonthPeriodId(p.id)
-                          setIsPeriodDropdown(false)
-                        }}
-                        className={`w-full text-left px-3 py-1.5 transition-colors flex items-center justify-between hover:bg-[#222734] cursor-pointer ${
-                          monthPeriodId === p.id
-                            ? "text-[#A78BFA] font-semibold bg-[#7C3AED]/10"
-                            : "text-[#F8FAFC]"
-                        }`}
-                      >
-                        <span>{p.label}</span>
-                      </button>
-                    ))}
+              {isPeriodDropdown && (
+                <div
+                  role="listbox"
+                  aria-label="Seleccionar período"
+                  className="absolute right-0 top-full mt-1 w-56 bg-[#181B22] border border-[#262D3D] rounded-xl shadow-xl py-1.5 z-30 text-xs"
+                >
+                  <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+                    {rangeType === "dia"
+                      ? "Seleccionar día"
+                      : rangeType === "semana"
+                        ? "Seleccionar semana"
+                        : rangeType === "anio"
+                          ? "Seleccionar año"
+                          : "Seleccionar mes"}
                   </div>
-                )}
-              </div>
-            )}
+                  {currentOptions.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="option"
+                      aria-selected={activePeriodId === p.id}
+                      onClick={() => handleSelectPeriod(p.id)}
+                      className={`w-full text-left px-3 py-1.5 transition-colors flex items-center justify-between hover:bg-[#222734] cursor-pointer ${
+                        activePeriodId === p.id
+                          ? "text-[#A78BFA] font-semibold bg-[#7C3AED]/10"
+                          : "text-[#F8FAFC]"
+                      }`}
+                    >
+                      <span>{p.label}</span>
+                    </button>
+                  ))}
+
+                  {rangeType === "dia" && (
+                    <div className="mt-1.5 pt-2 px-3 pb-1 border-t border-[#262D3D]">
+                      <label className="block text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1">
+                        Elegir otra fecha
+                      </label>
+                      <input
+                        type="date"
+                        value={customDateIso}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          if (!val) return
+                          setCustomDateIso(val)
+                          handleSelectPeriod(`custom-dia-${val}`)
+                        }}
+                        className="w-full px-2 py-1 rounded-lg bg-[#111318] border border-[#262D3D] text-xs text-[#F8FAFC] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <button
               type="button"
@@ -180,7 +231,7 @@ export default function DashboardPage({
           </div>
         </div>
 
-        {/* ── Fila 1: Los 5 KPIs Principales Delimitados por Mes ── */}
+        {/* ── Fila 1: Los 5 KPIs Principales Delimitados por el Período ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <KPICard
             title="Ventas Totales"
@@ -199,7 +250,7 @@ export default function DashboardPage({
             actionLabel="Ver cobros"
           />
           <KPICard
-            title="Eventos del Mes"
+            title={eventosKpiTitle}
             value={`${data.eventosConfirmados}/${data.eventosTotal}`}
             subtitle={`${data.eventosConfirmados} confirmados`}
             icon={Calendar}
@@ -227,10 +278,10 @@ export default function DashboardPage({
         {/* ── Fila 2: Gráficos Estadísticos 1 y 2 + Mini-Agenda Multi-Evento ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            {/* Gráfico Estadístico 1: Cobrado Mes vs Mes (Siempre los 2 últimos meses respecto al seleccionado) */}
+            {/* Gráfico Estadístico 1: Comparativo del período seleccionado vs período anterior */}
             <ChartCard
-              title={`Cobrado Mes contra Mes (${mesActualLabel} vs ${mesAnteriorLabel})`}
-              subtitle={`Comparativa acumulada de los 2 últimos meses · ${fmtPct(desvMeta)} frente a la meta`}
+              title={cobradoChartTitle}
+              subtitle={`Comparativo de recaudo (${mesActualLabel} vs ${mesAnteriorLabel})`}
               labels={data.monthComparison.map((p) => p.label)}
               series={[
                 {
@@ -274,10 +325,6 @@ export default function DashboardPage({
 
           <div className="lg:col-span-1">
             <AvailabilityMiniCalendar
-              year={data.year}
-              monthIndex={data.monthIndex}
-              monthName={data.monthName}
-              calendarDays={data.calendarDays}
               onNavigate={onNavigate}
               onAgendar={(iso) => handleOpenCreateEvent(iso)}
             />

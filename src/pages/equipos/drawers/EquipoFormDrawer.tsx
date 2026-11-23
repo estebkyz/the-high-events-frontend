@@ -99,7 +99,9 @@ export function EquipoFormDrawer({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <div
+          className={`grid grid-cols-1 ${isEdit ? "sm:grid-cols-3" : "sm:grid-cols-2"} gap-3.5`}
+        >
           <div>
             <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
               Categoría (FK id_categoria)
@@ -146,21 +148,23 @@ export function EquipoFormDrawer({
             />
           </div>
 
-          <div>
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Estado operativo
-            </label>
-            <CustomSelect
-              value={formData.estadoOperativo ?? "Disponible"}
-              onChange={(val) =>
-                setFormData((f) => ({
-                  ...f,
-                  estadoOperativo: val as EstadoOperativo,
-                }))
-              }
-              options={ESTADO_SELECT_OPTIONS}
-            />
-          </div>
+          {isEdit && (
+            <div>
+              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                Estado operativo
+              </label>
+              <CustomSelect
+                value={formData.estadoOperativo ?? "Disponible"}
+                onChange={(val) =>
+                  setFormData((f) => ({
+                    ...f,
+                    estadoOperativo: val as EstadoOperativo,
+                  }))
+                }
+                options={ESTADO_SELECT_OPTIONS}
+              />
+            </div>
+          )}
         </div>
 
         {formData.propiedad === "Alquilado" ? (

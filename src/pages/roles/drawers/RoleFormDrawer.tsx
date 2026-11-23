@@ -107,7 +107,7 @@ export function RoleFormDrawer({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div className="sm:col-span-4">
+            <div className={editingRole ? "sm:col-span-4" : "sm:col-span-5"}>
               <FormInput
                 label="Nombre"
                 value={formNombre}
@@ -116,7 +116,7 @@ export function RoleFormDrawer({
                 required
               />
             </div>
-            <div className="sm:col-span-5">
+            <div className={editingRole ? "sm:col-span-5" : "sm:col-span-7"}>
               <FormInput
                 label="Descripción"
                 value={formDesc}
@@ -124,16 +124,18 @@ export function RoleFormDrawer({
                 placeholder="Responsabilidades y alcance del perfil"
               />
             </div>
-            <div className="sm:col-span-3">
-              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-                Estado del rol
-              </label>
-              <CustomSelect
-                value={formEstado}
-                onChange={(val) => setFormEstado(val as "Activo" | "Inactivo")}
-                options={ESTADO_OPTIONS}
-              />
-            </div>
+            {editingRole && (
+              <div className="sm:col-span-3">
+                <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                  Estado del rol
+                </label>
+                <CustomSelect
+                  value={formEstado}
+                  onChange={(val) => setFormEstado(val as "Activo" | "Inactivo")}
+                  options={ESTADO_OPTIONS}
+                />
+              </div>
+            )}
           </div>
         )}
 

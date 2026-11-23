@@ -21,6 +21,8 @@ export interface ServicioDetalleEvento {
   observaciones: string
   costo: string
   cantidad?: number
+  proveedor_id?: string
+  proveedor_nombre?: string
 }
 
 export interface CotizacionCatalogoItem {
@@ -50,6 +52,8 @@ export interface EquipoCatalogoItem {
   categoria: string
   disponible: boolean
   propiedad: "Propio" | "Alquilado"
+  proveedor_id?: string
+  proveedor_nombre?: string
 }
 
 export interface EventoItem {

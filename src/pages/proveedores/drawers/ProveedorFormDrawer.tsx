@@ -91,9 +91,9 @@ export const ProveedorFormDrawer: React.FC<ProveedorFormDrawerProps> = ({
           />
         </div>
 
-        {/* ── Fila 3: Correo, Teléfono y Estado ── */}
+        {/* ── Fila 3: Correo, Teléfono y Estado (solo edición) ── */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
-          <div className="sm:col-span-6">
+          <div className={mode === "edit" ? "sm:col-span-6" : "sm:col-span-7"}>
             <FormInput
               label="Correo electrónico"
               type="email"
@@ -106,7 +106,7 @@ export const ProveedorFormDrawer: React.FC<ProveedorFormDrawerProps> = ({
               required
             />
           </div>
-          <div className="sm:col-span-3">
+          <div className={mode === "edit" ? "sm:col-span-3" : "sm:col-span-5"}>
             <FormInput
               label="Teléfono"
               maxLength={15}
@@ -118,21 +118,23 @@ export const ProveedorFormDrawer: React.FC<ProveedorFormDrawerProps> = ({
               required
             />
           </div>
-          <div className="sm:col-span-3">
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Estado
-            </label>
-            <CustomSelect
-              value={formState.estado || "Activo"}
-              onChange={(val) =>
-                setFormState((f) => ({
-                  ...f,
-                  estado: val as ProveedorItem["estado"],
-                }))
-              }
-              options={ESTADO_OPTIONS}
-            />
-          </div>
+          {mode === "edit" && (
+            <div className="sm:col-span-3">
+              <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
+                Estado
+              </label>
+              <CustomSelect
+                value={formState.estado || "Activo"}
+                onChange={(val) =>
+                  setFormState((f) => ({
+                    ...f,
+                    estado: val as ProveedorItem["estado"],
+                  }))
+                }
+                options={ESTADO_OPTIONS}
+              />
+            </div>
+          )}
         </div>
 
         {/* ── Fila 4: Especialidades / Categorías de Servicio Ofrecidas ── */}

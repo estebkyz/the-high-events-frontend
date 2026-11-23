@@ -189,7 +189,7 @@ export function CustomSelect({
 
       {/* Menú desplegable flotante */}
       {isOpen && !disabled && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-[#181B22] border border-[#262D3D] rounded-xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute left-0 min-w-full w-max max-w-[min(340px,calc(100vw-2rem))] top-full mt-1.5 z-50 bg-[#181B22] border border-[#262D3D] rounded-xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           <div className="max-h-60 overflow-y-auto py-1">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt) => {
@@ -206,7 +206,7 @@ export function CustomSelect({
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate">{opt.label}</span>
+                        <span>{opt.label}</span>
                         {opt.badge && (
                           <span className="px-2 py-0.5 rounded-md bg-[#222734] border border-[#2D3748] text-[10px] text-[#A78BFA] shrink-0 font-medium">
                             {opt.badge}

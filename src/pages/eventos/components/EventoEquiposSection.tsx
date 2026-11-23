@@ -76,7 +76,7 @@ export function EventoEquiposSection({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-8 border-t border-[#262D3D]">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Columna Izquierda */}
       <div className="lg:col-span-3 space-y-3">
         <div>
@@ -141,8 +141,16 @@ export function EventoEquiposSection({
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-[#222734] text-[#94A3B8]">
                             {eq.categoria}
                           </span>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-[#10B981]/15 text-[#10B981] font-medium">
-                            {eq.propiedad}
+                          <span
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              eq.propiedad === "Alquilado"
+                                ? "bg-[#F59E0B]/15 text-[#FBBF24]"
+                                : "bg-[#10B981]/15 text-[#10B981]"
+                            }`}
+                          >
+                            {eq.propiedad === "Alquilado" && eq.proveedor_nombre
+                              ? `Alquilado · ${eq.proveedor_nombre}`
+                              : eq.propiedad}
                           </span>
                         </div>
                       </div>
@@ -223,8 +231,16 @@ export function EventoEquiposSection({
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-[#222734] text-[#94A3B8]">
                         {eq.categoria}
                       </span>
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-[#10B981]/15 text-[#10B981] font-medium">
-                        {eq.propiedad}
+                      <span
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          eq.propiedad === "Alquilado"
+                            ? "bg-[#F59E0B]/15 text-[#FBBF24]"
+                            : "bg-[#10B981]/15 text-[#10B981]"
+                        }`}
+                      >
+                        {eq.propiedad === "Alquilado" && eq.proveedor_nombre
+                          ? `Alquilado · ${eq.proveedor_nombre}`
+                          : eq.propiedad}
                       </span>
                     </div>
                   </div>

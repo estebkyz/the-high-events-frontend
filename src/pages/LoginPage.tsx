@@ -98,18 +98,18 @@ export default function LoginPage({ onLoginSuccess }: Props) {
         <div className="w-full max-w-[400px] space-y-8">
           <div className="space-y-1">
             <h2 className="text-[26px] font-bold text-[#F1F5F9] tracking-tight">
-              Bienvenido de nuevo
+              Panel de Administración
             </h2>
             <p className="text-[13px] text-[#64748B]">
-              Ingresa tus credenciales para acceder a la plataforma
+              Ingresa tus datos para continuar.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-[#94A3B8] block">
-                Correo Electrónico
+              <label className="text-[13px] font-semibold text-[#F1F5F9] block">
+                Correo electrónico
               </label>
               <input
                 type="email"
@@ -123,7 +123,7 @@ export default function LoginPage({ onLoginSuccess }: Props) {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-widest text-[#94A3B8] block">
+              <label className="text-[13px] font-semibold text-[#F1F5F9] block">
                 Contraseña
               </label>
               <div className="relative">
@@ -170,7 +170,7 @@ export default function LoginPage({ onLoginSuccess }: Props) {
               type="submit"
               className="w-full h-[46px] bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold rounded-xl text-[13px] tracking-wide transition-all shadow-lg hover:shadow-violet-900/40"
             >
-              Iniciar Sesión
+              Iniciar sesión
             </button>
           </form>
         </div>

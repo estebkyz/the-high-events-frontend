@@ -222,7 +222,7 @@ export default function ProveedoresPage() {
         correo: formState.correo || "",
         servicios: formState.servicios || [],
         equipos: formState.equipos || [],
-        estado: formState.estado || "Activo",
+        estado: "Activo",
         contratosCount: 0,
         historial: [],
         fecha_creacion: new Date().toISOString(),

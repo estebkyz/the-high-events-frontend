@@ -172,7 +172,7 @@ export default function UsuariosPage() {
         telefono: formState.telefono || "",
         rol: formState.rol || "Operador",
         ultimoAcceso: "Nunca",
-        estado: formState.estado || "Activo",
+        estado: "Activo",
         fecha_creacion: new Date().toISOString(),
         sesiones: [],
       }

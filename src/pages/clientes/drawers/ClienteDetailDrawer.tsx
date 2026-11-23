@@ -1,6 +1,14 @@
 import React from "react"
 import { Drawer } from "../../../components/Drawer"
 import { StatusBadge } from "../../../components/StatusBadge"
+import {
+  DetailHeader,
+  DetailSection,
+  DetailGrid,
+  DetailField,
+  DetailList,
+  DetailEmptyNote,
+} from "../../../components/detail"
 import type { ClienteItem, HistorialItem } from "../types"
 import { getClienteDisplayName } from "../utils"
 
@@ -22,76 +30,80 @@ export const ClienteDetailDrawer: React.FC<ClienteDetailDrawerProps> = ({
 }) => {
   if (!client) return null
 
+  const displayName = getClienteDisplayName(client)
+
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
       size="detail"
-      title="Perfil de Cliente"
-      subtitle={getClienteDisplayName(client)}
+      title="Detalle de cliente"
+      subtitle={displayName}
+      footer={
+        <div className="flex gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              onClose()
+              onOpenEdit(client)
+            }}
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors cursor-pointer"
+          >
+            Editar cliente
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] border border-[#2D3748] transition-colors cursor-pointer"
+          >
+            Cerrar
+          </button>
+        </div>
+      }
     >
       <div className="space-y-4">
-        {/* Customer header */}
-        <div className="flex items-center gap-3.5 p-3.5 bg-[#1A1D23] rounded-xl border border-[#2D3748]">
-          <div className="w-11 h-11 rounded-xl bg-[#7C3AED]/20 text-[#A78BFA] flex items-center justify-center font-bold text-base shrink-0 border border-[#7C3AED]/30">
-            {getClienteDisplayName(client).charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-[#F1F5F9] leading-snug truncate">
-              {getClienteDisplayName(client)}
-            </p>
-            {client.tipo_cliente === "Empresa" && client.contacto_nombre && (
-              <p className="text-[12px] text-[#A78BFA] font-medium mt-0.5">
-                {client.contacto_nombre}
-              </p>
-            )}
-            <div className="flex flex-wrap items-center gap-2 mt-2">
+        <DetailHeader
+          badges={
+            <>
               <StatusBadge status={client.tipo_cliente} />
               <StatusBadge status={client.estado} />
-            </div>
-          </div>
-        </div>
+            </>
+          }
+          title={displayName}
+          subtitle={
+            client.tipo_cliente === "Empresa" && client.contacto_nombre
+              ? client.contacto_nombre
+              : undefined
+          }
+        />
 
-        {/* Info grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            {
-              label: "Documento Legal",
-              value: `${client.tipo_documento} ${client.numero_documento}`,
-            },
-            {
-              label: "Ciudad / Dirección",
-              value: `${client.ciudad} ${
-                client.direccion ? `— ${client.direccion}` : ""
-              }`,
-            },
-            { label: "Correo Electrónico", value: client.correo },
-            { label: "Teléfono", value: client.telefono },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="p-3 bg-[#1A1D23] rounded-xl border border-[#2D3748]"
-            >
-              <p className="text-[10px] text-[#64748B] uppercase tracking-wider font-semibold">
-                {item.label}
-              </p>
-              <p className="text-xs text-[#F1F5F9] font-medium mt-1 break-all">
-                {item.value || "No registrado"}
-              </p>
-            </div>
-          ))}
-        </div>
+        <DetailGrid>
+          <DetailField
+            label="Documento"
+            value={`${client.tipo_documento} ${client.numero_documento}`}
+          />
+          <DetailField
+            label="Dirección"
+            value={client.direccion || "No registrada"}
+          />
+          <DetailField
+            label="Correo electrónico"
+            value={client.correo || "No registrado"}
+            valueClassName="break-all"
+          />
+          <DetailField
+            label="Teléfono"
+            value={client.telefono || "No registrado"}
+          />
+        </DetailGrid>
 
-        {/* Change status */}
-        <div className="p-3 bg-[#1A1D23] rounded-xl border border-[#2D3748] space-y-2">
-          <p className="text-[10px] text-[#A78BFA] uppercase tracking-wider font-semibold">
-            Estado del Cliente
-          </p>
+        <DetailSection title="Estado de cliente">
           <div className="flex gap-2">
             {["Activo", "Inactivo"].map((s) => (
               <button
                 key={s}
                 type="button"
+                aria-pressed={client.estado === s}
                 onClick={() => onSetEstado(client.id, s)}
                 className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
                   client.estado === s
@@ -105,75 +117,41 @@ export const ClienteDetailDrawer: React.FC<ClienteDetailDrawerProps> = ({
               </button>
             ))}
           </div>
-        </div>
+        </DetailSection>
 
-        {/* Historial Comercial */}
-        <div>
-          <p className="text-[11px] text-[#A78BFA] uppercase tracking-wider font-semibold mb-2">
-            Historial Comercial
-          </p>
-          <div className="rounded-xl border border-[#2D3748] overflow-hidden">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-[#111318] text-[#94A3B8]">
-                  <th className="p-2.5 text-left font-medium">Referencia</th>
-                  <th className="p-2.5 text-left font-medium">Tipo</th>
-                  <th className="p-2.5 text-left font-medium">Fecha</th>
-                  <th className="p-2.5 text-left font-medium">Monto</th>
-                  <th className="p-2.5 text-left font-medium">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historial.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-4 text-center text-[#64748B]">
-                      Sin historial comercial
-                    </td>
-                  </tr>
-                ) : (
-                  historial.map((h, i) => (
-                    <tr
-                      key={i}
-                      className="border-t border-[#2D3748]/60 bg-[#1A1D23] hover:bg-[#242830] transition-colors"
-                    >
-                      <td className="p-2.5 font-mono text-[#A78BFA] font-semibold">
+        <DetailSection
+          title="Historial comercial"
+          count={historial.length > 0 ? `${historial.length} registro(s)` : undefined}
+        >
+          {historial.length === 0 ? (
+            <DetailEmptyNote text="Sin historial comercial" />
+          ) : (
+            <DetailList>
+              {historial.map((h, i) => (
+                <div
+                  key={i}
+                  className="py-2.5 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-semibold text-[#A78BFA]">
                         {h.referencia}
-                      </td>
-                      <td className="p-2.5 text-[#94A3B8]">{h.tipo}</td>
-                      <td className="p-2.5 text-[#94A3B8]">{h.fecha}</td>
-                      <td className="p-2.5 text-[#F1F5F9] font-medium">
-                        {h.monto}
-                      </td>
-                      <td className="p-2.5">
-                        <StatusBadge status={h.estado} />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="pt-2 flex gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              onClose()
-              onOpenEdit(client)
-            }}
-            className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors cursor-pointer"
-          >
-            Editar Cliente
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] border border-[#2D3748] transition-colors cursor-pointer"
-          >
-            Cerrar
-          </button>
-        </div>
+                      </span>
+                      <span className="text-[11px] text-[#94A3B8]">{h.tipo}</span>
+                    </div>
+                    <p className="text-[11px] text-[#94A3B8] mt-0.5">{h.fecha}</p>
+                  </div>
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <span className="text-xs font-semibold text-[#F1F5F9] tabular-nums">
+                      {h.monto}
+                    </span>
+                    <StatusBadge status={h.estado} />
+                  </div>
+                </div>
+              ))}
+            </DetailList>
+          )}
+        </DetailSection>
       </div>
     </Drawer>
   )
