@@ -1,709 +1,159 @@
-import { usePagination } from "../../hooks/usePagination"
-import { useCrudResource } from "../../hooks/useCrudResource"
-import React, { useState, useMemo, useEffect } from "react"
-import { useLocation } from "react-router-dom"
-import { Users, Truck, CheckCircle2, Download, Trash2 } from "lucide-react"
-import { PageHeader } from "../../components/PageHeader"
-import { IndexTabs } from "../../components/IndexTabs"
-import { CustomSelect } from "../../components/CustomSelect"
-import { BulkActionsBar } from "../../components/BulkActionsBar"
-import { useToast } from "../../components/Toast"
-import { printDocumentPdf } from "../../utils/printDocumentPdf"
-import { INITIAL_ABONOS } from "./data"
-import { AbonoTable } from "./components/AbonoTable"
+import { useMemo, useState, type SubmitEvent } from "react"
+import { Banknote, Wallet } from "lucide-react"
+import { IndexTabs } from "@/components/IndexTabs"
+import { PageHeader } from "@/components/PageHeader"
+import { SegmentedControl } from "@/components/SegmentedControl"
+import { useToast } from "@/components/Toast"
+import { DataTable } from "@/components/list/DataTable"
+import { FilterSelect } from "@/components/list/FilterField"
+import { ListPage } from "@/components/list/ListPage"
+import { useCrudActions } from "@/hooks/useCrudActions"
+import { useCrudResource } from "@/hooks/useCrudResource"
+import { useListFilters } from "@/hooks/useListFilters"
+import { useRecordModal } from "@/hooks/useRecordModal"
+import { buildTabs, matchesSearch, withAllOption } from "@/utils/list"
+import { getAbonoColumns } from "./components/abonoColumns"
 import { AbonosKPIs } from "./components/AbonosKPIs"
+import {
+  ABONO_FILTERS,
+  CARTERA,
+  CARTERA_OPTIONS,
+  ESTADO_CARTERA_OPTIONS,
+  ESTADO_CARTERA_TABS,
+} from "./constants"
 import { AbonoDetailDrawer } from "./drawers/AbonoDetailDrawer"
-import { AbonoFormDrawer } from "./drawers/AbonoFormDrawer"
-import type {
-  AbonoItem,
-  AbonoDrawerMode,
-  AbonoFormData,
-  TipoAbonoTab,
-  AbonosKPIsData,
-  PagoFormState,
-  PaymentHistoryEntry,
-} from "./types"
+import { PagoFormDrawer } from "./drawers/PagoFormDrawer"
+import { aplicarPago, EMPTY_PAGO, pagoInicial, validatePago, verificarPago } from "./form"
+import type { AbonoItem, EstadoPago, PagoForm, TipoCartera } from "./types"
+import { admitePago, estadoCartera, getAbonoName, getTercero } from "./utils"
 
 export default function AbonosPage() {
   const toast = useToast()
-  const location = useLocation()
-  const { items: abonos, setItems: setAbonos } = useCrudResource<AbonoItem>({
-    endpoint: "/abonos",
-    storageKey: "high_events_abonos_v1",
-    initialData: INITIAL_ABONOS,
-  })
-  const [selectedAbono, setSelectedAbono] = useState<AbonoItem | null>(null)
-  const [drawerMode, setDrawerMode] = useState<AbonoDrawerMode>("create")
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [cartera, setCartera] = useState<TipoCartera>("Clientes")
+  const copy = CARTERA[cartera]
 
-  // Selection for Bulk Actions (Shopify Polaris)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const abonos = useCrudResource<AbonoItem>({ endpoint: "/abonos" })
+  const actions = useCrudActions(abonos, copy.label, getAbonoName)
+  const filters = useListFilters(ABONO_FILTERS)
+  const modal = useRecordModal<AbonoItem, PagoForm>(abonos.items, EMPTY_PAGO)
 
-  // Search & Pagination
-  const [search, setSearch] = useState("")
-  const [filterEstadoPago, setFilterEstadoPago] = useState("Todos")
-
-  // Pestaña Activa: 'Clientes' o 'Proveedores' (Regla de negocio UI/UX)
-  const [activeTab, setActiveTab] = useState<TipoAbonoTab>("Clientes")
-
-  // Form State para creación y edición de abonos
-  const [formState, setFormState] = useState<AbonoFormData>({})
-  const [showPagoForm, setShowPagoForm] = useState(false)
-
-  // Auto precargar datos cuando viene de una cotización aceptada
-  useEffect(() => {
-    const st = location.state as {
-      fromQuote?: boolean
-      cotizacionCodigo?: string
-      cliente?: string
-      evento?: string
-      total?: string
-    } | null
-    if (st?.fromQuote) {
-      const rawTotal = st.total || "$ 0"
-      const cleanNum = Number(rawTotal.replace(/[^0-9]/g, "")) || 0
-      const half = Math.round(cleanNum * 0.5)
-      const halfFmt = `$ ${half.toLocaleString("es-CO")}`
-
-      setActiveTab("Clientes")
-      setDrawerMode("create")
-      setFormState({
-        tipoCartera: "Clientes",
-        evento: st.evento || `Evento de ${st.cliente || ""}`,
-        cliente: st.cliente || "",
-        total: rawTotal,
-        totalNum: cleanNum,
-        anticipo: halfFmt,
-        anticipoNum: half,
-        saldo: halfFmt,
-        saldoNum: half,
-        estadoAnticipo: "Pendiente",
-        estadoSaldo: "Pendiente",
-        porcentaje: 0,
-        historial: [],
-      })
-      setIsDrawerOpen(true)
-      toast.info(
-        `Registrando plan de abonos para cotización ${st.cotizacionCodigo || ""}`,
-      )
-    }
-  }, [location.state])
-
-  // Form State para registrar transacción (pago_cliente / pago_proveedor)
-  const [pagoForm, setPagoForm] = useState<PagoFormState>({
-    tipoPago: "Anticipo",
-    monto: "",
-    fecha: new Date().toISOString().split("T")[0],
-    metodo: "Transferencia",
-    comprobante: "",
-    estado: "Pagado",
-    observaciones: "",
-    verificacionCondicion: false,
-  })
-
-  const isClientes = activeTab === "Clientes"
-
-  // Filtrado por pestaña y búsqueda en tiempo real
-  const filteredData = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return abonos.filter((a) => {
-      if (a.tipoCartera !== activeTab) return false
-      if (filterEstadoPago === "Pendiente" && a.porcentaje === 100) return false
-      if (filterEstadoPago === "Liquidado" && a.porcentaje < 100) return false
-      if (!q) return true
-      const matchEvento = a.evento.toLowerCase().includes(q)
-      const matchCliente = a.cliente
-        ? a.cliente.toLowerCase().includes(q)
-        : false
-      const matchProveedor = a.proveedor
-        ? a.proveedor.toLowerCase().includes(q)
-        : false
-      const matchServicio = a.servicio
-        ? a.servicio.toLowerCase().includes(q)
-        : false
-      return matchEvento || matchCliente || matchProveedor || matchServicio
-    })
-  }, [abonos, activeTab, search, filterEstadoPago])
-
-  // Paginación
-  const {
-    pageSize,
-    setPageSize,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    paginatedData,
-  } = usePagination(filteredData)
-
-  // Cálculo de KPIs financieros
-  const kpis: AbonosKPIsData = useMemo(() => {
-    const clientList = abonos.filter((a) => a.tipoCartera === "Clientes")
-    const supplierList = abonos.filter((a) => a.tipoCartera === "Proveedores")
-
-    const anticiposClientes = clientList
-      .filter((a) => a.estadoAnticipo === "Pagado")
-      .reduce((sum, a) => sum + a.anticipoNum, 0)
-    const saldosPendClientes = clientList
-      .filter((a) => a.estadoSaldo === "Pendiente")
-      .reduce((sum, a) => sum + a.saldoNum, 0)
-    const anticiposProv = supplierList
-      .filter((a) => a.estadoAnticipo === "Pagado")
-      .reduce((sum, a) => sum + a.anticipoNum, 0)
-    const saldosPendProv = supplierList
-      .filter((a) => a.estadoSaldo === "Pendiente")
-      .reduce((sum, a) => sum + a.saldoNum, 0)
-
-    return {
-      anticiposClientes,
-      saldosPendClientes,
-      anticiposProv,
-      saldosPendProv,
-    }
-  }, [abonos])
-
-  // Handlers estandarizados para apertura de Drawers
-  const openCreate = () => {
-    setSelectedAbono(null)
-    setFormState({
-      evento: "",
-      cliente: "",
-      proveedor: "",
-      servicio: "",
-      total: "",
-      anticipo: "",
-      saldo: "",
-      porcentaje: 0,
-      estadoAnticipo: "Pendiente",
-      estadoSaldo: "Pendiente",
-      fechaPago: new Date().toISOString().split("T")[0],
-      observaciones: "",
-    })
-    setDrawerMode("create")
-    setIsDrawerOpen(true)
-  }
-
-  const openEdit = (row: AbonoItem) => {
-    setSelectedAbono(row)
-    setFormState({ ...row })
-    setDrawerMode("edit")
-    setIsDrawerOpen(true)
-  }
-
-  const openView = (row: AbonoItem) => {
-    setSelectedAbono(row)
-    setShowPagoForm(false)
-    setDrawerMode("view")
-    setIsDrawerOpen(true)
-  }
-
-  // Botón de billete [ 💵 ] para registrar nuevo abono / pago
-  const openRegistrarAbono = (row: AbonoItem) => {
-    setSelectedAbono(row)
-    const tipoPago = row.estadoAnticipo === "Pendiente" ? "Anticipo" : "Saldo"
-    const monto = tipoPago === "Anticipo" ? row.anticipo : row.saldo
-
-    setPagoForm({
-      tipoPago,
-      monto,
-      fecha: new Date().toISOString().split("T")[0],
-      metodo: "Transferencia",
-      comprobante: `TR-${Date.now().toString().slice(-6)}`,
-      estado: "Pagado",
-      observaciones: "",
-      verificacionCondicion: isClientes
-        ? !!row.eventoFinalizado
-        : !!row.cumplimientoVerificado,
-    })
-    setShowPagoForm(true)
-    setDrawerMode("payment")
-    setIsDrawerOpen(true)
-  }
-
-  const closeDrawer = () => {
-    setIsDrawerOpen(false)
-    setSelectedAbono(null)
-    setShowPagoForm(false)
-  }
-
-  const handleDelete = (row: AbonoItem) => {
-    const entidad =
-      row.tipoCartera === "Clientes"
-        ? `del cliente ${row.cliente || row.evento}`
-        : `del proveedor ${row.proveedor || row.evento}`
-    if (confirm(`¿Eliminar el registro de abono ${entidad}?`)) {
-      setAbonos((prev) => prev.filter((a) => a.id !== row.id))
-      setSelectedIds((prev) => prev.filter((id) => id !== row.id))
-      toast.success("Registro eliminado exitosamente")
-    }
-  }
-
-  // Bulk actions handlers (Shopify Polaris)
-  const handleToggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    )
-  }
-
-  const handleToggleSelectAll = () => {
-    const pageIds = paginatedData.map((a) => a.id)
-    const allSelected =
-      pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id))
-    if (allSelected) {
-      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)))
-    } else {
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])))
-    }
-  }
-
-  const resetFilters = () => {
-    setSearch("")
-    setCurrentPage(1)
-  }
-
-  const isFiltered = Boolean(search)
-
-  const handleBulkLiquidate = () => {
-    setAbonos((prev) =>
-      prev.map((a) =>
-        selectedIds.includes(a.id)
-          ? {
-              ...a,
-              estadoAnticipo: "Pagado",
-              estadoSaldo: "Pagado",
-              porcentaje: 100,
-            }
-          : a,
+  const deCartera = useMemo(
+    () => abonos.items.filter((a) => a.tipoCartera === cartera),
+    [abonos.items, cartera],
+  )
+  const { search, matches } = filters
+  const filteredData = useMemo(
+    () =>
+      deCartera.filter(
+        (a) =>
+          matches("estado", estadoCartera(a)) &&
+          matchesSearch(search, [a.evento, a.servicio, getTercero(a)]),
       ),
-    )
-    toast.success(
-      `${selectedIds.length} acuerdo(s) de cartera liquidados al 100%`,
-    )
-    setSelectedIds([])
-  }
+    [deCartera, search, matches],
+  )
 
-  const handleBulkReceipts = () => {
-    toast.info(
-      `Generando recibos de caja en PDF para ${selectedIds.length} registro(s)...`,
+  const openPago = (item: AbonoItem) => modal.openEdit(item, pagoInicial(item))
+
+  const handleVerificar = (item: AbonoItem, pagoId: string, estado: EstadoPago) =>
+    actions.update(
+      item.id,
+      verificarPago(item, pagoId, estado),
+      estado === "Pagado" ? "Pago verificado" : "Pago rechazado",
     )
-    setSelectedIds([])
-  }
 
-  const handleBulkDelete = () => {
-    if (
-      confirm(
-        `¿Eliminar los ${selectedIds.length} registros de cartera seleccionados?`,
-      )
-    ) {
-      setAbonos((prev) => prev.filter((a) => !selectedIds.includes(a.id)))
-      toast.success(`${selectedIds.length} registro(s) eliminados`)
-      setSelectedIds([])
-    }
-  }
-
-  // Registrar Transacción (pago_cliente o pago_proveedor)
-  const handlePagoSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!selectedAbono || !pagoForm.monto) {
-      toast.error("El monto del pago es obligatorio")
+    if (!modal.selected) return
+    const error = validatePago(modal.editForm, modal.selected)
+    if (error) {
+      toast.error(error)
       return
     }
-
-    if (!pagoForm.comprobante.trim()) {
-      toast.error("El comprobante o referencia de transacción es obligatorio")
-      return
+    const changes = aplicarPago(modal.selected, modal.editForm)
+    if (await actions.update(modal.selected.id, changes, "Transacción registrada")) {
+      modal.close()
     }
-
-    // Regla de Negocio para Saldo 50%
-    if (pagoForm.tipoPago === "Saldo" && !pagoForm.verificacionCondicion) {
-      if (isClientes) {
-        toast.error(
-          "Para registrar el saldo del cliente, debes confirmar que el evento ha finalizado satisfactoriamente.",
-        )
-        return
-      } else {
-        toast.error(
-          "Para registrar el saldo al proveedor, debes confirmar que se ha verificado el cumplimiento del servicio.",
-        )
-        return
-      }
-    }
-
-    const montoNum = Number(pagoForm.monto.replace(/[^0-9]/g, "")) || 0
-    const newTxId = isClientes
-      ? `PC-${Date.now().toString().slice(-4)}`
-      : `PP-${Date.now().toString().slice(-4)}`
-
-    const newHistoryEntry: PaymentHistoryEntry = {
-      id: newTxId,
-      fecha: pagoForm.fecha || new Date().toISOString().split("T")[0],
-      monto: pagoForm.monto,
-      montoNum,
-      metodo: pagoForm.metodo,
-      concepto: pagoForm.tipoPago === "Anticipo" ? "Anticipo" : "Saldo",
-      tipoPago: pagoForm.tipoPago,
-      comprobante: pagoForm.comprobante.trim(),
-      estado: pagoForm.estado,
-      observaciones: pagoForm.observaciones.trim() || undefined,
-    }
-
-    const updateItem = (item: AbonoItem): AbonoItem => {
-      if (item.id !== selectedAbono.id) return item
-
-      let nuevoEstadoAnticipo = item.estadoAnticipo
-      let nuevoEstadoSaldo = item.estadoSaldo
-      let nuevaFechaAnticipo = item.fechaAnticipo
-      let nuevaFechaSaldo = item.fechaSaldo
-
-      if (pagoForm.tipoPago === "Anticipo") {
-        nuevoEstadoAnticipo = "Pagado"
-        nuevaFechaAnticipo = pagoForm.fecha
-      } else if (pagoForm.tipoPago === "Saldo") {
-        nuevoEstadoSaldo = "Pagado"
-        nuevaFechaSaldo = pagoForm.fecha
-      }
-
-      const totalCalculado =
-        (nuevoEstadoAnticipo === "Pagado" ? 50 : 0) +
-        (nuevoEstadoSaldo === "Pagado" ? 50 : 0)
-
-      return {
-        ...item,
-        estadoAnticipo: nuevoEstadoAnticipo,
-        estadoSaldo: nuevoEstadoSaldo,
-        fechaAnticipo: nuevaFechaAnticipo,
-        fechaSaldo: nuevaFechaSaldo,
-        eventoFinalizado: isClientes
-          ? pagoForm.verificacionCondicion || item.eventoFinalizado
-          : item.eventoFinalizado,
-        cumplimientoVerificado: !isClientes
-          ? pagoForm.verificacionCondicion || item.cumplimientoVerificado
-          : item.cumplimientoVerificado,
-        porcentaje: totalCalculado,
-        historial: [newHistoryEntry, ...item.historial],
-      }
-    }
-
-    setAbonos((prev) => prev.map(updateItem))
-
-    toast.success(
-      isClientes
-        ? `Transacción de cliente registrada exitosamente (${pagoForm.tipoPago})`
-        : `Pago a proveedor registrado exitosamente (${pagoForm.tipoPago})`,
-    )
-
-    setShowPagoForm(false)
-    setSelectedAbono((prev) => (prev ? updateItem(prev) : null))
-  }
-
-  // Crear o Editar acuerdo general de abono
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formState.evento?.trim()) {
-      toast.error("El nombre del evento es requerido")
-      return
-    }
-
-    if (drawerMode === "edit" && selectedAbono) {
-      setAbonos((prev) =>
-        prev.map((a) =>
-          a.id === selectedAbono.id ? { ...a, ...formState } as AbonoItem : a,
-        ),
-      )
-      toast.success("Acuerdo de abono actualizado correctamente")
-    } else {
-      const totalNum =
-        Number((formState.total || "").replace(/[^0-9]/g, "")) || 0
-      const anticipoNum =
-        Number((formState.anticipo || "").replace(/[^0-9]/g, "")) ||
-        Math.round(totalNum * 0.5)
-      const saldoNum = Math.max(0, totalNum - anticipoNum)
-
-      const nuevo: AbonoItem = {
-        id: String(Date.now()),
-        tipoCartera: activeTab,
-        evento: formState.evento || "",
-        cliente: formState.cliente || "",
-        proveedor: formState.proveedor || "",
-        servicio: formState.servicio || "",
-        total: formState.total || "$ 0",
-        totalNum,
-        anticipo:
-          formState.anticipo || `$ ${anticipoNum.toLocaleString("es-CO")}`,
-        anticipoNum,
-        saldo: formState.saldo || `$ ${saldoNum.toLocaleString("es-CO")}`,
-        saldoNum,
-        porcentaje:
-          formState.estadoAnticipo === "Pagado"
-            ? formState.estadoSaldo === "Pagado"
-              ? 100
-              : 50
-            : 0,
-        estadoAnticipo: formState.estadoAnticipo || "Pendiente",
-        estadoSaldo: formState.estadoSaldo || "Pendiente",
-        fechaPago:
-          formState.fechaPago || new Date().toISOString().split("T")[0],
-        observaciones: formState.observaciones || "",
-        historial: [],
-      }
-
-      setAbonos((prev) => [nuevo, ...prev])
-      toast.success(
-        isClientes
-          ? "Nuevo abono de cliente registrado exitosamente"
-          : "Nuevo contrato con proveedor registrado exitosamente",
-      )
-    }
-    closeDrawer()
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
-      <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
-        {/* ── Top Bar con PageHeader estandarizado ── */}
-        <PageHeader
-          title={isClientes ? "Abonos" : "Pagos"}
-          actionLabel={isClientes ? "Crear abono" : "Crear pago"}
-          onAction={openCreate}
-          searchValue={search}
-          onSearchChange={(val) => {
-            setSearch(val)
-            setCurrentPage(1)
-          }}
-          searchPlaceholder="Buscar"
-          activeFilterCount={filterEstadoPago !== "Todos" ? 1 : 0}
-          activeFilterPills={
-            filterEstadoPago !== "Todos"
-              ? [
-                  {
-                    key: "estadoPago",
-                    label: `Estado: ${filterEstadoPago}`,
-                    onClear: () => {
-                      setFilterEstadoPago("Todos")
-                      setCurrentPage(1)
-                    },
-                  },
-                ]
-              : []
-          }
-          onResetFilters={() => {
-            setFilterEstadoPago("Todos")
-            setCurrentPage(1)
-          }}
-          extraControls={
-            <div className="inline-flex items-center gap-1 p-1 bg-[#181B22] border border-[#262D3D] rounded-xl">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("Clientes")
-                  setCurrentPage(1)
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === "Clientes"
-                    ? "bg-[#7C3AED] text-white shadow-xs"
-                    : "text-[#94A3B8] hover:text-[#F8FAFC]"
-                }`}
-              >
-                <Users size={13} />
-                <span>Clientes</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("Proveedores")
-                  setCurrentPage(1)
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === "Proveedores"
-                    ? "bg-[#7C3AED] text-white shadow-xs"
-                    : "text-[#94A3B8] hover:text-[#F8FAFC]"
-                }`}
-              >
-                <Truck size={13} />
-                <span>Proveedores</span>
-              </button>
-            </div>
-          }
-        >
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-              Estado de Cartera
-            </label>
-            <CustomSelect
-              value={filterEstadoPago}
-              onChange={(val) => {
-                setFilterEstadoPago(val)
-                setCurrentPage(1)
-              }}
-              options={[
-                { label: "Todos los Registros", value: "Todos" },
-                { label: "Con Saldo Pendiente (50%)", value: "Pendiente" },
-                { label: "Liquidados (100%)", value: "Liquidado" },
-              ]}
-            />
-          </div>
-        </PageHeader>
-
-        {/* 4 Summary KPI Cards Contextualizados */}
-        <AbonosKPIs kpis={kpis} activeTab={activeTab} />
-
-        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
-        <IndexTabs
-          tabs={[
-            {
-              id: "Todos",
-              label: "Todos",
-              count: abonos.filter((a) => a.tipoCartera === activeTab).length,
-            },
-            {
-              id: "Pendiente",
-              label: "Pendientes",
-              count: abonos.filter(
-                (a) => a.tipoCartera === activeTab && a.porcentaje < 100,
-              ).length,
-            },
-            {
-              id: "Liquidado",
-              label: "Liquidados",
-              count: abonos.filter(
-                (a) => a.tipoCartera === activeTab && a.porcentaje === 100,
-              ).length,
-            },
-          ]}
-          activeTab={filterEstadoPago}
-          onTabChange={(newTab) => {
-            setFilterEstadoPago(newTab)
-            setCurrentPage(1)
-          }}
+    <ListPage
+      overlays={
+        <>
+          <AbonoDetailDrawer
+            isOpen={modal.mode === "view"}
+            item={modal.selected}
+            saving={actions.saving}
+            onClose={modal.close}
+            onRegistrarPago={openPago}
+            onVerificar={handleVerificar}
+          />
+          <PagoFormDrawer
+            isOpen={modal.mode === "form"}
+            abono={modal.selected}
+            saving={actions.saving}
+            form={modal.editForm}
+            setForm={modal.setEditForm}
+            onClose={modal.close}
+            onSubmit={(e) => void handleSubmit(e)}
+          />
+        </>
+      }
+    >
+      <PageHeader
+        title={copy.title}
+        {...filters.headerProps}
+        extraControls={
+          <SegmentedControl
+            label="Cartera"
+            value={cartera}
+            options={CARTERA_OPTIONS}
+            onChange={(val) => setCartera(val as TipoCartera)}
+          />
+        }
+      >
+        <FilterSelect
+          label="Estado"
+          value={filters.get("estado")}
+          onChange={(val) => filters.set("estado", val)}
+          options={withAllOption("Todos los registros", ESTADO_CARTERA_OPTIONS)}
         />
+      </PageHeader>
 
-        {/* ── Tabla Modularizada y Paginación ── */}
-        <AbonoTable
-          abonos={paginatedData}
-          activeTab={activeTab}
-          totalCount={filteredData.length}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          selectedIds={selectedIds}
-          onToggleSelect={handleToggleSelect}
-          onToggleSelectAll={handleToggleSelectAll}
-          onEmptyAction={openCreate}
-          onResetFilters={resetFilters}
-          isFiltered={isFiltered}
-          onPageSizeChange={(newSize) => {
-            setPageSize(newSize)
-            setCurrentPage(1)
-          }}
-          onPageChange={setCurrentPage}
-          onRegistrarAbono={openRegistrarAbono}
-          onView={openView}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-          onGenerarRecibo={(row) =>
-            printDocumentPdf({
-              tipoDocumento: "Comprobante de Abono / Pago",
-              codigo: `ABO-${row.id}`,
-              fecha: row.fechaPago,
-              terceroLabel: row.tipoCartera === "Clientes" ? "Cliente" : "Proveedor",
-              terceroNombre: row.cliente || row.proveedor || row.evento,
-              evento: row.evento,
-              estado: `${row.porcentaje}% Liquidado`,
-              total: row.total,
-              items: [
-                { descripcion: `Anticipo 50% (${row.estadoAnticipo})`, valor: row.anticipo },
-                { descripcion: `Saldo 50% (${row.estadoSaldo})`, valor: row.saldo },
-              ],
-              notas: row.observaciones,
-            })
-          }
-        />
-      </main>
+      <AbonosKPIs abonos={abonos.items} cartera={cartera} />
 
-      {/* Bulk Actions Bar (Shopify Polaris) */}
-      <BulkActionsBar
-        selectedCount={selectedIds.length}
-        totalCount={filteredData.length}
-        onClearSelection={() => setSelectedIds([])}
-        actions={[
+      <IndexTabs
+        tabs={buildTabs(deCartera, estadoCartera, ESTADO_CARTERA_TABS)}
+        activeTab={filters.get("estado")}
+        onTabChange={(tab) => filters.set("estado", tab)}
+      />
+
+      <DataTable
+        itemLabel={copy.label.plural}
+        columns={getAbonoColumns(cartera)}
+        data={filteredData}
+        getName={getAbonoName}
+        loading={abonos.loading}
+        error={abonos.error}
+        onRetry={() => void abonos.refresh()}
+        resetKey={`${cartera}${filters.resetKey}`}
+        isFiltered={filters.isFiltered}
+        onResetFilters={filters.resetAll}
+        onView={modal.openView}
+        extraActions={[
           {
-            label: "Liquidar Saldos (100%)",
-            onClick: handleBulkLiquidate,
-            variant: "success",
-            icon: CheckCircle2,
-          },
-          {
-            label: "Generar Recibos PDF",
-            onClick: handleBulkReceipts,
-            variant: "secondary",
-            icon: Download,
-          },
-          {
-            label: "Eliminar",
-            onClick: handleBulkDelete,
-            variant: "danger",
-            icon: Trash2,
+            label: "Registrar transacción",
+            icon: Banknote,
+            onClick: openPago,
+            tone: "success",
+            isVisible: admitePago,
           },
         ]}
-      />
-
-      {/* Detail Drawer (Transacciones de pago_cliente o pago_proveedor) */}
-      <AbonoDetailDrawer
-        isOpen={
-          isDrawerOpen &&
-          (drawerMode === "view" || drawerMode === "payment") &&
-          !!selectedAbono
-        }
-        abono={selectedAbono}
-        onClose={closeDrawer}
-        showPagoForm={showPagoForm}
-        setShowPagoForm={setShowPagoForm}
-        pagoForm={pagoForm}
-        setPagoForm={setPagoForm}
-        onPagoSubmit={handlePagoSubmit}
-        onGenerarRecibo={() => {
-          if (selectedAbono) {
-            printDocumentPdf({
-              tipoDocumento: "Comprobante de Abono / Pago",
-              codigo: `ABO-${selectedAbono.id}`,
-              fecha: selectedAbono.fechaPago,
-              terceroLabel:
-                selectedAbono.tipoCartera === "Clientes" ? "Cliente" : "Proveedor",
-              terceroNombre:
-                selectedAbono.cliente ||
-                selectedAbono.proveedor ||
-                selectedAbono.evento,
-              evento: selectedAbono.evento,
-              estado: `${selectedAbono.porcentaje}% Liquidado`,
-              total: selectedAbono.total,
-              items: [
-                {
-                  descripcion: `Anticipo 50% (${selectedAbono.estadoAnticipo})`,
-                  valor: selectedAbono.anticipo,
-                },
-                {
-                  descripcion: `Saldo 50% (${selectedAbono.estadoSaldo})`,
-                  valor: selectedAbono.saldo,
-                },
-              ],
-              notas: selectedAbono.observaciones,
-            })
-          }
+        empty={{
+          icon: Wallet,
+          title: copy.emptyTitle,
+          description: copy.emptyDescription,
         }}
       />
-
-      {/* Create / Edit Drawer (Crear o Editar acuerdo general) */}
-      <AbonoFormDrawer
-        isOpen={
-          isDrawerOpen && (drawerMode === "create" || drawerMode === "edit")
-        }
-        activeTab={activeTab}
-        mode={drawerMode === "edit" ? "edit" : "create"}
-        abono={selectedAbono}
-        formState={formState}
-        setFormState={setFormState}
-        onClose={closeDrawer}
-        onSubmit={handleFormSubmit}
-      />
-    </div>
+    </ListPage>
   )
 }

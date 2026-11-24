@@ -1,13 +1,8 @@
-export type TipoDocumentoUsuario = "CC" | "CE" | "NIT" | "PASAPORTE"
-
-export interface SesionAcceso {
-  fecha: string; ip: string
-  dispositivo: string
-  resultado: "Exitosa" | "Fallida"
-}
+import type { EstadoActivo, TipoDocumento } from "@/constants/common"
 
 export interface UsuarioItem {
-  id: string; tipo_documento: TipoDocumentoUsuario
+  id: string
+  tipo_documento: TipoDocumento
   numero_documento: string
   primer_nombre: string
   segundo_nombre?: string
@@ -16,13 +11,13 @@ export interface UsuarioItem {
   correo: string
   telefono: string
   rol: string
-  contrasena?: string
   ultimoAcceso: string
-  estado: "Activo" | "Inactivo"
+  estado: EstadoActivo
   fecha_creacion?: string
-  sesiones?: SesionAcceso[]
+  /** Solo se envía al crear o cambiar la contraseña; la API no debe devolverla. */
+  contrasena?: string
 }
 
-export type UsuarioDrawerMode = "none" | "create" | "edit" | "view"
-
-export type UsuarioFormData = Partial<UsuarioItem>
+export type UsuarioForm = Omit<UsuarioItem, "id" | "ultimoAcceso" | "fecha_creacion"> & {
+  contrasena: string
+}

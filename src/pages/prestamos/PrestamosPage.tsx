@@ -1,360 +1,189 @@
-import { usePagination } from "../../hooks/usePagination"
-import { useCrudResource } from "../../hooks/useCrudResource"
-import React, { useState, useMemo } from "react"
-import { PageHeader } from "../../components/PageHeader"
-import { IndexTabs } from "../../components/IndexTabs"
-import { CustomSelect } from "../../components/CustomSelect"
-import { useToast } from "../../components/Toast"
-import { INITIAL_PRESTAMOS } from "./data"
-import { PrestamoTable } from "./components/PrestamoTable"
-import { PrestamoFormDrawer } from "./drawers/PrestamoFormDrawer"
+import { useMemo, useState, type SubmitEvent } from "react"
+import { HandHelping, RotateCcw } from "lucide-react"
+import { IndexTabs } from "@/components/IndexTabs"
+import { PageHeader } from "@/components/PageHeader"
+import { useToast } from "@/components/Toast"
+import { DataTable } from "@/components/list/DataTable"
+import { FilterSelect } from "@/components/list/FilterField"
+import { ListPage } from "@/components/list/ListPage"
+import { useCrudActions } from "@/hooks/useCrudActions"
+import { useCrudResource } from "@/hooks/useCrudResource"
+import { useListFilters } from "@/hooks/useListFilters"
+import { useRecordModal } from "@/hooks/useRecordModal"
+import type { EmpleadoItem } from "@/pages/empleados/types"
+import type { EquipoItem } from "@/pages/equipos/types"
+import type { EventoItem } from "@/pages/eventos/types"
+import { todayISO } from "@/utils/format"
+import { buildTabs, matchesSearch, withAllOption } from "@/utils/list"
+import { getPrestamoColumns } from "./components/prestamoColumns"
+import {
+  ESTADO_PRESTAMO_OPTIONS,
+  ESTADO_PRESTAMO_TABS,
+  PRESTAMO_FILTERS,
+  PRESTAMO_LABEL,
+} from "./constants"
 import { PrestamoDetailDrawer } from "./drawers/PrestamoDetailDrawer"
+import { PrestamoFormDrawer } from "./drawers/PrestamoFormDrawer"
 import { PrestamoReturnDrawer } from "./drawers/PrestamoReturnDrawer"
-import type {
-  PrestamoItem,
-  PrestamoDrawerMode,
-  PrestamoFormData,
-  PrestamoEstado,
-} from "./types"
+import {
+  admiteDevolucion,
+  devolucionInicial,
+  devolucionToChanges,
+  EMPTY_DEVOLUCION,
+  EMPTY_PRESTAMO,
+  validateDevolucion,
+  validatePrestamo,
+} from "./form"
+import type { PrestamoEstado, PrestamoForm, PrestamoItem } from "./types"
 
 export default function PrestamosPage() {
   const toast = useToast()
-  const { items: prestamos, setItems: setPrestamos } =
-    useCrudResource<PrestamoItem>({
-      endpoint: "/prestamos",
-      storageKey: "high_events_prestamos_v1",
-      initialData: INITIAL_PRESTAMOS,
-    })
-
-  // Search & Pagination
-  const [search, setSearch] = useState("")
-
-  // Filter Tab (Polaris Quick Views)
-  const [activeTab, setActiveTab] = useState<string>("Todos")
-
-  // Drawer
-  const [drawerMode, setDrawerMode] = useState<PrestamoDrawerMode>("none")
-  const [selectedPrestamo, setSelectedPrestamo] = useState<PrestamoItem | null>(
-    null,
+  const prestamos = useCrudResource<PrestamoItem>({ endpoint: "/prestamos" })
+  const empleados = useCrudResource<EmpleadoItem>({ endpoint: "/empleados" })
+  const eventos = useCrudResource<EventoItem>({ endpoint: "/eventos" })
+  const equipos = useCrudResource<EquipoItem>({ endpoint: "/equipos" })
+  const actions = useCrudActions(prestamos, PRESTAMO_LABEL, (p) => p.codigo)
+  const filters = useListFilters(PRESTAMO_FILTERS)
+  const modal = useRecordModal<PrestamoItem, PrestamoForm, "return">(
+    prestamos.items,
+    EMPTY_PRESTAMO,
   )
-  const [editForm, setEditForm] = useState<PrestamoFormData>({})
+  const [devolucion, setDevolucion] = useState(EMPTY_DEVOLUCION)
 
-  // Return flow state
-  const [returnConditions, setReturnConditions] =
-    useState<Record<string, string>>({})
-  const [returnDate, setReturnDate] = useState("2026-09-18")
-  const [returnObs, setReturnObs] = useState("")
-
-  const statusCounts = useMemo(() => {
-    return {
-      Todos: prestamos.length,
-      Activo: prestamos.filter((p) => p.estado === "Activo").length,
-      Devuelto: prestamos.filter((p) => p.estado === "Devuelto").length,
-      "Con Retraso": prestamos.filter((p) => p.estado === "Con Retraso").length,
-      "Con Daños": prestamos.filter((p) => p.estado === "Con Daños").length,
-    }
-  }, [prestamos])
-
-  const quickTabs = useMemo(
-    () => [
-      { id: "Todos", label: "Todos", count: statusCounts.Todos },
-      { id: "Activo", label: "Activos", count: statusCounts.Activo },
-      { id: "Devuelto", label: "Devueltos", count: statusCounts.Devuelto },
-      { id: "Con Retraso", label: "Con Retraso", count: statusCounts["Con Retraso"] },
-      { id: "Con Daños", label: "Con Daños", count: statusCounts["Con Daños"] },
-    ],
-    [statusCounts],
+  const { search, matches } = filters
+  const filteredData = useMemo(
+    () =>
+      prestamos.items.filter(
+        (p) =>
+          matches("estado", p.estado) &&
+          matchesSearch(search, [p.responsable, p.evento, p.codigo]),
+      ),
+    [prestamos.items, search, matches],
   )
 
-  const filteredData = useMemo(() => {
-    return prestamos.filter((p) => {
-      const q = search.toLowerCase()
-      if (
-        q &&
-        !p.responsable.toLowerCase().includes(q) &&
-        !p.evento.toLowerCase().includes(q)
-      )
-        return false
-      if (activeTab !== "Todos" && p.estado !== activeTab) return false
-      return true
-    })
-  }, [prestamos, search, activeTab])
-
-  // Pagination calculations
-  const {
-    pageSize,
-    setPageSize,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    paginatedData,
-  } = usePagination(filteredData)
-
-  const openReturn = (p: PrestamoItem) => {
-    setSelectedPrestamo(p)
-    const initial: Record<string, string> = {}
-    p.equipos.forEach((eq) => {
-      initial[eq.id] = "Bueno"
-    })
-    setReturnConditions(initial)
-    setReturnDate(new Date().toISOString().split("T")[0])
-    setReturnObs("")
-    setDrawerMode("return")
+  const openCreate = () => modal.openCreate({ fechaSalida: todayISO() })
+  const openEdit = (item: PrestamoItem) => modal.openEdit(item, { ...item })
+  const openReturn = (item: PrestamoItem) => {
+    setDevolucion(devolucionInicial(item))
+    modal.open("return", item)
   }
 
-  const confirmReturn = () => {
-    if (!selectedPrestamo) return
-    const hasDamages = Object.values(returnConditions).some(
-      (c) => c === "Daño Leve" || c === "Daño Mayor",
-    )
-    const isLate = returnDate > selectedPrestamo.fechaDevolucion
+  const handleStatusChange = (id: string, estado: PrestamoEstado) =>
+    actions.changeStatus(id, { estado }, estado)
 
-    let finalEstado: PrestamoEstado = "Devuelto"
-    if (hasDamages) {
-      finalEstado = "Con Daños"
-    } else if (isLate) {
-      finalEstado = "Con Retraso"
-    }
-
-    setPrestamos((prev) =>
-      prev.map((p) =>
-        p.id === selectedPrestamo.id
-          ? {
-              ...p,
-              estado: finalEstado,
-              fecha_devolucion_real: returnDate,
-              observaciones_devolucion: returnObs.trim() || undefined,
-            }
-          : p,
-      ),
-    )
-    toast.success(`Préstamo ${selectedPrestamo.codigo} registrado como ${finalEstado}`)
-    setDrawerMode("none")
-  }
-
-  const handleStatusChange = (id: string, newEstado: PrestamoEstado) => {
-    setPrestamos((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, estado: newEstado } : p)),
-    )
-    toast.info(`Estado del préstamo actualizado a ${newEstado}`)
-  }
-
-  const handleDelete = (p: PrestamoItem) => {
-    if (confirm(`¿Eliminar préstamo de ${p.responsable}?`)) {
-      setPrestamos((prev) => prev.filter((item) => item.id !== p.id))
-      toast.success("Préstamo eliminado")
-    }
-  }
-
-  const handleCreatePrestamo = (e: React.FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!editForm.responsable?.trim() || !editForm.evento?.trim()) {
-      toast.error("Debes seleccionar el empleado responsable y el evento")
+    const error = validatePrestamo(modal.editForm)
+    if (error) {
+      toast.error(error)
       return
     }
-    if (!editForm.equipos || editForm.equipos.length === 0) {
-      toast.error("Debes seleccionar al menos un equipo para registrar el préstamo")
-      return
-    }
-    const newP: PrestamoItem = {
-      id: String(Date.now()),
-      codigo: `PR-${100 + prestamos.length + 4}`,
-      responsable: editForm.responsable ?? "",
-      responsable_id: editForm.responsable_id,
-      evento: editForm.evento ?? "",
-      evento_id: editForm.evento_id,
-      equipos: editForm.equipos,
-      fechaSalida: editForm.fechaSalida ?? new Date().toISOString().split("T")[0],
-      fechaDevolucion: editForm.fechaDevolucion ?? "",
-      estado: "Activo",
-      observaciones_entrega: editForm.observaciones_entrega,
-    }
-    setPrestamos((prev) => [newP, ...prev])
-    toast.success("Préstamo registrado exitosamente")
-    setDrawerMode("none")
+    const saved = modal.selected
+      ? await actions.update(modal.selected.id, modal.editForm)
+      : await actions.create({ ...modal.editForm, estado: "Activo" })
+    if (saved) modal.close()
   }
 
-  const handleUpdatePrestamo = (e: React.FormEvent) => {
+  const handleReturn = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!selectedPrestamo) return
-    if (!editForm.equipos || editForm.equipos.length === 0) {
-      toast.error("El préstamo debe tener al menos un equipo asignado")
+    if (!modal.selected) return
+    const error = validateDevolucion(devolucion, modal.selected)
+    if (error) {
+      toast.error(error)
       return
     }
-    setPrestamos((prev) =>
-      prev.map((p) =>
-        p.id === selectedPrestamo.id
-          ? {
-              ...p,
-              responsable: editForm.responsable ?? p.responsable,
-              responsable_id: editForm.responsable_id ?? p.responsable_id,
-              evento: editForm.evento ?? p.evento,
-              evento_id: editForm.evento_id ?? p.evento_id,
-              equipos: editForm.equipos ?? p.equipos,
-              fechaSalida: editForm.fechaSalida ?? p.fechaSalida,
-              fechaDevolucion: editForm.fechaDevolucion ?? p.fechaDevolucion,
-              observaciones_entrega:
-                editForm.observaciones_entrega ?? p.observaciones_entrega,
-            }
-          : p,
-      ),
-    )
-    toast.success("Préstamo actualizado exitosamente")
-    setDrawerMode("none")
-  }
-
-  const openView = (p: PrestamoItem) => {
-    setSelectedPrestamo(p)
-    setDrawerMode("view")
-  }
-
-  const openEdit = (p: PrestamoItem) => {
-    setSelectedPrestamo(p)
-    setEditForm({
-      responsable: p.responsable,
-      responsable_id: p.responsable_id,
-      evento: p.evento,
-      evento_id: p.evento_id,
-      equipos: [...p.equipos],
-      fechaSalida: p.fechaSalida,
-      fechaDevolucion: p.fechaDevolucion,
-      observaciones_entrega: p.observaciones_entrega,
-    })
-    setDrawerMode("edit")
+    const changes = devolucionToChanges(modal.selected, devolucion)
+    const message = `Devolución registrada: ${changes.estado}`
+    if (await actions.update(modal.selected.id, changes, message)) modal.close()
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
-      <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
-        {/* ── Top Bar con PageHeader estandarizado ── */}
-        <PageHeader
-          title="Préstamos"
-          actionLabel="Crear préstamo"
-          onAction={() => {
-            setSelectedPrestamo(null)
-            setEditForm({
-              responsable: "",
-              evento: "",
-              equipos: [],
-              fechaSalida: new Date().toISOString().split("T")[0],
-              fechaDevolucion: "",
-            })
-            setDrawerMode("new")
-          }}
-          searchValue={search}
-          onSearchChange={(val) => {
-            setSearch(val)
-            setCurrentPage(1)
-          }}
-          searchPlaceholder="Buscar"
-          activeFilterCount={activeTab !== "Todos" ? 1 : 0}
-          activeFilterPills={
-            activeTab !== "Todos"
-              ? [
-                  {
-                    key: "estado",
-                    label: `Estado: ${activeTab}`,
-                    onClear: () => {
-                      setActiveTab("Todos")
-                      setCurrentPage(1)
-                    },
-                  },
-                ]
-              : []
-          }
-          onResetFilters={() => {
-            setActiveTab("Todos")
-            setCurrentPage(1)
-          }}
-        >
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-              Estado del Préstamo
-            </label>
-            <CustomSelect
-              value={activeTab}
-              onChange={(val) => {
-                setActiveTab(val)
-                setCurrentPage(1)
-              }}
-              options={[
-                { label: "Todos los Estados", value: "Todos" },
-                { label: "Activos", value: "Activo" },
-                { label: "Devueltos", value: "Devuelto" },
-                { label: "Con Retraso", value: "Con Retraso" },
-                { label: "Con Daños", value: "Con Daños" },
-              ]}
-            />
-          </div>
-        </PageHeader>
-
-        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
-        <IndexTabs
-          tabs={quickTabs}
-          activeTab={activeTab}
-          onTabChange={(newTab) => {
-            setActiveTab(newTab)
-            setCurrentPage(1)
-          }}
+    <ListPage
+      overlays={
+        <>
+          <PrestamoDetailDrawer
+            isOpen={modal.mode === "view"}
+            item={modal.selected}
+            onClose={modal.close}
+            onEdit={openEdit}
+            onDevolucion={openReturn}
+          />
+          <PrestamoFormDrawer
+            isOpen={modal.mode === "form"}
+            isEditing={modal.isEditing}
+            saving={actions.saving}
+            form={modal.editForm}
+            setForm={modal.setEditForm}
+            onClose={modal.close}
+            onSubmit={(e) => void handleSubmit(e)}
+            empleados={empleados.items}
+            eventos={eventos.items}
+            equipos={equipos.items}
+          />
+          <PrestamoReturnDrawer
+            isOpen={modal.mode === "return"}
+            prestamo={modal.selected}
+            saving={actions.saving}
+            form={devolucion}
+            setForm={setDevolucion}
+            onClose={modal.close}
+            onSubmit={(e) => void handleReturn(e)}
+          />
+        </>
+      }
+    >
+      <PageHeader
+        title="Préstamos"
+        actionLabel="Crear préstamo"
+        onAction={openCreate}
+        {...filters.headerProps}
+      >
+        <FilterSelect
+          label="Estado"
+          value={filters.get("estado")}
+          onChange={(val) => filters.set("estado", val)}
+          options={withAllOption("Todos los estados", ESTADO_PRESTAMO_OPTIONS)}
         />
+      </PageHeader>
 
-        {/* ── Tabla Modularizada y Paginación ── */}
-        <PrestamoTable
-          prestamos={paginatedData}
-          totalCount={filteredData.length}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageSizeChange={(newSize) => {
-            setPageSize(newSize)
-            setCurrentPage(1)
-          }}
-          onPageChange={setCurrentPage}
-          onStatusChange={handleStatusChange}
-          onView={openView}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-          onOpenReturn={openReturn}
-        />
-      </main>
-
-      {/* Form Drawer (New / Edit) */}
-      <PrestamoFormDrawer
-        mode={drawerMode === "edit" ? "edit" : "new"}
-        isOpen={drawerMode === "new" || drawerMode === "edit"}
-        onClose={() => setDrawerMode("none")}
-        prestamo={selectedPrestamo}
-        formData={editForm}
-        setFormData={setEditForm}
-        onSubmit={
-          drawerMode === "edit" ? handleUpdatePrestamo : handleCreatePrestamo
-        }
+      <IndexTabs
+        tabs={buildTabs(prestamos.items, (p) => p.estado, ESTADO_PRESTAMO_TABS)}
+        activeTab={filters.get("estado")}
+        onTabChange={(tab) => filters.set("estado", tab)}
       />
 
-      {/* Detail Drawer */}
-      <PrestamoDetailDrawer
-        isOpen={drawerMode === "view"}
-        onClose={() => setDrawerMode("none")}
-        prestamo={selectedPrestamo}
-        onOpenReturn={openReturn}
+      <DataTable
+        itemLabel={PRESTAMO_LABEL.plural}
+        columns={getPrestamoColumns(handleStatusChange)}
+        data={filteredData}
+        getName={(p) => p.codigo}
+        loading={prestamos.loading}
+        error={prestamos.error}
+        onRetry={() => void prestamos.refresh()}
+        resetKey={filters.resetKey}
+        isFiltered={filters.isFiltered}
+        onResetFilters={filters.resetAll}
+        onCreate={openCreate}
+        onView={modal.openView}
+        onEdit={openEdit}
+        onDelete={(item) => void actions.remove(item)}
+        extraActions={[
+          {
+            label: "Registrar devolución",
+            icon: RotateCcw,
+            onClick: openReturn,
+            tone: "success",
+            isVisible: admiteDevolucion,
+          },
+        ]}
+        empty={{
+          icon: HandHelping,
+          title: "Aún no tienes préstamos registrados",
+          description:
+            "Registra la entrega de equipos propios a un responsable y evento.",
+          createLabel: "Crear préstamo",
+        }}
       />
-
-      {/* Return Registration Drawer */}
-      <PrestamoReturnDrawer
-        isOpen={drawerMode === "return"}
-        onClose={() => setDrawerMode("none")}
-        prestamo={selectedPrestamo}
-        returnConditions={returnConditions}
-        onConditionChange={(id, val) =>
-          setReturnConditions((prev) => ({ ...prev, [id]: val }))
-        }
-        returnDate={returnDate}
-        onReturnDateChange={setReturnDate}
-        returnObs={returnObs}
-        onReturnObsChange={setReturnObs}
-        onConfirm={confirmReturn}
-        onBackToView={() => setDrawerMode("view")}
-      />
-    </div>
+    </ListPage>
   )
 }

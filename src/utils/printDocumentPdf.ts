@@ -1,5 +1,5 @@
-export interface PrintableDocumentPayload {
-  tipoDocumento: "Cotización Comercial" | "Factura de Venta" | "Comprobante de Abono / Pago"
+export interface PrintableDocument {
+  tipoDocumento: string
   codigo: string
   fecha: string
   terceroLabel: string
@@ -11,95 +11,79 @@ export interface PrintableDocumentPayload {
   notas?: string
 }
 
-/**
- * Abre una ventana de impresión/descarga PDF limpia y con formato corporativo
- * para Cotizaciones, Facturas de Venta y Recibos de Abonos.
- */
-export function printDocumentPdf(doc: PrintableDocumentPayload): void {
-  const win = window.open("", "_blank", "width=860,height=720")
-  if (!win) {
-    window.print()
-    return
-  }
+const STYLES = `
+  body { font-family: Inter, system-ui, sans-serif; color: #0f172a; margin: 40px; }
+  header { display: flex; justify-content: space-between; border-bottom: 2px solid #7c3aed; padding-bottom: 18px; margin-bottom: 24px; }
+  .brand { font-size: 22px; font-weight: 800; color: #7c3aed; }
+  .muted { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .doc { text-align: right; }
+  .doc h1 { font-size: 18px; margin: 0; }
+  .code { font-family: monospace; font-size: 14px; font-weight: 700; color: #7c3aed; margin-top: 4px; }
+  .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; padding: 16px; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 24px; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px; }
+  th { background: #f1f5f9; text-align: left; padding: 10px 12px; border-bottom: 2px solid #cbd5e1; }
+  td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+  .right { text-align: right; }
+  .total { text-align: right; font-size: 16px; font-weight: 800; }
+  .notes { margin-top: 24px; font-size: 12px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
+`
 
-  const rowsHtml =
-    doc.items && doc.items.length > 0
-      ? doc.items
-          .map(
-            (it) => `
-          <tr>
-            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${it.descripcion}</td>
-            <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace;">${it.valor}</td>
-          </tr>`,
-          )
-          .join("")
-      : `
-        <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${doc.evento || doc.tipoDocumento}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-family:monospace;">${doc.total}</td>
-        </tr>`
+/** Los datos los escribe el usuario: sin escapar permitirían inyectar HTML. */
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;")
+}
 
-  const html = `<!doctype html>
+function buildHtml(doc: PrintableDocument): string {
+  const e = (value: string | undefined) => escapeHtml(String(value ?? ""))
+  const items = doc.items?.length
+    ? doc.items
+    : [{ descripcion: doc.evento || doc.tipoDocumento, valor: doc.total }]
+  const rows = items
+    .map(
+      (it) =>
+        `<tr><td>${e(it.descripcion)}</td><td class="right">${e(it.valor)}</td></tr>`,
+    )
+    .join("")
+
+  return `<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <title>${doc.tipoDocumento} - ${doc.codigo}</title>
-  <style>
-    body { font-family: 'Inter', system-ui, sans-serif; color: #0f172a; margin: 40px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #7c3aed; padding-bottom: 18px; margin-bottom: 24px; }
-    .brand { font-size: 22px; font-weight: 800; color: #7c3aed; }
-    .doc-title { font-size: 18px; font-weight: 700; margin: 0; }
-    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 24px; font-size: 13px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 24px; }
-    th { background: #f1f5f9; text-align: left; padding: 10px 12px; font-weight: 700; border-bottom: 2px solid #cbd5e1; }
-    .total-box { text-align: right; font-size: 16px; font-weight: 800; margin-top: 12px; }
-    .notes { margin-top: 24px; font-size: 12px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
-  </style>
-</head>
+<head><meta charset="utf-8" /><title>${e(doc.tipoDocumento)} - ${e(doc.codigo)}</title><style>${STYLES}</style></head>
 <body>
-  <div class="header">
-    <div>
-      <div class="brand">THE HIGH EVENTS</div>
-      <div style="font-size:12px;color:#64748b;margin-top:4px;">Producción Técnica & Logística de Eventos</div>
-    </div>
-    <div style="text-align:right;">
-      <p class="doc-title">${doc.tipoDocumento}</p>
-      <div style="font-family:monospace;font-size:14px;color:#7c3aed;font-weight:700;margin-top:4px;">${doc.codigo}</div>
-    </div>
-  </div>
-
+  <header>
+    <div><div class="brand">THE HIGH EVENTS</div><div class="muted">Producción técnica y logística de eventos</div></div>
+    <div class="doc"><h1>${e(doc.tipoDocumento)}</h1><div class="code">${e(doc.codigo)}</div></div>
+  </header>
   <div class="meta">
-    <div><strong>${doc.terceroLabel}:</strong> ${doc.terceroNombre}</div>
-    <div><strong>Fecha:</strong> ${doc.fecha}</div>
-    ${doc.evento ? `<div><strong>Evento:</strong> ${doc.evento}</div>` : ""}
-    <div><strong>Estado:</strong> ${doc.estado}</div>
+    <div><strong>${e(doc.terceroLabel)}:</strong> ${e(doc.terceroNombre)}</div>
+    <div><strong>Fecha:</strong> ${e(doc.fecha)}</div>
+    ${doc.evento ? `<div><strong>Evento:</strong> ${e(doc.evento)}</div>` : ""}
+    <div><strong>Estado:</strong> ${e(doc.estado)}</div>
   </div>
-
   <table>
-    <thead>
-      <tr>
-        <th>Concepto / Servicio</th>
-        <th style="text-align:right;">Valor</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rowsHtml}
-    </tbody>
+    <thead><tr><th>Concepto / Servicio</th><th class="right">Valor</th></tr></thead>
+    <tbody>${rows}</tbody>
   </table>
-
-  <div class="total-box">Total: ${doc.total}</div>
-
-  ${doc.notas ? `<div class="notes"><strong>Observaciones:</strong> ${doc.notas}</div>` : ""}
-
-  <script>
-    window.onload = function() {
-      window.print();
-    };
-  </script>
+  <div class="total">Total: ${e(doc.total)}</div>
+  ${doc.notas ? `<div class="notes"><strong>Observaciones:</strong> ${e(doc.notas)}</div>` : ""}
 </body>
 </html>`
+}
 
-  win.document.open()
-  win.document.write(html)
-  win.document.close()
+/** Imprime (o guarda como PDF) un documento en un iframe aislado. */
+export function printDocumentPdf(doc: PrintableDocument): void {
+  const frame = document.createElement("iframe")
+  frame.hidden = true
+  frame.srcdoc = buildHtml(doc)
+  frame.onload = () => {
+    const target = frame.contentWindow
+    if (!target) return
+    target.onafterprint = () => frame.remove()
+    target.print()
+  }
+  document.body.append(frame)
 }

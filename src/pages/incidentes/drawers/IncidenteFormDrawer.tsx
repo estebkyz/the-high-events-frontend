@@ -1,204 +1,124 @@
-import React, { useMemo } from "react"
-import { Drawer } from "../../../components/Drawer"
-import { FormInput } from "../../../components/FormInput"
-import { CustomSelect, type SelectOption } from "../../../components/CustomSelect"
-import type { IncidenteFormData, Criticidad, TipoIncidente } from "../types"
-import { CRITICIDAD_OPTIONS, TIPO_INCIDENTE_OPTIONS } from "../data"
-import { useCrudResource } from "../../../hooks/useCrudResource"
-import type { EventoItem } from "../../eventos/types"
-import type { EmpleadoItem } from "../../empleados/types"
-import { getEmpleadoFullName } from "../../empleados/utils"
-import type { AgendaEvent } from "../../agendamiento/types"
+import { Drawer } from "@/components/Drawer"
+import { FormInput } from "@/components/FormInput"
+import { FormActions } from "@/components/form/FormActions"
+import { FormSelect } from "@/components/form/FormSelect"
+import { FormTextarea } from "@/components/form/FormTextarea"
+import type { FormDrawerProps } from "@/components/form/types"
+import type { EmpleadoItem } from "@/pages/empleados/types"
+import { getEmpleadoFullName } from "@/pages/empleados/utils"
+import type { EventoItem } from "@/pages/eventos/types"
+import { fieldSetter } from "@/utils/form"
+import { CRITICIDAD_OPTIONS, TIPO_INCIDENTE_OPTIONS } from "../constants"
+import type { Criticidad, IncidenteForm, TipoIncidente } from "../types"
 
-interface IncidenteFormDrawerProps {
-  isOpen: boolean
-  newIncForm: IncidenteFormData
-  setNewIncForm: React.Dispatch<React.SetStateAction<IncidenteFormData>>
-  onClose: () => void
-  onSubmit: (e: React.FormEvent) => void
+interface IncidenteFormDrawerProps extends FormDrawerProps<IncidenteForm> {
+  eventos: EventoItem[]
+  empleados: EmpleadoItem[]
 }
 
-export const IncidenteFormDrawer: React.FC<IncidenteFormDrawerProps> = ({
+export function IncidenteFormDrawer({
   isOpen,
-  newIncForm,
-  setNewIncForm,
+  isEditing,
+  saving,
+  form,
+  setForm,
   onClose,
   onSubmit,
-}) => {
-  const { items: rawEventos } = useCrudResource<EventoItem>({ endpoint: "/eventos" })
-  const { items: rawAgenda } = useCrudResource<AgendaEvent>({ endpoint: "/agendamientos" })
-  const { items: rawEmpleados } = useCrudResource<EmpleadoItem>({ endpoint: "/empleados" })
+  eventos,
+  empleados,
+}: IncidenteFormDrawerProps) {
+  const set = fieldSetter(setForm)
 
-  const eventoOptions = useMemo<SelectOption[]>(() => {
-    const fromEventos = rawEventos.map((ev) => ({
-      label: ev.nombre,
-      value: ev.nombre,
-      sublabel: `${ev.cliente_nombre} · ${ev.direccion}`,
-    }))
-    const seen = new Set(fromEventos.map((e) => e.value))
-    const fromAgenda = rawAgenda
-      .filter((ag) => ag.kind === "evento" && !seen.has(ag.title))
-      .map((ag) => ({
-        label: ag.title,
-        value: ag.title,
-        sublabel: `${ag.client} · ${ag.venue || "Agendado"}`,
-      }))
-    return [...fromEventos, ...fromAgenda]
-  }, [rawEventos, rawAgenda])
+  const handleEvento = (id: string) => {
+    const evento = eventos.find((ev) => ev.id === id)
+    if (evento) set({ evento: evento.nombre, evento_id: Number(id) })
+  }
 
-  const empleadoOptions = useMemo<SelectOption[]>(
-    () =>
-      rawEmpleados.map((emp) => {
-        const nombre = getEmpleadoFullName(emp)
-        return {
-          label: nombre,
-          value: nombre,
-          sublabel: emp.cargo,
-        }
-      }),
-    [rawEmpleados],
-  )
+  const handleEmpleado = (id: string) => {
+    const empleado = empleados.find((emp) => emp.id === id)
+    if (empleado) {
+      set({ reporta: getEmpleadoFullName(empleado), reportado_por_id: Number(id) })
+    }
+  }
 
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
       position="center"
-      width="max-w-2xl"
-      title="Crear incidente"
-      subtitle="Registra un incidente operativo asociado a un evento/agendamiento específico y un colaborador responsable"
+      title={isEditing ? "Editar incidente" : "Crear incidente"}
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div>
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Evento / Agendamiento asociado (FK id_evento) <span className="text-[#EF4444]">*</span>
-            </label>
-            <CustomSelect
-              options={eventoOptions}
-              value={newIncForm.evento ?? ""}
-              searchable={true}
-              placeholder="Seleccionar evento..."
-              onChange={(val) =>
-                setNewIncForm((f) => ({ ...f, evento: val }))
-              }
-            />
-          </div>
-
-          <div>
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Colaborador que reporta (FK id_empleado) <span className="text-[#EF4444]">*</span>
-            </label>
-            <CustomSelect
-              options={empleadoOptions}
-              value={newIncForm.reporta ?? ""}
-              searchable={true}
-              placeholder="Seleccionar empleado..."
-              onChange={(val) =>
-                setNewIncForm((f) => ({ ...f, reporta: val }))
-              }
-            />
-          </div>
-        </div>
-
         <FormInput
-          label="Título del incidente"
+          label="Título"
           required
-          placeholder="Ej. Falla en gabinete de pantalla LED P3 durante prueba"
-          value={newIncForm.titulo ?? ""}
-          onChange={(e) =>
-            setNewIncForm((f) => ({ ...f, titulo: e.target.value }))
-          }
+          placeholder="Ej. Falla en pantalla LED durante prueba"
+          value={form.titulo}
+          onChange={(e) => set({ titulo: e.target.value })}
         />
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <div>
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Tipo de incidente
-            </label>
-            <CustomSelect
-              value={newIncForm.tipo_incidente ?? "otro"}
-              onChange={(val) =>
-                setNewIncForm((f) => ({
-                  ...f,
-                  tipo_incidente: val as TipoIncidente,
-                }))
-              }
-              options={TIPO_INCIDENTE_OPTIONS}
-            />
-          </div>
-
-          <div>
-            <label className="text-[13px] font-medium text-[#F1F5F9] mb-1.5 block">
-              Criticidad / Gravedad
-            </label>
-            <CustomSelect
-              value={newIncForm.criticidad ?? "Media"}
-              onChange={(val) =>
-                setNewIncForm((f) => ({
-                  ...f,
-                  criticidad: val as Criticidad,
-                }))
-              }
-              options={CRITICIDAD_OPTIONS}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          <FormInput
-            label="Área o equipo técnico afectado"
-            placeholder="Ej. Pantalla Central / Acometida"
+          <FormSelect
+            label="Evento"
             required
-            value={newIncForm.areaAfectada ?? ""}
-            onChange={(e) =>
-              setNewIncForm((f) => ({ ...f, areaAfectada: e.target.value }))
-            }
+            searchable
+            placeholder="Seleccionar evento"
+            options={eventos.map((ev) => ({ label: ev.nombre, value: ev.id }))}
+            value={String(form.evento_id ?? "")}
+            onChange={handleEvento}
+          />
+          <FormSelect
+            label="Empleado que reporta"
+            required
+            searchable
+            placeholder="Seleccionar empleado"
+            options={empleados.map((emp) => ({
+              label: getEmpleadoFullName(emp),
+              value: emp.id,
+              sublabel: emp.cargo,
+            }))}
+            value={String(form.reportado_por_id ?? "")}
+            onChange={handleEmpleado}
+          />
+          <FormSelect
+            label="Tipo de incidente"
+            value={form.tipo_incidente}
+            onChange={(val) => set({ tipo_incidente: val as TipoIncidente })}
+            options={TIPO_INCIDENTE_OPTIONS}
+          />
+          <FormSelect
+            label="Criticidad"
+            value={form.criticidad}
+            onChange={(val) => set({ criticidad: val as Criticidad })}
+            options={CRITICIDAD_OPTIONS}
           />
           <FormInput
-            label="Costo adicional estimado ($)"
+            label="Área o equipo afectado"
+            placeholder="Ej. Pantalla central"
+            required
+            value={form.areaAfectada ?? ""}
+            onChange={(e) => set({ areaAfectada: e.target.value })}
+          />
+          <FormInput
+            label="Costo adicional estimado"
             type="number"
+            min={0}
             placeholder="0"
-            value={String(newIncForm.costo_adicional ?? 0)}
-            onChange={(e) =>
-              setNewIncForm((f) => ({
-                ...f,
-                costo_adicional: Number(e.target.value),
-              }))
-            }
+            value={form.costo_adicional || ""}
+            onChange={(e) => set({ costo_adicional: Number(e.target.value) })}
           />
         </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] font-medium text-[#F1F5F9]">
-            Descripción detallada de la novedad
-          </label>
-          <textarea
-            value={newIncForm.descripcion ?? ""}
-            onChange={(e) =>
-              setNewIncForm((f) => ({ ...f, descripcion: e.target.value }))
-            }
-            placeholder="Describe la novedad presentada y las acciones requeridas..."
-            rows={2}
-            className="px-3.5 py-2.5 bg-[#111318] border border-[#2D3748] rounded-xl text-xs text-[#F1F5F9] placeholder-[#64748B] focus:outline-none focus:border-[#7C3AED] resize-none"
-          />
-        </div>
-
-        <div className="pt-3 flex items-center justify-end gap-3 border-t border-[#2D3748]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] border border-[#2D3748] transition-colors cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-all shadow-sm shadow-[#7C3AED]/25 cursor-pointer"
-          >
-            Crear incidente
-          </button>
-        </div>
+        <FormTextarea
+          label="Descripción"
+          required
+          placeholder="Describe la novedad presentada"
+          value={form.descripcion}
+          onChange={(e) => set({ descripcion: e.target.value })}
+        />
+        <FormActions
+          onCancel={onClose}
+          saving={saving}
+          submitLabel={isEditing ? "Guardar cambios" : "Crear incidente"}
+        />
       </form>
     </Drawer>
   )

@@ -1,149 +1,84 @@
-import { Drawer } from "../../../components/Drawer"
-import { StatusBadge } from "../../../components/StatusBadge"
+import { Clock, DollarSign, FileText, Tag, Truck } from "lucide-react"
+import { Drawer } from "@/components/Drawer"
+import { StatusBadge } from "@/components/StatusBadge"
 import {
-  DetailHeader,
-  DetailSection,
-  DetailGrid,
+  DetailEmptyNote,
   DetailField,
+  DetailFooter,
+  DetailGrid,
+  DetailHeader,
   DetailHighlight,
   DetailList,
-  DetailEmptyNote,
-} from "../../../components/detail"
-import { Tag, DollarSign, FileText, Edit2, Clock, Truck } from "lucide-react"
-import { TIPO_COBRO_LABELS, type ServicioItem } from "../types"
-import { INITIAL_PROVIDERS } from "../../proveedores/data"
+  DetailSection,
+} from "@/components/detail"
+import type { DetailDrawerProps } from "@/components/form/types"
+import type { ProveedorItem } from "@/pages/proveedores/types"
+import { TIPO_COBRO_LABELS } from "../constants"
+import type { ServicioItem } from "../types"
 
-interface ServicioDetailDrawerProps {
-  isOpen: boolean
-  onClose: () => void
-  service: ServicioItem | null
-  onOpenEdit: (service: ServicioItem) => void
+interface ServicioDetailDrawerProps extends DetailDrawerProps<ServicioItem> {
+  /** Proveedores activos que ofrecen este servicio. */
+  proveedores: ProveedorItem[]
 }
 
 export function ServicioDetailDrawer({
   isOpen,
+  item,
   onClose,
-  service,
-  onOpenEdit,
+  onEdit,
+  proveedores,
 }: ServicioDetailDrawerProps) {
-  if (!service) return null
-
-  const linkedProviders = INITIAL_PROVIDERS.filter(
-    (p) =>
-      p.estado === "Activo" &&
-      p.servicios.some(
-        (srv) =>
-          srv.toLowerCase().includes(service.categoria.toLowerCase()) ||
-          service.categoria.toLowerCase().includes(srv.toLowerCase()) ||
-          service.nombre.toLowerCase().includes(srv.toLowerCase()),
-      ),
-  )
-
-  const modalidadCobro = TIPO_COBRO_LABELS[service.tipo_cobro] || service.tipo_cobro
+  if (!item) return null
+  const modalidad = TIPO_COBRO_LABELS[item.tipo_cobro] ?? item.tipo_cobro
 
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      size="detail"
       title="Detalle de servicio"
       footer={
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] border border-[#262D3D] transition-colors cursor-pointer"
-          >
-            Cerrar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              onClose()
-              onOpenEdit(service)
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-all cursor-pointer"
-          >
-            <Edit2 size={13} aria-hidden="true" />
-            Editar servicio
-          </button>
-        </div>
+        <DetailFooter
+          onClose={onClose}
+          onEdit={() => onEdit(item)}
+          editLabel="Editar servicio"
+        />
       }
     >
-      <div className="space-y-4 text-xs">
-        <DetailHeader
-          badges={<StatusBadge status={service.estado} />}
-          title={service.nombre}
-          subtitle={
-            <>
-              Categoría:{" "}
-              <span className="text-[#A78BFA] font-semibold">
-                {service.categoria}
-              </span>
-            </>
-          }
+      <DetailHeader badges={<StatusBadge status={item.estado} />} title={item.nombre} />
+      <DetailHighlight
+        label="Precio base"
+        value={item.precioBase}
+        sublabel={modalidad}
+        icon={DollarSign}
+        tone="success"
+      />
+      <DetailGrid>
+        <DetailField label="Categoría" value={item.categoria} icon={Tag} />
+        <DetailField label="Modalidad de cobro" value={modalidad} icon={Clock} />
+        <DetailField
+          label="Descripción técnica"
+          value={item.descripcion}
+          icon={FileText}
+          span={2}
         />
-
-        <DetailHighlight
-          label="Tarifa Base"
-          value={service.precioBase}
-          sublabel={modalidadCobro}
-          icon={DollarSign}
-          tone="success"
-        />
-
-        <DetailSection title="Información del servicio" noBorder>
-          <DetailGrid>
-            <DetailField
-              label="Categoría"
-              value={service.categoria}
-              icon={Tag}
-            />
-            <DetailField
-              label="Modalidad Cobro"
-              value={modalidadCobro}
-              icon={Clock}
-              valueClassName="text-[#A78BFA] font-semibold"
-            />
-            <DetailField
-              label="Descripción Técnica"
-              value={service.descripcion}
-              icon={FileText}
-              valueClassName="font-normal text-[#CBD5E1] leading-relaxed"
-              span={2}
-            />
-          </DetailGrid>
-        </DetailSection>
-
-        <DetailSection
-          title="Proveedores Habilitados (Relación M:N)"
-          icon={Truck}
-          count={linkedProviders.length}
-        >
-          <p className="text-[11px] text-[#94A3B8]">
-            Servicio del catálogo maestro: puede ejecutarse directamente por The High Events o contratarse con cualquiera de los proveedores habilitados según el evento:
-          </p>
-          {linkedProviders.length > 0 ? (
-            <DetailList>
-              {linkedProviders.map((p) => (
-                <div
-                  key={p.id}
-                  className="py-2.5 flex items-center justify-between gap-2"
-                >
-                  <span className="text-[12px] font-medium text-[#F1F5F9] truncate">
-                    {p.razon_social}
-                  </span>
-                  <span className="text-[10px] text-[#A78BFA] shrink-0">
-                    Habilitado
-                  </span>
-                </div>
-              ))}
-            </DetailList>
-          ) : (
-            <DetailEmptyNote text="Ejecución directa por The High Events (sin terceros asociados actualmente)." />
-          )}
-        </DetailSection>
-      </div>
+      </DetailGrid>
+      <DetailSection
+        title="Proveedores habilitados"
+        icon={Truck}
+        count={proveedores.length}
+      >
+        {proveedores.length === 0 ? (
+          <DetailEmptyNote text="Ejecución directa por The High Events." />
+        ) : (
+          <DetailList>
+            {proveedores.map((p) => (
+              <p key={p.id} className="py-2.5 text-[12px] font-medium text-[#F1F5F9]">
+                {p.razon_social}
+              </p>
+            ))}
+          </DetailList>
+        )}
+      </DetailSection>
     </Drawer>
   )
 }

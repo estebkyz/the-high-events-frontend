@@ -1,90 +1,84 @@
-import React from "react"
-import { User, Clock } from "lucide-react"
-import type { TareaItem, EstadoTarea } from "../types"
-import {
-  PRIORIDAD_DOT,
-  KANBAN_HEADER_COLORS,
-  KANBAN_BORDER_COLORS,
-} from "../data"
+import { Clock, User } from "lucide-react"
+import { ESTADOS_TAREA, KANBAN_COLORS, PRIORIDAD_DOT } from "../constants"
+import type { TareaItem } from "../types"
 
 interface TareaKanbanProps {
-  tasks: TareaItem[]
-  onOpenView: (task: TareaItem) => void
+  tareas: TareaItem[]
+  loading: boolean
+  onView: (tarea: TareaItem) => void
 }
 
-const KANBAN_COLUMNS: EstadoTarea[] = [
-  "Pendiente",
-  "En Proceso",
-  "Completada",
-]
-
-export const TareaKanban: React.FC<TareaKanbanProps> = ({
-  tasks,
-  onOpenView,
-}) => {
+export function TareaKanban({ tareas, loading, onView }: TareaKanbanProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {KANBAN_COLUMNS.map((colState) => {
-        const colTasks = tasks.filter((t) => t.estado === colState)
+      {ESTADOS_TAREA.map((estado) => {
+        const columna = tareas.filter((t) => t.estado === estado)
+        const colors = KANBAN_COLORS[estado]
         return (
-          <div
-            key={colState}
-            className={`bg-[#242830] border rounded-2xl p-4 flex flex-col min-h-[450px] ${KANBAN_BORDER_COLORS[colState]}`}
+          <section
+            key={estado}
+            aria-label={estado}
+            className={`bg-[#181B22] border rounded-2xl p-4 flex flex-col min-h-[320px] ${colors.border}`}
           >
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#2D3748]">
-              <h2
-                className={`text-xs font-semibold uppercase tracking-wider ${KANBAN_HEADER_COLORS[colState]}`}
-              >
-                {colState}
-              </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1A1D23] text-[#A78BFA] border border-[#2D3748]">
-                {colTasks.length}
+              <h2 className={`text-xs font-semibold ${colors.header}`}>{estado}</h2>
+              <span className="text-[11px] font-semibold text-[#94A3B8] tabular-nums">
+                {columna.length}
               </span>
             </div>
-
-            <div className="space-y-3 flex-1 overflow-y-auto pr-1">
-              {colTasks.map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => onOpenView(task)}
-                  className="bg-[#1A1D23] border border-[#2D3748] hover:border-[#7C3AED] p-3.5 rounded-xl space-y-2.5 transition-all shadow-sm cursor-pointer"
-                >
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="text-[10px] font-mono font-semibold text-[#64748B]">
-                      {task.codigo_tarea || "TAR-001"} · {task.fase}
-                    </span>
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 ${PRIORIDAD_DOT[task.prioridad]}`}
-                      title={`Prioridad ${task.prioridad}`}
-                    />
-                  </div>
-                  <p className="text-xs font-semibold text-[#F1F5F9] leading-snug">
-                    {task.tarea}
-                  </p>
-                  <p className="text-[11px] text-[#A78BFA] font-medium truncate">
-                    {task.evento}
-                  </p>
-                  <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-2 border-t border-[#2D3748]/50 gap-2">
-                    <div className="flex items-center gap-1 min-w-0">
-                      <User size={11} className="shrink-0" />
-                      <span className="truncate">{task.responsable}</span>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Clock size={11} />
-                      <span>{task.fechaLimite}</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="space-y-3 flex-1">
+              {columna.map((tarea) => (
+                <TareaKanbanCard
+                  key={tarea.id}
+                  tarea={tarea}
+                  onClick={() => onView(tarea)}
+                />
               ))}
-              {colTasks.length === 0 && (
-                <p className="text-center text-[#64748B] text-[11px] py-8 italic">
-                  Sin tareas en esta columna
+              {columna.length === 0 && (
+                <p className="text-center text-[#94A3B8] text-[11px] py-8">
+                  {loading ? "Cargando tareas…" : "Sin tareas"}
                 </p>
               )}
             </div>
-          </div>
+          </section>
         )
       })}
     </div>
+  )
+}
+
+interface TareaKanbanCardProps {
+  tarea: TareaItem
+  onClick: () => void
+}
+
+function TareaKanbanCard({ tarea, onClick }: TareaKanbanCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left bg-[#111318] border border-[#2D3748] hover:border-[#7C3AED] focus-visible:border-[#7C3AED] focus:outline-none p-3.5 rounded-xl space-y-2 transition-colors cursor-pointer"
+    >
+      <span className="flex items-center justify-between gap-1.5 text-[11px] text-[#94A3B8]">
+        {tarea.fase}
+        <span
+          role="img"
+          aria-label={`Prioridad ${tarea.prioridad}`}
+          className={`w-2 h-2 rounded-full shrink-0 ${PRIORIDAD_DOT[tarea.prioridad]}`}
+        />
+      </span>
+      <span className="block text-xs font-semibold text-[#F1F5F9]">{tarea.tarea}</span>
+      <span className="block text-[11px] text-[#A78BFA] truncate">{tarea.evento}</span>
+      <span className="flex items-center justify-between gap-2 text-[11px] text-[#94A3B8] pt-2 border-t border-[#2D3748]/50">
+        <span className="inline-flex items-center gap-1 min-w-0">
+          <User size={11} className="shrink-0" aria-hidden="true" />
+          <span className="truncate">{tarea.responsable}</span>
+        </span>
+        <span className="inline-flex items-center gap-1 shrink-0 tabular-nums">
+          <Clock size={11} aria-hidden="true" />
+          {tarea.fechaLimite}
+        </span>
+      </span>
+    </button>
   )
 }

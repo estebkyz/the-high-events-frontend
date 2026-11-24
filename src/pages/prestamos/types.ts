@@ -1,14 +1,15 @@
-// Mapped exactly to MySQL Workbench: ENUM('activo','devuelto','con_retraso','con_danos')
+/** ENUM('activo','devuelto','con_retraso','con_danos') */
 export type PrestamoEstado = "Activo" | "Devuelto" | "Con Retraso" | "Con Daños"
 
-export type PrestamoDrawerMode = "none" | "new" | "edit" | "view" | "return"
+/** ENUM('excelente','bueno','regular','mal') */
+export type CondicionEquipo = "Excelente" | "Bueno" | "Regular" | "Dañado"
 
 export interface EquipoPrestado {
   id: string
   nombre: string
   serie: string
-  condicionSalida: string
-  condicionRetorno?: string
+  condicionSalida: CondicionEquipo
+  condicionRetorno?: CondicionEquipo
 }
 
 export interface PrestamoItem {
@@ -27,4 +28,21 @@ export interface PrestamoItem {
   observaciones_devolucion?: string
 }
 
-export type PrestamoFormData = Partial<PrestamoItem>
+export type PrestamoForm = Pick<
+  PrestamoItem,
+  | "responsable"
+  | "responsable_id"
+  | "evento"
+  | "evento_id"
+  | "equipos"
+  | "fechaSalida"
+  | "fechaDevolucion"
+  | "observaciones_entrega"
+>
+
+export interface DevolucionPrestamoForm {
+  fecha: string
+  observaciones: string
+  /** id del equipo → condición al retorno. */
+  condiciones: Record<string, CondicionEquipo>
+}

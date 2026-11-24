@@ -1,22 +1,12 @@
-// Mapped exactly to MySQL Workbench: ENUM('planificacion', 'montaje', 'ejecucion', 'desmontaje')
-export type Fase =
-  | "Planificación"
-  | "Montaje"
-  | "Ejecución"
-  | "Desmontaje"
+/** ENUM('planificacion','montaje','ejecucion','desmontaje') */
+export type Fase = "Planificación" | "Montaje" | "Ejecución" | "Desmontaje"
 
 export type Prioridad = "Alta" | "Media" | "Baja"
 
-// Mapped exactly to MySQL Workbench: ENUM('pendiente', 'en_proceso', 'completada')
-export type EstadoTarea =
-  | "Pendiente"
-  | "En Proceso"
-  | "Completada"
+/** ENUM('pendiente','en_proceso','completada') */
+export type EstadoTarea = "Pendiente" | "En Proceso" | "Completada"
 
-/**
- * Representa un registro de `evento_tarea` (Tarea operativa asignada a un evento y empleado,
- * referenciando una plantilla del catálogo maestro `tarea`).
- */
+/** Tarea asignada a un evento y empleado (`evento_tarea`). */
 export interface TareaItem {
   id: string
   tarea_id?: string
@@ -40,20 +30,15 @@ export interface TareaItem {
   notas?: string
 }
 
-export type TareaDrawerMode =
-  | "none"
-  | "new"
-  | "edit"
-  | "view"
-  | "new_catalogo"
-  | "edit_catalogo"
-
-export type TareaFormData = Partial<TareaItem>
-
-export interface TareaCatalogoFormValues {
-  id?: string
-  codigo?: string
+/** Plantilla del catálogo maestro (`tarea`). */
+export interface TareaCatalogoItem {
+  id: string
+  codigo: string
   nombre_tarea: string
   descripcion: string
   fase_sugerida: Fase
 }
+
+export type TareaForm = Omit<TareaItem, "id">
+export type TareaCatalogoForm = Omit<TareaCatalogoItem, "id" | "codigo">
+export type TareaView = "kanban" | "table" | "catalogo"

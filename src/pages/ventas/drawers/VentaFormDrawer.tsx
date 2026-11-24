@@ -1,138 +1,98 @@
-import React from "react"
-import { Drawer } from "../../../components/Drawer"
-import { FormInput } from "../../../components/FormInput"
-import { CustomSelect } from "../../../components/CustomSelect"
-import { TIPO_VENTA_OPTIONS } from "../data"
-import type {
-  VentaItem,
-  VentaFormData,
-  TipoVenta,
-  EstadoPagoVenta,
-} from "../types"
+import { Drawer } from "@/components/Drawer"
+import { FormInput } from "@/components/FormInput"
+import { FormActions } from "@/components/form/FormActions"
+import { FormSelect } from "@/components/form/FormSelect"
+import type { FormDrawerProps } from "@/components/form/types"
+import type { EventoItem } from "@/pages/eventos/types"
+import { fieldSetter } from "@/utils/form"
+import { ESTADO_VENTA_OPTIONS } from "../constants"
+import { seleccionarEvento } from "../form"
+import type { EstadoVenta, VentaForm } from "../types"
 
-interface VentaFormDrawerProps {
-  mode: "create" | "edit"; isOpen: boolean
-  onClose: () => void
-  sale: VentaItem | null
-  formData: VentaFormData
-  setFormData: React.Dispatch<React.SetStateAction<VentaFormData>>
-  onSubmit: (e: React.FormEvent) => void
+interface VentaFormDrawerProps extends FormDrawerProps<VentaForm> {
+  eventos: EventoItem[]
 }
 
-const ESTADO_PAGO_SELECT_OPTIONS = [
-  { value: "Pendiente", label: "Pendiente" },
-  { value: "Parcial", label: "Parcial" },
-  { value: "Pagado", label: "Pagado" },
-]
-
 export function VentaFormDrawer({
-  mode,
   isOpen,
+  isEditing,
+  saving,
+  form,
+  setForm,
   onClose,
-  sale,
-  formData,
-  setFormData,
   onSubmit,
+  eventos,
 }: VentaFormDrawerProps) {
-  const isEdit = mode === "edit"
+  const set = fieldSetter(setForm)
+
+  const handleEvento = (id: string) =>
+    set(
+      seleccionarEvento(
+        form,
+        eventos.find((e) => e.id === id),
+      ),
+    )
 
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
       position="center"
-      size="modal"
-      title={isEdit ? `Editar ${sale?.codigo}` : "Registrar Venta"}
-      subtitle={
-        isEdit
-          ? "Modifica los datos del comprobante"
-          : "Registra un nuevo comprobante de ingreso"
-      }
+      title={isEditing ? "Editar venta" : "Crear venta"}
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label className="text-[12px] font-semibold text-[#94A3B8] uppercase tracking-wider mb-1.5 block">
-            Tipo de Venta
-          </label>
-          <CustomSelect
-            value={formData.tipo as string || "Cliente"}
-            onChange={(val) =>
-              setFormData((f) => ({ ...f, tipo: val as TipoVenta }))
-            }
-            options={TIPO_VENTA_OPTIONS}
-          />
-        </div>
-
-        <FormInput
-          label="Cliente o Nombre de Evento"
-          value={formData.clienteEvento || ""}
-          onChange={(e) =>
-            setFormData((f) => ({ ...f, clienteEvento: e.target.value }))
-          }
+        <FormSelect
+          label="Evento"
           required
+          searchable
+          placeholder="Seleccionar evento"
+          value={form.evento_id}
+          onChange={handleEvento}
+          options={eventos.map((e) => ({
+            label: e.nombre,
+            value: e.id,
+            badge: e.modalidad,
+            sublabel: e.cliente_nombre,
+          }))}
         />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <FormInput
-            label="Número de Factura"
-            placeholder="FACT-2026-..."
-            value={formData.numero_factura || ""}
-            onChange={(e) =>
-              setFormData((f) => ({ ...f, numero_factura: e.target.value }))
-            }
+            label="Número de factura"
+            placeholder="Ej. FACT-2026-001"
+            value={form.numero_factura}
+            onChange={(e) => set({ numero_factura: e.target.value })}
+            required
           />
           <FormInput
             label="Fecha"
             type="date"
-            value={formData.fecha || ""}
-            onChange={(e) =>
-              setFormData((f) => ({ ...f, fecha: e.target.value }))
-            }
+            value={form.fecha}
+            onChange={(e) => set({ fecha: e.target.value })}
             required
           />
-        </div>
-
-        <FormInput
-          label="Monto Total"
-          type="number"
-          placeholder="0"
-          value={
-            formData.totalNum !== undefined ? String(formData.totalNum) : ""
-          }
-          onChange={(e) =>
-            setFormData((f) => ({ ...f, totalNum: Number(e.target.value) }))
-          }
-          required
-        />
-
-        <div>
-          <label className="text-[12px] font-semibold text-[#94A3B8] uppercase tracking-wider mb-1.5 block">
-            Estado del Pago
-          </label>
-          <CustomSelect
-            value={formData.estadoPago as string || "Pendiente"}
-            onChange={(val) =>
-              setFormData((f) => ({ ...f, estadoPago: val as EstadoPagoVenta }))
-            }
-            options={ESTADO_PAGO_SELECT_OPTIONS}
+          <FormInput
+            label="Monto total"
+            type="number"
+            min={1}
+            placeholder="0"
+            value={form.totalNum || ""}
+            onChange={(e) => set({ totalNum: Number(e.target.value) })}
+            required
           />
+          {isEditing && (
+            <FormSelect
+              label="Estado"
+              value={form.estado_venta}
+              onChange={(val) => set({ estado_venta: val as EstadoVenta })}
+              options={ESTADO_VENTA_OPTIONS}
+            />
+          )}
         </div>
-
-        <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#262D3D]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg text-xs font-medium text-[#94A3B8] hover:bg-[#181B22] cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#7C3AED] text-white hover:bg-[#6D28D9] transition-colors cursor-pointer"
-          >
-            {isEdit ? "Guardar Cambios" : "Registrar Venta"}
-          </button>
-        </div>
+        <FormActions
+          onCancel={onClose}
+          saving={saving}
+          submitLabel={isEditing ? "Guardar cambios" : "Crear venta"}
+        />
       </form>
     </Drawer>
   )

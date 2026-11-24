@@ -1,19 +1,28 @@
+import type { Fase } from "@/pages/tareas/types"
+
 export type ModalidadEvento = "Cliente" | "Propio"
 
-export type EstadoEvento = "Planificación" | "Confirmado" | "Montaje" | "En ejecución" | "Desmontaje" | "Finalizado" | "Cerrado financiero" | "Cancelado"
+export type EstadoEvento =
+  | "Planificación"
+  | "Confirmado"
+  | "Montaje"
+  | "En ejecución"
+  | "Desmontaje"
+  | "Finalizado"
+  | "Cerrado financiero"
+  | "Cancelado"
 
-export type FaseTareaEvento = "Planificación" | "Montaje" | "Ejecución" | "Desmontaje"
-
-export interface EmpleadoTareaAsignada {
-  empleado_id: string; nombre: string
+export interface EmpleadoAsignado {
+  empleado_id: string
+  nombre: string
   cargo: string
   tarea_id: string
   nombre_tarea: string
-  fase: FaseTareaEvento
+  fase: Fase
   estado: "Pendiente" | "En proceso" | "Completada"
 }
 
-export interface ServicioDetalleEvento {
+export interface ServicioEvento {
   id: string
   servicio_catalogo_id?: string
   nombre: string
@@ -25,48 +34,20 @@ export interface ServicioDetalleEvento {
   proveedor_nombre?: string
 }
 
-export interface CotizacionCatalogoItem {
-  id: string
-  codigo: string
-  cliente_id: string
-  cliente_nombre: string
-  nombre_evento: string
-  fecha_evento: string
-  fecha_emision?: string
-  fecha_vencimiento?: string
-  direccion: string
-  hora_inicio: string
-  hora_fin: string
-  aforo_esperado: number
-  observaciones?: string
-  servicios: string[]
-  total: number
-  desc: string
-  estado: string
-}
-
-export interface EquipoCatalogoItem {
-  id: string
-  codigo: string
-  nombre: string
-  categoria: string
-  disponible: boolean
-  propiedad: "Propio" | "Alquilado"
-  proveedor_id?: string
-  proveedor_nombre?: string
-}
-
 export interface EventoItem {
   id: string
   cliente_id: string | null
   cliente_nombre: string
-  cotizacion_id: string
+  /** `null` en eventos propios (columna opcional en la BD). */
+  cotizacion_id: string | null
   cotizacion_codigo: string
   modalidad: ModalidadEvento
   nombre: string
   direccion: string
-  hora_inicio: string // YYYY-MM-DDTHH:mm (DATETIME)
-  hora_fin: string // YYYY-MM-DDTHH:mm (DATETIME)
+  /** `YYYY-MM-DDTHH:mm` */
+  hora_inicio: string
+  /** `YYYY-MM-DDTHH:mm` */
+  hora_fin: string
   presupuesto_estimado: number
   estado: EstadoEvento
   fecha_creacion: string
@@ -75,35 +56,25 @@ export interface EventoItem {
   publico_objetivo?: string
   observaciones?: string
   servicios: string[]
-  serviciosDetalles?: ServicioDetalleEvento[]
-  empleadosAsignados?: EmpleadoTareaAsignada[]
+  serviciosDetalles?: ServicioEvento[]
+  empleadosAsignados?: EmpleadoAsignado[]
   equiposAsignados?: string[]
 }
 
-export const ESTADOS_EVENTO: EstadoEvento[] = [
-  "Planificación",
-  "Confirmado",
-  "Montaje",
-  "En ejecución",
-  "Desmontaje",
-  "Finalizado",
-  "Cerrado financiero",
-  "Cancelado",
-]
-
-export const FASES_TAREA: FaseTareaEvento[] = [
-  "Planificación",
-  "Montaje",
-  "Ejecución",
-  "Desmontaje",
-]
-
-export type AsignacionEmpleado = {
-  checked: boolean; tarea_id: string
-  fase: FaseTareaEvento
+export interface EventoForm extends Omit<
+  EventoItem,
+  "id" | "fecha_creacion" | "publico_objetivo"
+> {
+  aforo_esperado: string
+  concepto_espectaculo: string
+  observaciones: string
+  serviciosDetalles: ServicioEvento[]
+  empleadosAsignados: EmpleadoAsignado[]
+  equiposAsignados: string[]
 }
 
-/** Selección de personal del formulario, indexada por id de empleado. */
-export type AsignacionesMap = Record<string, AsignacionEmpleado>
-
-export type EventoFormValues = Partial<EventoItem>
+/** Props comunes de las secciones del formulario. */
+export interface EventoSectionProps {
+  form: EventoForm
+  onChange: (changes: Partial<EventoForm>) => void
+}

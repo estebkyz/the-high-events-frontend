@@ -1,25 +1,19 @@
-import React from "react"
-
 export interface IndexTabItem {
-  id: string; label: string
+  id: string
+  label: string
   count?: number
 }
 
 export interface IndexTabsProps {
-  tabs: IndexTabItem[]; activeTab: string
+  tabs: IndexTabItem[]
+  activeTab: string
   onTabChange: (id: string) => void
-  className?: string
 }
 
-export const IndexTabs: React.FC<IndexTabsProps> = ({
-  tabs,
-  activeTab,
-  onTabChange,
-  className = "",
-}) => {
+export function IndexTabs({ tabs, activeTab, onTabChange }: IndexTabsProps) {
   return (
     <div
-      className={`flex items-center gap-1 border-b border-[#262D3D] overflow-x-auto scrollbar-none scroll-smooth ${className}`}
+      className="flex items-center gap-1 border-b border-[#262D3D] overflow-x-auto scrollbar-none scroll-smooth"
       role="tablist"
       aria-label="Vistas Rápidas"
     >

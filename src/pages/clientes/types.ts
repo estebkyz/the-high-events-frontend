@@ -1,31 +1,24 @@
+import type { EstadoActivo, TipoDocumento } from "@/constants/common"
+
 export type TipoCliente = "Empresa" | "Natural"
-export type TipoDocumentoCliente = "CC" | "CE" | "NIT" | "PASAPORTE"
 
 export interface ClienteItem {
-  id: string; tipo_cliente: TipoCliente
+  id: string
+  tipo_cliente: TipoCliente
   razon_social?: string
   primer_nombre?: string
   segundo_nombre?: string
   primer_apellido?: string
   segundo_apellido?: string
   contacto_nombre?: string
-  tipo_documento: TipoDocumentoCliente
+  tipo_documento: TipoDocumento
   numero_documento: string
   correo: string
   telefono: string
   direccion: string
   ciudad: string
-  estado: string // 'Activo' | 'Inactivo'
+  estado: EstadoActivo
   fecha_creacion?: string
 }
 
-export interface HistorialItem {
-  referencia: string; tipo: string
-  fecha: string
-  monto: string
-  estado: string
-}
-
-export type ClienteDrawerMode = "view" | "create" | "edit"
-
-export type ClienteFormData = Partial<ClienteItem>
+export type ClienteForm = Omit<ClienteItem, "id">

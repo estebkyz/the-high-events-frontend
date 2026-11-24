@@ -1,28 +1,31 @@
-export type TipoPagoEnum = "Anticipo" | "Saldo"
-export type EstadoPagoTransaccion = "Pagado" | "Pendiente"
-export type TipoAbonoTab = "Clientes" | "Proveedores"
+export type TipoPago = "Anticipo" | "Saldo"
+/** Estado de una transacción. */
+export type EstadoPago = "Pagado" | "Pendiente" | "Rechazado"
+/** Estado derivado de cada cuota del acuerdo. */
+export type EstadoCuota = "Pagado" | "Pendiente"
+export type TipoCartera = "Clientes" | "Proveedores"
 
-/**
- * Representa una transacción individual según el modelo ER (pago_cliente / pago_proveedor)
- */
-export interface PaymentHistoryEntry {
+/** Transacción individual. Sin `id` hasta que el servidor la registra. */
+export interface PagoHistorial {
   id?: string
   fecha: string
   monto: string
-  montoNum?: number
+  montoNum: number
   metodo: string
   concepto: string
-  tipoPago?: TipoPagoEnum
+  tipoPago: TipoPago
   comprobante?: string
-  estado?: EstadoPagoTransaccion
+  estado: EstadoPago
   observaciones?: string
 }
 
 /**
- * Entidad principal para la gestión de abonos y control del 50% anticipo / 50% saldo
+ * Acuerdo de pago (50 % anticipo / 50 % saldo). Lo deriva el servidor de una
+ * venta o de los servicios de un proveedor: aquí solo se registran pagos.
  */
 export interface AbonoItem {
-  id: string; tipoCartera: TipoAbonoTab
+  id: string
+  tipoCartera: TipoCartera
   evento: string
   cliente?: string
   proveedor?: string
@@ -33,34 +36,26 @@ export interface AbonoItem {
   anticipoNum: number
   saldo: string
   saldoNum: number
-  estadoAnticipo: "Pagado" | "Pendiente"
-  estadoSaldo: "Pagado" | "Pendiente"
+  estadoAnticipo: EstadoCuota
+  estadoSaldo: EstadoCuota
   fechaAnticipo?: string
   fechaSaldo?: string
-  eventoFinalizado?: boolean // Regla Clientes: 50% saldo una vez finalizado satisfactoriamente el evento
-  cumplimientoVerificado?: boolean // Regla Proveedores: 50% saldo tras verificar cumplimiento de servicios
+  /** Clientes: el saldo se habilita al finalizar el evento. */
+  eventoFinalizado?: boolean
+  /** Proveedores: se envía al registrar el saldo. */
+  cumplimientoVerificado?: boolean
   porcentaje: number
   fechaPago: string
-  historial: PaymentHistoryEntry[]
-  observaciones?: string
+  historial: PagoHistorial[]
 }
 
-export interface AbonosKPIsData {
-  anticiposClientes: number; saldosPendClientes: number
-  anticiposProv: number
-  saldosPendProv: number
-}
-
-export interface PagoFormState {
-  tipoPago: TipoPagoEnum; monto: string
+export interface PagoForm {
+  tipoPago: TipoPago
+  montoNum: number
   fecha: string
   metodo: string
   comprobante: string
-  estado: EstadoPagoTransaccion
+  estado: EstadoPago
   observaciones: string
-  verificacionCondicion: boolean
+  condicionVerificada: boolean
 }
-
-export type AbonoDrawerMode = "view" | "create" | "edit" | "payment"
-
-export type AbonoFormData = Partial<AbonoItem>

@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { SlidersHorizontal, RotateCcw, X } from "lucide-react"
 
 export interface FilterPopoverProps {
   activeCount?: number
   onReset?: () => void
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function FilterPopover({
@@ -17,10 +17,7 @@ export function FilterPopover({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(event.target as Node)
-      ) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
@@ -85,9 +82,7 @@ export function FilterPopover({
           <div className="flex items-center justify-between border-b border-[#262D3D] pb-2.5">
             <div className="flex items-center gap-1.5">
               <SlidersHorizontal size={13} className="text-[#A78BFA]" />
-              <span className="font-semibold text-[13px] text-[#F1F5F9]">
-                Filtros
-              </span>
+              <span className="font-semibold text-[13px] text-[#F1F5F9]">Filtros</span>
               {activeCount > 0 && (
                 <span className="text-[11px] text-[#A78BFA] font-medium">
                   ({activeCount} activo{activeCount > 1 ? "s" : ""})

@@ -1,119 +1,102 @@
-import { Drawer } from "../../../components/Drawer"
-import { StatusBadge } from "../../../components/StatusBadge"
+import { RotateCcw } from "lucide-react"
+import { Drawer } from "@/components/Drawer"
+import { StatusBadge } from "@/components/StatusBadge"
 import {
-  DetailHeader,
-  DetailSection,
-  DetailGrid,
-  DetailField,
-  DetailList,
+  DetailAction,
   DetailEmptyNote,
-} from "../../../components/detail"
-import { ArrowDownCircle, Package } from "lucide-react"
+  DetailField,
+  DetailFooter,
+  DetailGrid,
+  DetailHeader,
+  DetailList,
+  DetailSection,
+} from "@/components/detail"
+import type { DetailDrawerProps } from "@/components/form/types"
+import { admiteDevolucion } from "../form"
 import type { PrestamoItem } from "../types"
 
-interface PrestamoDetailDrawerProps {
-  isOpen: boolean; onClose: () => void
-  prestamo: PrestamoItem | null
-  onOpenReturn: (prestamo: PrestamoItem) => void
+interface PrestamoDetailDrawerProps extends DetailDrawerProps<PrestamoItem> {
+  onDevolucion: (prestamo: PrestamoItem) => void
 }
 
 export function PrestamoDetailDrawer({
   isOpen,
+  item,
   onClose,
-  prestamo,
-  onOpenReturn,
+  onEdit,
+  onDevolucion,
 }: PrestamoDetailDrawerProps) {
-  if (!prestamo) return null
-
-  const canReturn =
-    prestamo.estado === "Activo" || prestamo.estado === "Con Retraso"
+  if (!item) return null
 
   return (
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      size="detail"
-      title={`Préstamo ${prestamo.codigo}`}
-      subtitle="Detalle completo del préstamo"
+      title="Detalle de préstamo"
       footer={
-        canReturn ? (
-          <button
-            type="button"
-            onClick={() => onOpenReturn(prestamo)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold bg-[#10B981] text-white hover:bg-[#059669] transition-colors cursor-pointer"
-          >
-            <ArrowDownCircle size={15} aria-hidden="true" />
-            Registrar Devolución
-          </button>
-        ) : undefined
+        <DetailFooter
+          onClose={onClose}
+          onEdit={() => onEdit(item)}
+          editLabel="Editar préstamo"
+        />
       }
     >
-      <div className="space-y-4 text-xs">
-        <DetailHeader
-          badges={<StatusBadge status={prestamo.estado} />}
-          title={prestamo.codigo}
-          subtitle={prestamo.evento}
-        />
+      <DetailHeader
+        badges={<StatusBadge status={item.estado} />}
+        title={item.codigo}
+        subtitle={item.evento}
+      />
+      <DetailGrid>
+        <DetailField label="Responsable" value={item.responsable} span={2} />
+        <DetailField label="Fecha de salida" value={item.fechaSalida} />
+        <DetailField label="Devolución esperada" value={item.fechaDevolucion} />
+        {item.fecha_devolucion_real && (
+          <DetailField label="Devolución real" value={item.fecha_devolucion_real} />
+        )}
+        {item.observaciones_entrega && (
+          <DetailField
+            label="Observaciones de entrega"
+            value={item.observaciones_entrega}
+            span={2}
+          />
+        )}
+        {item.observaciones_devolucion && (
+          <DetailField
+            label="Observaciones de devolución"
+            value={item.observaciones_devolucion}
+            span={2}
+          />
+        )}
+      </DetailGrid>
 
-        <DetailSection title="Información del préstamo" noBorder>
-          <DetailGrid>
-            <DetailField label="Responsable del préstamo" span={2}>
-              <div className="flex items-center gap-2.5 mt-0.5">
-                <div
-                  className="w-7 h-7 rounded-full bg-[#7C3AED]/30 text-[#A78BFA] flex items-center justify-center font-bold text-xs shrink-0"
-                  aria-hidden="true"
-                >
-                  {prestamo.responsable.charAt(0)}
+      <DetailSection title="Equipos" count={item.equipos.length}>
+        {item.equipos.length === 0 ? (
+          <DetailEmptyNote text="No hay equipos registrados en este préstamo." />
+        ) : (
+          <DetailList>
+            {item.equipos.map((eq) => (
+              <div key={eq.id} className="py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-[#F1F5F9] text-[12px] truncate">
+                    {eq.nombre}
+                  </p>
+                  <p className="text-[11px] text-[#94A3B8]">{eq.serie}</p>
                 </div>
-                <span className="font-semibold text-[#F1F5F9] text-[13px]">
-                  {prestamo.responsable}
-                </span>
+                <StatusBadge status={eq.condicionRetorno ?? eq.condicionSalida} />
               </div>
-            </DetailField>
-            <DetailField label="Evento" value={prestamo.evento} span={2} />
-            <DetailField label="Fecha Salida" value={prestamo.fechaSalida} />
-            <DetailField
-              label="Devolución Esperada"
-              value={prestamo.fechaDevolucion}
-            />
-          </DetailGrid>
-        </DetailSection>
+            ))}
+          </DetailList>
+        )}
+      </DetailSection>
 
-        <DetailSection
-          title="Equipos en Préstamo"
-          count={prestamo.equipos.length}
-        >
-          {prestamo.equipos.length === 0 ? (
-            <DetailEmptyNote text="No hay equipos registrados en este préstamo." />
-          ) : (
-            <DetailList>
-              {prestamo.equipos.map((eq) => (
-                <div
-                  key={eq.id}
-                  className="py-2.5 flex items-center gap-3"
-                >
-                  <div
-                    className="w-7 h-7 rounded bg-[#242830] flex items-center justify-center shrink-0"
-                    aria-hidden="true"
-                  >
-                    <Package size={13} className="text-[#64748B]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[#F1F5F9] text-[12px] leading-tight truncate">
-                      {eq.nombre}
-                    </p>
-                    <p className="text-[10px] text-[#64748B]">{eq.serie}</p>
-                  </div>
-                  <StatusBadge
-                    status={eq.condicionSalida}
-                    className="text-[10px] px-2 shrink-0"
-                  />
-                </div>
-              ))}
-            </DetailList>
-          )}
-        </DetailSection>
-      </div>
+      {admiteDevolucion(item) && (
+        <DetailAction
+          icon={RotateCcw}
+          label="Registrar devolución"
+          tone="success"
+          onClick={() => onDevolucion(item)}
+        />
+      )}
     </Drawer>
   )
 }

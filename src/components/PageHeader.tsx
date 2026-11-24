@@ -1,4 +1,4 @@
-import React from "react"
+import type { ReactNode } from "react"
 import { Search, X } from "lucide-react"
 import { FilterPopover } from "./FilterPopover"
 
@@ -15,12 +15,11 @@ export interface PageHeaderProps {
   searchValue?: string
   onSearchChange?: (val: string) => void
   searchPlaceholder?: string
-  filterPopoverChildren?: React.ReactNode
-  children?: React.ReactNode
+  children?: ReactNode
   activeFilterCount?: number
   onResetFilters?: () => void
   activeFilterPills?: ActiveFilterPill[]
-  extraControls?: React.ReactNode
+  extraControls?: ReactNode
 }
 
 export function PageHeader({
@@ -30,23 +29,18 @@ export function PageHeader({
   searchValue,
   onSearchChange,
   searchPlaceholder = "Buscar",
-  filterPopoverChildren,
   children,
   activeFilterCount = 0,
   onResetFilters,
   activeFilterPills = [],
   extraControls,
 }: PageHeaderProps) {
-  const filterContent = filterPopoverChildren ?? children
-
   return (
     <div className="space-y-2.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {/* ── Lado izquierdo: Título + Botón de acción primario ── */}
         <div className="flex items-center gap-3">
-          <h1 className="text-[22px] font-bold text-[#F1F5F9] tracking-tight">
-            {title}
-          </h1>
+          <h1 className="text-[22px] font-bold text-[#F1F5F9] tracking-tight">{title}</h1>
           {actionLabel && onAction && (
             <button
               type="button"
@@ -91,12 +85,9 @@ export function PageHeader({
             </div>
           )}
 
-          {filterContent && (
-            <FilterPopover
-              activeCount={activeFilterCount}
-              onReset={onResetFilters}
-            >
-              {filterContent}
+          {children && (
+            <FilterPopover activeCount={activeFilterCount} onReset={onResetFilters}>
+              {children}
             </FilterPopover>
           )}
         </div>

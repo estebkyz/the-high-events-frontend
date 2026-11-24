@@ -1,448 +1,173 @@
-import { usePagination } from "../../hooks/usePagination"
-import { useCrudResource } from "../../hooks/useCrudResource"
-import React, { useState, useMemo } from "react"
-import { PageHeader } from "../../components/PageHeader"
-import { IndexTabs } from "../../components/IndexTabs"
-import { CustomSelect } from "../../components/CustomSelect"
-import { useToast } from "../../components/Toast"
-import type { ServicioItem, CategoriaServicioItem } from "../servicios/types"
-import type {
-  ProveedorItem,
-  ProveedorDrawerMode,
-  ProveedorViewTab,
-  ProveedorFormData,
-} from "./types"
+import { useMemo, type SubmitEvent } from "react"
+import { Truck } from "lucide-react"
+import { IndexTabs } from "@/components/IndexTabs"
+import { PageHeader } from "@/components/PageHeader"
+import { useToast } from "@/components/Toast"
+import { DataTable } from "@/components/list/DataTable"
+import { FilterSelect } from "@/components/list/FilterField"
+import { ListPage } from "@/components/list/ListPage"
 import {
-  INITIAL_PROVIDERS,
-  ESTADO_FILTER_OPTIONS,
-} from "./data"
-import { getProveedorContacto } from "./utils"
-import { ProveedorTable } from "./components/ProveedorTable"
+  ESTADO_ACTIVO_OPTIONS,
+  ESTADO_ACTIVO_TABS,
+  type EstadoActivo,
+} from "@/constants/common"
+import { useCrudActions } from "@/hooks/useCrudActions"
+import { useCrudResource } from "@/hooks/useCrudResource"
+import { FILTER_ALL, useListFilters } from "@/hooks/useListFilters"
+import { useRecordModal } from "@/hooks/useRecordModal"
+import type { EquipoItem } from "@/pages/equipos/types"
+import type { ServicioItem } from "@/pages/servicios/types"
+import { buildTabs, matchesSearch, toOptions, withAllOption } from "@/utils/list"
+import { getProveedorColumns } from "./components/proveedorColumns"
+import { PROVEEDOR_FILTERS, PROVEEDOR_LABEL } from "./constants"
 import { ProveedorDetailDrawer } from "./drawers/ProveedorDetailDrawer"
 import { ProveedorFormDrawer } from "./drawers/ProveedorFormDrawer"
+import { EMPTY_PROVEEDOR, proveedorToForm, validateProveedor } from "./form"
+import type { ProveedorForm, ProveedorItem } from "./types"
+import { getProveedorContacto } from "./utils"
 
 export default function ProveedoresPage() {
-  const { items: providers, setItems: setProviders } =
-    useCrudResource<ProveedorItem>({
-      endpoint: "/proveedores",
-      storageKey: "high_events_proveedores_v1",
-      initialData: INITIAL_PROVIDERS,
-    })
-  const { items: rawServices } = useCrudResource<ServicioItem>({ endpoint: "/servicios" })
-  const { items: rawCatServices } = useCrudResource<CategoriaServicioItem>({
-    endpoint: "/categorias-servicio",
-  })
-  const availableServicios = useMemo(
-    () =>
-      Array.from(
-        new Set([
-          ...rawServices.map((s) => s.nombre),
-          ...rawCatServices.map((c) => c.nombre),
-        ]),
-      ).filter(Boolean),
-    [rawServices, rawCatServices],
-  )
   const toast = useToast()
+  const proveedores = useCrudResource<ProveedorItem>({ endpoint: "/proveedores" })
+  const servicios = useCrudResource<ServicioItem>({ endpoint: "/servicios" })
+  const equipos = useCrudResource<EquipoItem>({ endpoint: "/equipos" })
+  const actions = useCrudActions(proveedores, PROVEEDOR_LABEL, (p) => p.razon_social)
+  const filters = useListFilters(PROVEEDOR_FILTERS)
+  const modal = useRecordModal<ProveedorItem, ProveedorForm>(
+    proveedores.items,
+    EMPTY_PROVEEDOR,
+  )
 
-  // Search & Pagination
-  const [search, setSearch] = useState("")
+  const nombresServicio = useMemo(
+    () => servicios.items.map((s) => s.nombre),
+    [servicios.items],
+  )
 
-  // Filters
-  const [filterServicio, setFilterServicio] = useState<string[]>([])
-  const [filterEquipo, setFilterEquipo] = useState<string[]>([])
-  const [filterEstado, setFilterEstado] = useState("Todos")
-
-  // Drawers
-  const [drawerMode, setDrawerMode] = useState<ProveedorDrawerMode>("none")
-  const [selectedProvider, setSelectedProvider] =
-    useState<ProveedorItem | null>(null)
-  const [viewTab, setViewTab] = useState<ProveedorViewTab>("info")
-
-  const [formState, setFormState] = useState<ProveedorFormData>({
-    nit_documento: "",
-    razon_social: "",
-    contacto_primer_nombre: "",
-    contacto_segundo_nombre: "",
-    contacto_primer_apellido: "",
-    contacto_segundo_apellido: "",
-    telefono: "",
-    correo: "",
-    servicios: [],
-    equipos: [],
-    estado: "Activo",
-  })
-
+  const { search, matches } = filters
+  const servicio = filters.get("servicio")
   const filteredData = useMemo(
     () =>
-      providers.filter((p) => {
-        if (filterEstado !== "Todos" && p.estado !== filterEstado) return false
-        if (
-          filterServicio.length > 0 &&
-          !filterServicio.some((s) => p.servicios.includes(s))
-        )
-          return false
-        if (
-          filterEquipo.length > 0 &&
-          !filterEquipo.some((eq) => p.equipos.includes(eq))
-        )
-          return false
-        if (search) {
-          const q = search.toLowerCase()
-          const contactName = getProveedorContacto(p).toLowerCase()
-          const matchesCatalog =
-            p.servicios.some((s) => s.toLowerCase().includes(q)) ||
-            p.equipos.some((eq) => eq.toLowerCase().includes(q))
-          if (
-            !p.razon_social.toLowerCase().includes(q) &&
-            !p.nit_documento.toLowerCase().includes(q) &&
-            !contactName.includes(q) &&
-            !p.correo.toLowerCase().includes(q) &&
-            !matchesCatalog
-          ) {
-            return false
-          }
-        }
-        return true
-      }),
-    [providers, search, filterServicio, filterEquipo, filterEstado],
+      proveedores.items.filter(
+        (p) =>
+          matches("estado", p.estado) &&
+          (servicio === FILTER_ALL || (p.servicios ?? []).includes(servicio)) &&
+          matchesSearch(search, [
+            p.razon_social,
+            p.nit_documento,
+            p.correo,
+            getProveedorContacto(p),
+            ...(p.servicios ?? []),
+            ...(p.equipos ?? []),
+          ]),
+      ),
+    [proveedores.items, search, servicio, matches],
   )
 
-  // Pagination calculations
-  const {
-    pageSize,
-    setPageSize,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    paginatedData,
-  } = usePagination(filteredData)
+  const { selected } = modal
+  const equiposDelProveedor = equipos.items.filter(
+    (eq) =>
+      eq.propiedad === "Alquilado" &&
+      (String(eq.proveedor_id) === selected?.id ||
+        eq.proveedor_nombre === selected?.razon_social),
+  )
 
-  const closeDrawer = () => {
-    setDrawerMode("none")
-    setSelectedProvider(null)
-    setViewTab("info")
-  }
+  const openCreate = () => modal.openCreate()
+  const openEdit = (item: ProveedorItem) => modal.openEdit(item, proveedorToForm(item))
 
-  const openView = (row: ProveedorItem) => {
-    setSelectedProvider(row)
-    setViewTab("info")
-    setDrawerMode("view")
-  }
+  const handleStatusChange = (id: string, estado: EstadoActivo) =>
+    actions.changeStatus(id, { estado }, estado)
 
-  const openEdit = (row: ProveedorItem) => {
-    setSelectedProvider(row)
-    setFormState({
-      ...row,
-      servicios: [...row.servicios],
-      equipos: [...(row.equipos || [])],
-    })
-    setDrawerMode("edit")
-  }
-
-  const openCreate = () => {
-    setSelectedProvider(null)
-    setFormState({
-      nit_documento: "",
-      razon_social: "",
-      contacto_primer_nombre: "",
-      contacto_segundo_nombre: "",
-      contacto_primer_apellido: "",
-      contacto_segundo_apellido: "",
-      telefono: "",
-      correo: "",
-      servicios: [],
-      equipos: [],
-      estado: "Activo",
-    })
-    setDrawerMode("create")
-  }
-
-  const toggleEstado = (id: string, explicitNewEst?: "Activo" | "Inactivo") => {
-    setProviders((prev) =>
-      prev.map((p) => {
-        if (p.id === id) {
-          const newEst =
-            explicitNewEst ?? (p.estado === "Activo" ? "Inactivo" : "Activo")
-          toast.info(`${p.razon_social} ahora está ${newEst}`)
-          return { ...p, estado: newEst }
-        }
-        return p
-      }),
-    )
-    if (selectedProvider?.id === id) {
-      setSelectedProvider((prev) =>
-        prev
-          ? {
-              ...prev,
-              estado:
-                explicitNewEst ??
-                (prev.estado === "Activo" ? "Inactivo" : "Activo"),
-            }
-          : prev,
-      )
-    }
-  }
-
-  const handleDelete = (p: ProveedorItem) => {
-    if (confirm(`¿Eliminar proveedor ${p.razon_social}?`)) {
-      setProviders((prev) => prev.filter((item) => item.id !== p.id))
-      toast.success("Proveedor eliminado")
-    }
-  }
-
-  const handleSaveForm = (e: React.FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
-
-    if (!formState.nit_documento?.trim()) {
-      toast.error("El NIT o documento legal es obligatorio")
+    const error = validateProveedor(modal.editForm)
+    if (error) {
+      toast.error(error)
       return
     }
-
-    if (!formState.razon_social?.trim()) {
-      toast.error("La razón social o nombre de la empresa es obligatorio")
-      return
-    }
-
-    if (
-      !formState.contacto_primer_nombre?.trim() ||
-      !formState.contacto_primer_apellido?.trim()
-    ) {
-      toast.error(
-        "El primer nombre y primer apellido del contacto son obligatorios",
-      )
-      return
-    }
-
-    if (!formState.correo?.trim()) {
-      toast.error("El correo electrónico es obligatorio")
-      return
-    }
-
-    if (
-      (!formState.servicios || formState.servicios.length === 0) &&
-      (!formState.equipos || formState.equipos.length === 0)
-    ) {
-      toast.error(
-        "Selecciona al menos un servicio especializado o equipo técnico que suministre el proveedor",
-      )
-      return
-    }
-
-    if (drawerMode === "create") {
-      const newProvider: ProveedorItem = {
-        id: String(Date.now()),
-        nit_documento: formState.nit_documento || "",
-        razon_social: formState.razon_social || "",
-        contacto_primer_nombre: formState.contacto_primer_nombre || "",
-        contacto_segundo_nombre: formState.contacto_segundo_nombre || "",
-        contacto_primer_apellido: formState.contacto_primer_apellido || "",
-        contacto_segundo_apellido: formState.contacto_segundo_apellido || "",
-        telefono: formState.telefono || "",
-        correo: formState.correo || "",
-        servicios: formState.servicios || [],
-        equipos: formState.equipos || [],
-        estado: "Activo",
-        contratosCount: 0,
-        historial: [],
-        fecha_creacion: new Date().toISOString(),
-      }
-      setProviders([newProvider, ...providers])
-      toast.success("Proveedor registrado exitosamente")
-    } else if (drawerMode === "edit" && selectedProvider) {
-      setProviders(
-        providers.map((p) =>
-          p.id === selectedProvider.id
-            ? ({ ...p, ...formState } as ProveedorItem)
-            : p,
-        ),
-      )
-      toast.success("Proveedor actualizado correctamente")
-    }
-
-    closeDrawer()
+    const saved = selected
+      ? await actions.update(selected.id, modal.editForm)
+      : await actions.create({
+          ...modal.editForm,
+          contratosCount: 0,
+          historial: [],
+          fecha_creacion: new Date().toISOString(),
+        })
+    if (saved) modal.close()
   }
-
-  const toggleServicioFilter = (servicio: string) => {
-    setFilterServicio((prev) =>
-      prev.includes(servicio)
-        ? prev.filter((s) => s !== servicio)
-        : [...prev, servicio],
-    )
-    setCurrentPage(1)
-  }
-
-  const toggleEquipoFilter = (equipo: string) => {
-    setFilterEquipo((prev) =>
-      prev.includes(equipo)
-        ? prev.filter((eq) => eq !== equipo)
-        : [...prev, equipo],
-    )
-    setCurrentPage(1)
-  }
-
-  const quickTabs = useMemo(
-    () => [
-      { id: "Todos", label: "Todos", count: providers.length },
-      {
-        id: "Activo",
-        label: "Activos",
-        count: providers.filter((p) => p.estado === "Activo").length,
-      },
-      {
-        id: "Inactivo",
-        label: "Inactivos",
-        count: providers.filter((p) => p.estado === "Inactivo").length,
-      },
-    ],
-    [providers],
-  )
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#111318]">
-      <main className="flex-1 overflow-y-auto p-6 space-y-5 max-w-7xl mx-auto w-full">
-        {/* ── Top Bar con PageHeader estandarizado ── */}
-        <PageHeader
-          title="Proveedores"
-          actionLabel="Crear proveedor"
-          onAction={openCreate}
-          searchValue={search}
-          onSearchChange={(val) => {
-            setSearch(val)
-            setCurrentPage(1)
-          }}
-          searchPlaceholder="Buscar"
-          activeFilterCount={
-            (filterEstado !== "Todos" ? 1 : 0) +
-            (filterServicio.length > 0 ? 1 : 0)
-          }
-          activeFilterPills={[
-            ...(filterEstado !== "Todos"
-              ? [
-                  {
-                    key: "estado",
-                    label: `Estado: ${filterEstado}`,
-                    onClear: () => {
-                      setFilterEstado("Todos")
-                      setCurrentPage(1)
-                    },
-                  },
-                ]
-              : []),
-            ...filterServicio.map((s) => ({
-              key: `srv-${s}`,
-              label: `Servicio: ${s}`,
-              onClear: () => toggleServicioFilter(s),
-            })),
-          ]}
-          onResetFilters={() => {
-            setFilterEstado("Todos")
-            setFilterServicio([])
-            setFilterEquipo([])
-            setCurrentPage(1)
-          }}
-        >
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] mb-1.5 block">
-              Estado
-            </label>
-            <CustomSelect
-              value={filterEstado}
-              onChange={(val) => {
-                setFilterEstado(val)
-                setCurrentPage(1)
-              }}
-              options={ESTADO_FILTER_OPTIONS}
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#A78BFA]">
-                Especialidades / Servicios
-              </label>
-              {filterServicio.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterServicio([])
-                    setCurrentPage(1)
-                  }}
-                  className="text-[10px] text-[#EF4444] hover:underline cursor-pointer"
-                >
-                  Limpiar ({filterServicio.length})
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1.5 bg-[#111318] rounded-xl border border-[#2D3748]">
-              {availableServicios.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => toggleServicioFilter(s)}
-                  className={`px-2 py-1 rounded-lg text-[10px] font-medium border transition-all cursor-pointer ${
-                    filterServicio.includes(s)
-                      ? "bg-[#7C3AED]/20 text-[#A78BFA] border-[#7C3AED]/50 font-semibold"
-                      : "bg-[#1A1D23] text-[#64748B] border-[#2D3748] hover:text-[#94A3B8]"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        </PageHeader>
-
-        {/* ── Shopify Polaris IndexTabs: Vistas Rápidas ── */}
-        <IndexTabs
-          tabs={quickTabs}
-          activeTab={filterEstado}
-          onTabChange={(newTab) => {
-            setFilterEstado(newTab)
-            setCurrentPage(1)
-          }}
+    <ListPage
+      overlays={
+        <>
+          <ProveedorDetailDrawer
+            isOpen={modal.mode === "view"}
+            item={selected}
+            onClose={modal.close}
+            onEdit={openEdit}
+            equipos={equiposDelProveedor}
+            onStatusChange={handleStatusChange}
+          />
+          <ProveedorFormDrawer
+            isOpen={modal.mode === "form"}
+            isEditing={modal.isEditing}
+            saving={actions.saving}
+            form={modal.editForm}
+            setForm={modal.setEditForm}
+            onClose={modal.close}
+            onSubmit={(e) => void handleSubmit(e)}
+            servicios={nombresServicio}
+          />
+        </>
+      }
+    >
+      <PageHeader
+        title="Proveedores"
+        actionLabel="Crear proveedor"
+        onAction={openCreate}
+        {...filters.headerProps}
+      >
+        <FilterSelect
+          label="Estado"
+          value={filters.get("estado")}
+          onChange={(val) => filters.set("estado", val)}
+          options={withAllOption("Todos los estados", ESTADO_ACTIVO_OPTIONS)}
         />
-
-        {/* ── Tabla Modularizada y Paginación ── */}
-        <ProveedorTable
-          providers={paginatedData}
-          totalCount={filteredData.length}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageSizeChange={(newSize) => {
-            setPageSize(newSize)
-            setCurrentPage(1)
-          }}
-          onPageChange={setCurrentPage}
-          onToggleStatus={toggleEstado}
-          onView={openView}
-          onEdit={openEdit}
-          onDelete={handleDelete}
+        <FilterSelect
+          label="Servicio"
+          value={servicio}
+          onChange={(val) => filters.set("servicio", val)}
+          options={withAllOption("Todos los servicios", toOptions(nombresServicio))}
         />
-      </main>
+      </PageHeader>
 
-      {/* View Detail Drawer */}
-      <ProveedorDetailDrawer
-        isOpen={drawerMode === "view"}
-        provider={selectedProvider}
-        viewTab={viewTab}
-        onViewTabChange={setViewTab}
-        onClose={closeDrawer}
-        onToggleEstado={(id) => toggleEstado(id)}
-        onOpenEdit={openEdit}
+      <IndexTabs
+        tabs={buildTabs(proveedores.items, (p) => p.estado, ESTADO_ACTIVO_TABS)}
+        activeTab={filters.get("estado")}
+        onTabChange={(tab) => filters.set("estado", tab)}
       />
 
-      {/* Create / Edit Drawer */}
-      <ProveedorFormDrawer
-        isOpen={drawerMode === "create" || drawerMode === "edit"}
-        mode={drawerMode === "edit" ? "edit" : "create"}
-        selectedProvider={selectedProvider}
-        formState={formState}
-        setFormState={setFormState}
-        onClose={closeDrawer}
-        onSubmit={handleSaveForm}
+      <DataTable
+        itemLabel={PROVEEDOR_LABEL.plural}
+        columns={getProveedorColumns(handleStatusChange)}
+        data={filteredData}
+        getName={(p) => p.razon_social}
+        loading={proveedores.loading}
+        error={proveedores.error}
+        onRetry={() => void proveedores.refresh()}
+        resetKey={filters.resetKey}
+        isFiltered={filters.isFiltered}
+        onResetFilters={filters.resetAll}
+        onCreate={openCreate}
+        onView={modal.openView}
+        onEdit={openEdit}
+        onDelete={(item) => void actions.remove(item)}
+        empty={{
+          icon: Truck,
+          title: "Aún no tienes proveedores registrados",
+          description: "Registra aliados para gestionar suministros y recepciones.",
+          createLabel: "Crear proveedor",
+        }}
       />
-    </div>
+    </ListPage>
   )
 }
-

@@ -1,18 +1,19 @@
-import React from "react"
-import { Music2, Boxes, Monitor, Package, Sparkles } from "lucide-react"
-import type { Categoria } from "../types"
+import { Boxes, Monitor, Music2, Package, Sparkles, type LucideIcon } from "lucide-react"
 
-export function getCategoryIcon(categoria: Categoria, size = 20) {
-  switch (categoria) {
-    case "Audio":
-      return <Music2 size={size} className="text-[#A78BFA]" />
-    case "Iluminación":
-      return <Boxes size={size} className="text-[#F59E0B]" />
-    case "Video":
-      return <Monitor size={size} className="text-[#3B82F6]" />
-    case "Estructuras":
-      return <Package size={size} className="text-[#10B981]" />
-    default:
-      return <Sparkles size={size} className="text-[#EC4899]" />
-  }
+const ICONS: Record<string, { icon: LucideIcon; color: string }> = {
+  Audio: { icon: Music2, color: "text-[#A78BFA]" },
+  Iluminación: { icon: Boxes, color: "text-[#F59E0B]" },
+  Video: { icon: Monitor, color: "text-[#3B82F6]" },
+  Estructuras: { icon: Package, color: "text-[#10B981]" },
+}
+const DEFAULT_ICON = { icon: Sparkles, color: "text-[#EC4899]" }
+
+interface CategoryIconProps {
+  categoria: string
+  size?: number
+}
+
+export function CategoryIcon({ categoria, size = 20 }: CategoryIconProps) {
+  const { icon: Icon, color } = ICONS[categoria] ?? DEFAULT_ICON
+  return <Icon size={size} className={color} aria-hidden="true" />
 }

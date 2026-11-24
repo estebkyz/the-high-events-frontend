@@ -1,9 +1,11 @@
+import type { EstadoActivo } from "@/constants/common"
+
 export interface Contratacion {
   evento: string
   fecha: string
   monto: string
   estado: string
-  modalidadPago?: "Anticipo 50% Pagado" | "Liquidado 100% (50% + 50%)" | "Pendiente Anticipo"
+  modalidadPago?: string
   actaRecepcion?: string
 }
 
@@ -17,16 +19,17 @@ export interface ProveedorItem {
   contacto_segundo_apellido?: string
   telefono: string
   correo: string
-  /** Servicios y Personal Especializado (DJs, artistas, fotógrafos, técnicos, logística, producción audiovisual) */
+  /** Servicios y personal especializado. */
   servicios: string[]
-  /** Equipos e Insumos Técnicos alquilados sujetos a Formato Digital de Entrega y Recepción (montaje/desmontaje) */
+  /** Equipos e insumos técnicos alquilados (sujetos a acta de recepción). */
   equipos: string[]
-  estado: "Activo" | "Inactivo"
+  estado: EstadoActivo
   contratosCount: number
   historial: Contratacion[]
   fecha_creacion?: string
 }
 
-export type ProveedorDrawerMode = "none" | "view" | "edit" | "create"
-export type ProveedorViewTab = "info" | "historial"
-export type ProveedorFormData = Partial<ProveedorItem>
+export type ProveedorForm = Omit<
+  ProveedorItem,
+  "id" | "contratosCount" | "historial" | "fecha_creacion"
+>

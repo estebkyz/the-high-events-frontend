@@ -1,63 +1,43 @@
 import { lazy } from "react"
-import {
-  createBrowserRouter,
-  Navigate,
-  type RouteObject,
-} from "react-router-dom"
-import AppLayout from "../layouts/AppLayout"
-import { DashboardRoute, LoginRoute } from "./routeWrappers"
+import { createBrowserRouter, Navigate, type RouteObject } from "react-router-dom"
+import AppLayout from "@/layouts/AppLayout"
+import ErrorPage from "@/pages/ErrorPage"
+import { LoginRoute } from "./LoginRoute"
 import { ROUTE_PATHS, LOGIN_PATH } from "./paths"
-import type { RouteId } from "../types"
+import type { RouteId } from "@/types"
 
 // Cada página se carga bajo demanda (code splitting): el bundle inicial queda liviano.
-const EventosPage = lazy(() => import("../pages/eventos/EventosPage"))
-const EventoFormPage = lazy(() => import("../pages/eventos/EventoFormPage"))
-const CrearServicioEventoPage = lazy(
-  () => import("../pages/eventos/CrearServicioEventoPage"),
-)
-const CrearEmpleadoEventoPage = lazy(
-  () => import("../pages/eventos/CrearEmpleadoEventoPage"),
-)
-const AgendamientoPage = lazy(
-  () => import("../pages/agendamiento/AgendamientoPage"),
-)
-const TareasPage = lazy(() => import("../pages/tareas/TareasPage"))
-const EquiposPage = lazy(() => import("../pages/equipos/EquiposPage"))
-const PrestamosPage = lazy(() => import("../pages/prestamos/PrestamosPage"))
-const IncidentesPage = lazy(() => import("../pages/incidentes/IncidentesPage"))
-const ClientesPage = lazy(() => import("../pages/clientes/ClientesPage"))
-const CotizacionesPage = lazy(
-  () => import("../pages/cotizaciones/CotizacionesPage"),
-)
-const VentasPage = lazy(() => import("../pages/ventas/VentasPage"))
-const AbonosPage = lazy(() => import("../pages/abonos/AbonosPage"))
-const ProveedoresPage = lazy(
-  () => import("../pages/proveedores/ProveedoresPage"),
-)
-const RecepcionesPage = lazy(
-  () => import("../pages/recepciones/RecepcionesPage"),
-)
-const ServiciosPage = lazy(() => import("../pages/servicios/ServiciosPage"))
-const EmpleadosPage = lazy(() => import("../pages/empleados/EmpleadosPage"))
-const UsuariosPage = lazy(() => import("../pages/usuarios/UsuariosPage"))
-const RolesPage = lazy(() => import("../pages/roles/RolesPage"))
-const NotFoundPage = lazy(() => import("../pages/NotFoundPage"))
+const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"))
+const EventosPage = lazy(() => import("@/pages/eventos/EventosPage"))
+const EventoFormPage = lazy(() => import("@/pages/eventos/EventoFormPage"))
+const AgendamientoPage = lazy(() => import("@/pages/agendamiento/AgendamientoPage"))
+const TareasPage = lazy(() => import("@/pages/tareas/TareasPage"))
+const EquiposPage = lazy(() => import("@/pages/equipos/EquiposPage"))
+const PrestamosPage = lazy(() => import("@/pages/prestamos/PrestamosPage"))
+const IncidentesPage = lazy(() => import("@/pages/incidentes/IncidentesPage"))
+const ClientesPage = lazy(() => import("@/pages/clientes/ClientesPage"))
+const CotizacionesPage = lazy(() => import("@/pages/cotizaciones/CotizacionesPage"))
+const VentasPage = lazy(() => import("@/pages/ventas/VentasPage"))
+const AbonosPage = lazy(() => import("@/pages/abonos/AbonosPage"))
+const ProveedoresPage = lazy(() => import("@/pages/proveedores/ProveedoresPage"))
+const RecepcionesPage = lazy(() => import("@/pages/recepciones/RecepcionesPage"))
+const ServiciosPage = lazy(() => import("@/pages/servicios/ServiciosPage"))
+const EmpleadosPage = lazy(() => import("@/pages/empleados/EmpleadosPage"))
+const UsuariosPage = lazy(() => import("@/pages/usuarios/UsuariosPage"))
+const RolesPage = lazy(() => import("@/pages/roles/RolesPage"))
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 
 const rel = (id: RouteId) => ROUTE_PATHS[id].slice(1)
 
 const privateRoutes: RouteObject[] = [
   { index: true, element: <Navigate to={ROUTE_PATHS.dashboard} replace /> },
-  { path: rel("dashboard"), element: <DashboardRoute /> },
+  { path: rel("dashboard"), element: <DashboardPage /> },
   {
     path: rel("eventos"),
     children: [
       { index: true, element: <EventosPage /> },
       { path: "nuevo", element: <EventoFormPage /> },
-      { path: "nuevo/servicio", element: <CrearServicioEventoPage /> },
-      { path: "nuevo/empleado", element: <CrearEmpleadoEventoPage /> },
       { path: ":id/editar", element: <EventoFormPage /> },
-      { path: ":id/editar/servicio", element: <CrearServicioEventoPage /> },
-      { path: ":id/editar/empleado", element: <CrearEmpleadoEventoPage /> },
     ],
   },
   { path: rel("agendamiento"), element: <AgendamientoPage /> },
@@ -79,6 +59,12 @@ const privateRoutes: RouteObject[] = [
 ]
 
 export const router = createBrowserRouter([
-  { path: LOGIN_PATH, element: <LoginRoute /> },
-  { path: "/", element: <AppLayout />, children: privateRoutes },
+  { path: LOGIN_PATH, element: <LoginRoute />, errorElement: <ErrorPage /> },
+  {
+    path: "/",
+    element: <AppLayout />,
+    errorElement: <ErrorPage />,
+    // Un error en una página conserva el menú para poder salir de ella.
+    children: [{ errorElement: <ErrorPage />, children: privateRoutes }],
+  },
 ])

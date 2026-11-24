@@ -62,7 +62,9 @@ export function DetailSection({
     >
       <div className="flex items-center justify-between gap-2">
         <h4 className="flex items-center gap-2 text-xs font-semibold text-[#F1F5F9]">
-          {Icon && <Icon size={14} className="text-[#A78BFA] shrink-0" aria-hidden="true" />}
+          {Icon && (
+            <Icon size={14} className="text-[#A78BFA] shrink-0" aria-hidden="true" />
+          )}
           <span>{title}</span>
         </h4>
         {(count !== undefined || action) && (
@@ -191,7 +193,9 @@ export function DetailHighlight({
     >
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 text-[11px] text-[#94A3B8]">
-          {Icon && <Icon size={13} className={`${styles.icon} shrink-0`} aria-hidden="true" />}
+          {Icon && (
+            <Icon size={13} className={`${styles.icon} shrink-0`} aria-hidden="true" />
+          )}
           <span className="truncate">{label}</span>
         </div>
         <div className={`text-base font-bold tabular-nums mt-0.5 ${styles.value}`}>

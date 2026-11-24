@@ -1,6 +1,6 @@
 # Estándares de Código y Diseño UI/UX — The High Events
 
-Este documento define el estándar único de arquitectura frontend, estructura de componentes, modales (`Drawer`), formularios, tablas, manejo de estado y nomenclatura para **The High Events** (`C:\Users\JuanE\Downloads\The High Events`).  
+Este documento define el estándar único de arquitectura frontend, estructura de componentes, modales (`Drawer`), formularios, tablas, manejo de estado y nomenclatura para **The High Events**.  
 **Regla de oro:** Todo módulo nuevo o modificación a un módulo existente DEBE seguir estrictamente esta estructura para garantizar legibilidad, mantenibilidad y consistencia visual.
 
 ---
@@ -246,7 +246,7 @@ Cada página de módulo debe organizarse exactamente en este orden de arriba hac
 
 ## 7. Estándar de Tarjetas KPI y Métricas Estadísticas
 
-El componente [`KPICard`](file:///C:/Users/JuanE/Downloads/The%20High%20Events/src/components/KPICard.tsx) centraliza todas las métricas del sistema y cuenta con la prop `variant?: 'linear' | 'minimal'`:
+El componente [`KPICard`](src/components/KPICard.tsx) centraliza todas las métricas del sistema y cuenta con la prop `variant?: 'linear' | 'minimal'`:
 
 - **Variante Activa: `'linear'` (Opción 1 — Dark Mode Premium):**
   - **Contenedor:** `bg-[#181B22] border border-[#262D3D] rounded-2xl p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] hover:border-[#3B455A] transition-all` (resuelve el dark mode mediante micro-reflejo superior en vez de sombra negra).
@@ -266,50 +266,46 @@ El componente [`KPICard`](file:///C:/Users/JuanE/Downloads/The%20High%20Events/s
 
 ---
 
-## 8. Arquitectura de Rutas y Módulos (VIGENTE — prevalece sobre §1–§3 en lo que se contradiga)
+## 8. Estándar vigente (PREVALECE sobre §1–§7 en lo que se contradiga)
 
-El proyecto ya no es un mockup de una sola pantalla: es un **frontend preparado para producción** (aún con datos de ejemplo). Reglas:
-
-### 8.1 Rutas (`react-router-dom`)
-- **Una URL por pantalla.** Nada de `useState` para decidir qué página mostrar.
-- Todas las URLs viven en [`src/routes/paths.ts`](src/routes/paths.ts) (`ROUTE_PATHS`, `EVENTO_PATHS`). **Nunca escribir strings de URL sueltos** en componentes.
-- El árbol de rutas está en [`src/routes/index.tsx`](src/routes/index.tsx). Toda página se importa con `lazy(() => import(...))` (code splitting).
-- `AppLayout` (`src/layouts/`) contiene sidebar + header + `<Outlet />` y protege las rutas privadas. `/login` es la única ruta pública.
-- Para navegar desde componentes que reciben `onNavigate(routeId)`, usar `useAppNavigate()`. Para rutas con parámetros, usar `useNavigate()` + helpers de `paths.ts` (p. ej. `EVENTO_PATHS.edit(id)`).
-- **Crear/Editar con formulario grande = ruta propia** (`/modulo/nuevo`, `/modulo/:id/editar`), no un modal. Los `Drawer` quedan para **ver detalle** y formularios cortos.
-
-### 8.2 Límite de tamaño de archivos
-- **Máximo ~300 líneas por archivo; nunca superar 500.** Si una página crece, se divide.
-- Una página con más de un bloque grande se convierte en **carpeta** `src/pages/<modulo>/`:
-
+### 8.1 Carpeta de cada módulo (`src/pages/<modulo>/`)
 ```
-src/pages/eventos/
-├── EventosPage.tsx           # Ruta de listado (orquesta estado y filtros)
-├── EventoFormPage.tsx        # Ruta de crear/editar (compone las secciones)
-├── EventoDatosSection.tsx    # Sección del formulario (props: form, setForm)
-├── EventoServiciosSection.tsx
-├── EventoStaffSection.tsx
-├── EventoCard.tsx            # Presentacional: recibe datos + callbacks
-├── EventoDetailDrawer.tsx    # Presentacional: detalle de solo lectura
-├── eventoColumns.tsx         # Columnas de DataTable (función pura)
-├── types.ts                  # Tipos y constantes de dominio
-├── data.ts                   # Datos de ejemplo (reemplazar por API)
-├── formState.ts              # Valores iniciales del formulario
-├── validation.ts             # Reglas de negocio (función pura, sin UI)
-└── utils.ts                  # Formateadores específicos del módulo
+XPage.tsx               # Orquesta: recursos, filtros, modal y handlers. Única con router/toast
+types.ts                # XItem (API) y XForm
+constants.ts            # X_LABEL, X_FILTERS, estados, *_OPTIONS, *_TABS
+form.ts                 # EMPTY_X, xToForm, validateX, xToPayload (puro, sin UI)
+utils.ts                # Helpers de dominio (opcional)
+components/xColumns.tsx # getXColumns(onStatusChange): Column<XItem>[]
+drawers/XDetailDrawer.tsx · XFormDrawer.tsx
 ```
-- `EventosPage.tsx` es el **modelo a replicar** al migrar los demás módulos (Clientes, Cotizaciones, Empleados, etc.).
+Modelo a copiar: `src/pages/clientes/`. Máximo 300 líneas por archivo.
 
-### 8.3 Separación de responsabilidades
-- **Componentes presentacionales** (`EventoCard`, `*Section`, `*DetailDrawer`): reciben props, no conocen el router ni el origen de los datos.
-- **Páginas** (`*Page.tsx`): únicas que usan `useNavigate`, `useParams`, `useToast` y manejan el estado de pantalla.
-- **Lógica sin UI** (validación, formateo, valores iniciales) va en archivos `.ts`, no dentro del JSX.
-- Tipos y datos de ejemplo **nunca** se definen dentro del componente de página.
+### 8.2 Qué lleva cada página de listado, en orden
+`ListPage` → `PageHeader {...filters.headerProps}` (filtros: `FilterSelect` / `FilterSegmented`) → KPIs (opcional) → `IndexTabs` con `buildTabs` → `DataTable`. Los drawers y `BulkActionsBar` van en `overlays`.
 
-### 8.4 Datos de ejemplo
-- Los datos falsos viven en `data.ts` del módulo, exportados como `*_MOCK`. Al conectar un backend, solo cambia ese origen.
-- Las acciones de crear/editar/eliminar **no persisten**: validan, avisan con `useToast` y regresan al listado.
+### 8.3 Piezas obligatorias
+| Necesidad | Usar | Prohibido |
+| :-- | :-- | :-- |
+| Leer/escribir API | `useCrudResource` | `fetch` en páginas, `setItems` local |
+| Crear/editar/eliminar + toast | `useCrudActions` | toast de éxito antes de que responda la API |
+| Modales y formulario | `useRecordModal` (`modal.mode`, `modal.editForm`) | varios `useState` por modal |
+| Búsqueda y filtros | `useListFilters` + `matchesSearch` | un `useState` por filtro |
+| Tabla, vacío, carga, error, móvil, paginación | `DataTable` | `<table>` en páginas |
+| Confirmar | `useConfirm` | `confirm()` / `alert()` |
+| Formulario | `FormInput`, `FormSelect`, `FormTextarea`, `FormSection`, `FormActions` | inputs y pies a mano |
+| Detalle | `components/detail` (`DetailHeader`, `DetailFooter`, `DetailStatusPicker`, `DetailAction`) | botones a mano |
+| Moneda y fechas | `utils/format` (`formatCOP`, `parseCOP`, `todayISO`) | `toISOString().split` |
+| Color de estado | `utils/statusTones` | mapas de color por módulo |
+| URLs y datos entre pantallas | `routes/paths`, `routes/navigationState` | strings sueltos |
 
-### 8.5 Verificación antes de entregar
-- `npm run typecheck` debe terminar sin errores (Vite **no** valida tipos por sí solo).
-- `npm run build` debe compilar sin errores.
+### 8.4 Código
+- Imports absolutos `@/…`; relativos solo dentro del mismo módulo.
+- `function` con props tipadas (sin `React.FC`, sin `any`); eventos con `SubmitEvent` (`FormEvent` está obsoleto).
+- El servidor manda: asigna `id` y códigos y calcula totales y estados derivados (p. ej. el pago de una venta). El frontend los muestra, no los edita ni los genera. Los estados se tipan igual que el ENUM de la BD.
+- Las relaciones se envían con su `id` (`evento_id`), no solo con el nombre.
+- Todo selector lleva nombre accesible (`label` o `ariaLabel`).
+- Sin datos inventados: ni mocks, ni valores por defecto ficticios, ni acciones que solo muestran un toast.
+- Textos en tipo oración y sin jerga de base de datos (`FK`, nombres de tabla).
+
+### 8.5 Antes de entregar
+`npm run check` sin errores (ESLint + tipos + formato + build). Las reglas de §8 que se pueden automatizar están en `eslint.config.js`: no se desactivan con comentarios.

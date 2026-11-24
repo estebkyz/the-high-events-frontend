@@ -1,10 +1,8 @@
-import React from "react"
-import { LucideIcon, Inbox } from "lucide-react"
+import { Inbox, type LucideIcon } from "lucide-react"
 
 export interface EmptyStateAction {
-  label: string; onClick: () => void
-  icon?: LucideIcon
-  variant?: "primary" | "secondary" | "danger"
+  label: string
+  onClick: () => void
 }
 
 export interface EmptyStateProps {
@@ -21,14 +19,14 @@ export interface EmptyStateProps {
  * Presenta un estado vacío accionable y orientativo en lugar de un texto plano.
  * Combina icono sobrio, copy explicativo y llamadas directas a la acción (+ Crear / Limpiar filtros).
  */
-export const EmptyState: React.FC<EmptyStateProps> = ({
+export function EmptyState({
   icon: Icon = Inbox,
   title,
   description,
   action,
   secondaryAction,
   compact = false,
-}) => {
+}: EmptyStateProps) {
   return (
     <div
       className={`flex flex-col items-center justify-center text-center ${
@@ -61,13 +59,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               onClick={secondaryAction.onClick}
               className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#222734] border border-[#262D3D] transition-colors cursor-pointer"
             >
-              {secondaryAction.icon && (
-                <secondaryAction.icon
-                  size={13}
-                  aria-hidden="true"
-                  className="inline mr-1"
-                />
-              )}
               {secondaryAction.label}
             </button>
           )}
@@ -77,7 +68,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               onClick={action.onClick}
               className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-[#7C3AED] hover:bg-[#6D28D9] text-white shadow-md shadow-[#7C3AED]/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              {action.icon && <action.icon size={13} aria-hidden="true" />}
               <span>{action.label}</span>
             </button>
           )}

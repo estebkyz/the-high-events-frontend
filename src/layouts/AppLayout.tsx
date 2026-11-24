@@ -1,26 +1,17 @@
 import { Suspense, useState } from "react"
 import { Navigate, Outlet, useLocation } from "react-router-dom"
-import Sidebar from "../components/Sidebar"
-import { BottomNavigation } from "../components/BottomNavigation"
-import TopHeader from "../components/TopHeader"
-import { useAuth } from "../context/AuthContext"
-import { useTheme } from "../hooks/useTheme"
-import { LOGIN_PATH, routeIdFromPath } from "../routes/paths"
-import { useAppNavigate } from "../routes/useAppNavigate"
-
-function PageLoader() {
-  return (
-    <div
-      className="flex-1 flex items-center justify-center text-xs text-[#94A3B8]"
-      role="status"
-    >
-      Cargando…
-    </div>
-  )
-}
+import { PageLoader } from "@/components/PageLoader"
+import { useAuth } from "@/context/AuthContext"
+import { useTheme } from "@/hooks/useTheme"
+import { LOGIN_PATH, routeIdFromPath } from "@/routes/paths"
+import { useAppNavigate } from "@/routes/useAppNavigate"
+import type { RouteId } from "@/types"
+import { BottomNavigation } from "./BottomNavigation"
+import { Sidebar } from "./Sidebar"
+import { TopHeader } from "./TopHeader"
 
 export default function AppLayout() {
-  const { isAuthenticated, logout } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { isDarkMode, toggleTheme } = useTheme()
   const { pathname } = useLocation()
   const navigate = useAppNavigate()
@@ -34,16 +25,24 @@ export default function AppLayout() {
 
   const currentRouteId = routeIdFromPath(pathname)
 
+  const handleNavigate = (route: RouteId) => {
+    setIsMobileMenuOpen(false)
+    navigate(route)
+  }
+
+  const handleToggleSidebar = () => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setIsMobileMenuOpen((prev) => !prev)
+    } else {
+      setIsSidebarVisible((prev) => !prev)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-[#111318] font-['Inter',sans-serif] overflow-hidden text-[#F1F5F9] antialiased">
-      {/* Sidebar: static on desktop (if visible), overlay drawer on mobile */}
       <Sidebar
         active={currentRouteId}
-        onNavigate={(route) => {
-          setIsMobileMenuOpen(false)
-          navigate(route)
-        }}
-        onLogout={logout}
+        onNavigate={handleNavigate}
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
         isDesktopVisible={isSidebarVisible}
@@ -51,14 +50,7 @@ export default function AppLayout() {
 
       <div className="flex-1 overflow-hidden flex flex-col min-w-0">
         <TopHeader
-          onToggleSidebar={() => {
-            // In mobile toggle the mobile overlay, in desktop toggle the sidebar column
-            if (window.innerWidth < 768) {
-              setIsMobileMenuOpen((prev) => !prev)
-            } else {
-              setIsSidebarVisible((prev) => !prev)
-            }
-          }}
+          onToggleSidebar={handleToggleSidebar}
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
         />
@@ -69,14 +61,9 @@ export default function AppLayout() {
           </Suspense>
         </div>
       </div>
-
-      {/* Mobile Bottom Navigation Bar (Shopify Thumb-Zone Pattern) */}
       <BottomNavigation
         active={currentRouteId}
-        onNavigate={(route) => {
-          setIsMobileMenuOpen(false)
-          navigate(route)
-        }}
+        onNavigate={handleNavigate}
         onOpenMenu={() => setIsMobileMenuOpen(true)}
         isMenuOpen={isMobileMenuOpen}
       />

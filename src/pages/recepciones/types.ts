@@ -1,17 +1,23 @@
-// Mapped exactly to MySQL Workbench: ENUM('recepcion_montaje','recepcion_desmontaje')
+/** ENUM('recepcion_montaje','recepcion_desmontaje') */
 export type TipoRecepcion = "Recepción Montaje" | "Recepción Desmontaje"
 
-// Mapped exactly to MySQL Workbench: ENUM('pendiente','conforme','cerrada','anulada')
-export type EstadoRecepcion = "Pendiente" | "Conforme" | "Cerrada" | "Anulada"
+/** ENUM('pendiente','conforme','con_novedades','cerrada','anulada') */
+export type EstadoRecepcion =
+  | "Pendiente"
+  | "Conforme"
+  | "Con Novedades"
+  | "Cerrada"
+  | "Anulada"
 
-// Mapped exactly to MySQL Workbench: ENUM('excelente','bueno','regular','dañado')
+/** ENUM('excelente','bueno','regular','dañado') */
 export type EstadoItemRecepcion = "Excelente" | "Bueno" | "Regular" | "Dañado"
 
-export interface EquipmentItem {
+export interface RecepcionEquipo {
   nombre: string
   cantidad: number
-  estado: EstadoItemRecepcion | string
+  estado: EstadoItemRecepcion
   observaciones?: string
+  /** Enlace a la foto. */
   evidencia_foto?: string
 }
 
@@ -20,41 +26,32 @@ export interface Recepcion {
   codigo: string
   evento: string
   evento_id?: number
-  responsable?: string
+  responsable: string
   responsable_id?: number
-  subcontrato?: string
-  subcontrato_id?: number
   proveedor: string
   tipo: TipoRecepcion
   fecha: string
-  fecha_hora?: string
   estado: EstadoRecepcion
-  descripcion: string
   observaciones: string
-  firma_digital?: string
   parentCodigo?: string
-  items: EquipmentItem[]
+  items: RecepcionEquipo[]
 }
 
-export interface NewItem {
-  nombre: string
-  cantidad: string
-  estado: EstadoItemRecepcion | string
-  observaciones?: string
-  evidencia_foto?: string
-}
+export type RecepcionForm = Pick<
+  Recepcion,
+  | "evento"
+  | "evento_id"
+  | "responsable"
+  | "responsable_id"
+  | "proveedor"
+  | "tipo"
+  | "fecha"
+  | "estado"
+  | "observaciones"
+  | "items"
+>
 
-export interface DevolucionItem {
-  nombre: string
-  cantidad: number
-  condicion: EstadoItemRecepcion | string
-}
-
-export type RecepcionDrawerMode = null | "view" | "create" | "edit" | "devolucion"
-
-export interface RecepcionesKPIsData {
-  total: number
-  pendientes: number
-  conformes: number
-  cerradas: number
-}
+export type DevolucionForm = Pick<
+  Recepcion,
+  "responsable" | "responsable_id" | "observaciones" | "items"
+>

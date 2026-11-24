@@ -1,4 +1,4 @@
-import type { RouteId } from "../types"
+import type { RouteId } from "@/types"
 
 /**
  * Única fuente de verdad de las URLs de la aplicación.
@@ -28,11 +28,10 @@ export const ROUTE_PATHS: Record<RouteId, string> = {
 export const EVENTO_PATHS = {
   list: ROUTE_PATHS.eventos,
   create: `${ROUTE_PATHS.eventos}/nuevo`,
-  createServicio: `${ROUTE_PATHS.eventos}/nuevo/servicio`,
-  createEmpleado: `${ROUTE_PATHS.eventos}/nuevo/empleado`,
+  createOn: (fecha: string) => `${ROUTE_PATHS.eventos}/nuevo?fecha=${fecha}`,
+  createFrom: (cotizacionId: string) =>
+    `${ROUTE_PATHS.eventos}/nuevo?cotizacion=${cotizacionId}`,
   edit: (id: string) => `${ROUTE_PATHS.eventos}/${id}/editar`,
-  editServicio: (id: string) => `${ROUTE_PATHS.eventos}/${id}/editar/servicio`,
-  editEmpleado: (id: string) => `${ROUTE_PATHS.eventos}/${id}/editar/empleado`,
 } as const
 
 export const LOGIN_PATH = "/login"
@@ -40,9 +39,7 @@ export const LOGIN_PATH = "/login"
 /** Deduce el RouteId activo a partir de la URL (para resaltar el menú lateral). */
 export function routeIdFromPath(pathname: string): RouteId {
   const match = (Object.keys(ROUTE_PATHS) as RouteId[]).find(
-    (id) =>
-      pathname === ROUTE_PATHS[id] ||
-      pathname.startsWith(`${ROUTE_PATHS[id]}/`),
+    (id) => pathname === ROUTE_PATHS[id] || pathname.startsWith(`${ROUTE_PATHS[id]}/`),
   )
   return match ?? "dashboard"
 }

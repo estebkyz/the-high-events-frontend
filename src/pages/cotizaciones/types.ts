@@ -5,14 +5,11 @@ export type EstadoCotizacion =
   | "Rechazada"
   | "Vencida"
 
-export interface CotizacionDetalleItem {
-  id?: string
-  servicio_id?: string
+export interface CotizacionDetalle {
   nombre: string
   cantidad: number
-  precio_unitario: number
+  valor_unitario: number
   subtotal: number
-  observaciones?: string
 }
 
 export interface CotizacionItem {
@@ -28,24 +25,19 @@ export interface CotizacionItem {
   hora_inicio?: string
   hora_fin?: string
   aforo_esperado?: number
-  fecha: string // Fecha emisión
-  fechaVence: string // Fecha vencimiento
+  /** Fecha de emisión. */
+  fecha: string
+  /** Fecha de vencimiento. */
+  fechaVence: string
   total: string
   totalNum: number
   estado: EstadoCotizacion
   url_documento?: string
   notas?: string
   servicios: string[]
+  /** Precio de cada servicio, en el mismo orden que `servicios`. */
   montos: string[]
-  detalles?: CotizacionDetalleItem[]
-  items?: {
-    nombre: string
-    cantidad: number
-    valor_unitario: number
-    subtotal: number
-  }[]
+  items?: CotizacionDetalle[]
 }
 
-export type CotizacionDrawerMode = "view" | "create" | "edit"
-
-export type CotizacionFormData = Partial<CotizacionItem>
+export type CotizacionForm = Omit<CotizacionItem, "id" | "codigo" | "estado">

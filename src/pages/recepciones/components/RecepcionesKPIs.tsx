@@ -1,42 +1,36 @@
-import React from "react"
-import { ClipboardList, Clock, CheckCircle2, Lock } from "lucide-react"
-import { KPICard } from "../../../components/KPICard"
-import type { RecepcionesKPIsData } from "../types"
+import { CheckCircle2, ClipboardList, Clock, Lock } from "lucide-react"
+import { KPICard } from "@/components/KPICard"
+import type { EstadoRecepcion, Recepcion } from "../types"
 
-interface RecepcionesKPIsProps {
-  kpis: RecepcionesKPIsData
-}
+export function RecepcionesKPIs({ recepciones }: { recepciones: Recepcion[] }) {
+  const count = (estado: EstadoRecepcion) =>
+    recepciones.filter((r) => r.estado === estado).length
 
-export function RecepcionesKPIs({ kpis }: RecepcionesKPIsProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <KPICard
-        title="Total Recepciones"
-        value={kpis.total}
-        subtitle="Total del período"
+        title="Total recepciones"
+        value={recepciones.length}
+        subtitle="Total registrado"
         icon={ClipboardList}
-        iconColor="text-[#64748B]"
       />
       <KPICard
-        title="Pendientes Firma"
-        value={kpis.pendientes}
-        subtitle="En el período"
+        title="Pendientes"
+        value={count("Pendiente")}
+        subtitle="Por verificar"
         icon={Clock}
-        iconColor="text-[#F59E0B]"
       />
       <KPICard
         title="Conformes"
-        value={kpis.conformes}
-        subtitle="En el período"
+        value={count("Conforme")}
+        subtitle="Verificadas"
         icon={CheckCircle2}
-        iconColor="text-[#10B981]"
       />
       <KPICard
         title="Cerradas"
-        value={kpis.cerradas}
-        subtitle="En el período"
+        value={count("Cerrada")}
+        subtitle="Proceso terminado"
         icon={Lock}
-        iconColor="text-[#A78BFA]"
       />
     </div>
   )

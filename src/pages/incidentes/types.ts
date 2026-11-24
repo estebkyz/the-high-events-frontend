@@ -8,20 +8,9 @@ export type TipoIncidente =
   | "emergencia_medica"
   | "otro"
 
-export const TIPO_INCIDENTE_LABELS: Record<TipoIncidente, string> = {
-  falla_electrica: "Falla Eléctrica",
-  corte_agua: "Corte de Agua",
-  dano_equipo: "Daño en Equipo",
-  inconveniente_proveedor: "Inconveniente con Proveedor",
-  retraso_montaje: "Retraso en Montaje",
-  seguridad_orden_publico: "Seguridad u Orden Público",
-  emergencia_medica: "Emergencia Médica",
-  otro: "Otro",
-}
-
 export type Criticidad = "Baja" | "Media" | "Alta" | "Crítica"
 
-// Mapped exactly to MySQL Workbench: ENUM('reportado','en_atencion','solucionado','escalado')
+/** ENUM('reportado','en_atencion','solucionado','escalado') */
 export type EstadoIncidente = "Reportado" | "En Atención" | "Solucionado" | "Escalado"
 
 export interface IncidenteItem {
@@ -38,19 +27,31 @@ export interface IncidenteItem {
   estado: EstadoIncidente
   descripcion: string
   areaAfectada?: string
-  accionCorrectiva?: string
+  /** Bitácora: una línea por acción (ver `bitacora.ts`). */
   acciones_tomadas?: string
   costo_adicional?: number
   resuelto_en?: string
 }
 
-export interface HistoryEntry {
-  id: string
-  accion: string
+export type IncidenteForm = Pick<
+  IncidenteItem,
+  | "titulo"
+  | "evento"
+  | "evento_id"
+  | "reporta"
+  | "reportado_por_id"
+  | "tipo_incidente"
+  | "criticidad"
+  | "descripcion"
+  | "areaAfectada"
+  | "costo_adicional"
+>
+
+export interface AccionIncidente {
+  fecha: string
   responsable: string
   estado: EstadoIncidente
-  timestamp: string
-  tipo: "initial" | "action"
+  accion: string
 }
 
-export type IncidenteFormData = Partial<IncidenteItem>
+export type AccionForm = Omit<AccionIncidente, "fecha">

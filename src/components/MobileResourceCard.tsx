@@ -1,21 +1,21 @@
-import React from "react"
+import type { ElementType, ReactNode } from "react"
 
 export interface ResourceAttribute {
   label: string
-  value: React.ReactNode
-  icon?: React.ElementType
+  value: ReactNode
+  icon?: ElementType
 }
 
 export interface MobileResourceCardProps {
   id: string | number
   isSelected?: boolean
   onToggleSelect?: (id: string) => void
-  title: React.ReactNode
-  subtitle?: React.ReactNode
-  badge?: React.ReactNode
+  title: ReactNode
+  subtitle?: ReactNode
+  badge?: ReactNode
   attributes?: ResourceAttribute[]
-  primaryValue?: React.ReactNode
-  actions?: React.ReactNode
+  primaryValue?: ReactNode
+  actions?: ReactNode
   onClick?: () => void
 }
 
@@ -78,10 +78,10 @@ export function MobileResourceCard({
       {/* Attributes List */}
       {attributes.length > 0 && (
         <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#262D3D]/60 text-[12px]">
-          {attributes.map((attr, idx) => {
+          {attributes.map((attr) => {
             const Icon = attr.icon
             return (
-              <div key={idx} className="flex items-center gap-1.5 min-w-0">
+              <div key={attr.label} className="flex items-center gap-1.5 min-w-0">
                 {Icon && (
                   <Icon
                     size={13}
@@ -91,9 +91,7 @@ export function MobileResourceCard({
                 )}
                 <div className="min-w-0 truncate text-[#94A3B8]">
                   <span className="text-[#64748B] mr-1">{attr.label}:</span>
-                  <span className="text-[#CBD5E1] font-medium">
-                    {attr.value}
-                  </span>
+                  <span className="text-[#CBD5E1] font-medium">{attr.value}</span>
                 </div>
               </div>
             )
@@ -110,9 +108,7 @@ export function MobileResourceCard({
           <div className="min-w-0 font-semibold text-[14px] text-[#F1F5F9]">
             {primaryValue}
           </div>
-          {actions && (
-            <div className="flex items-center gap-1 shrink-0">{actions}</div>
-          )}
+          {actions && <div className="flex items-center gap-1 shrink-0">{actions}</div>}
         </div>
       )}
     </div>

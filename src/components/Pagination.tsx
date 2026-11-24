@@ -46,9 +46,7 @@ export function Pagination({
               className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none"
             />
           </div>
-          <span>
-            {itemLabel ? `de ${totalCount} ${itemLabel}` : `de ${totalCount}`}
-          </span>
+          <span>{itemLabel ? `de ${totalCount} ${itemLabel}` : `de ${totalCount}`}</span>
         </div>
       </div>
 

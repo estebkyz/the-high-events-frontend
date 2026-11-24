@@ -17,7 +17,7 @@ Sistema ERP y plataforma de gestión integral para **The High Events**, empresa 
 
 ## 📋 Módulos del Sistema
 
-1. **Dashboard Ejecutivo**: Métricas clave (Ventas, Cobros, Rentabilidad, Ticket Promedio) y disponibilidad de agenda mensual.
+1. **Dashboard Ejecutivo**: Ventas, cobros, cuentas por cobrar y por pagar, operación y disponibilidad de agenda mensual.
 2. **Eventos**: Creación y edición con flujo completo en 4 secciones:
    - Datos generales del evento y cotización vinculada.
    - Servicios requeridos (sonido, iluminación, visuales, DJ, etc.).
@@ -38,12 +38,12 @@ Sistema ERP y plataforma de gestión integral para **The High Events**, empresa 
 
 Antes de ejecutar el proyecto, asegúrate de contar con las siguientes herramientas instaladas en tu equipo:
 
-- **[Node.js](https://nodejs.org/)**: Versión **18.x**, **20.x** (LTS recomendada) o superior.  
+- **[Node.js](https://nodejs.org/)**: Versión **22** o superior.  
   Verifica tu versión en la terminal:
   ```bash
   node -v
   ```
-- **Gestor de paquetes**: `npm` (incluido por defecto con Node.js), `pnpm` o `yarn`.
+- **Gestor de paquetes**: `npm` (incluido con Node.js).
 - **[Git](https://git-scm.com/)**: Para clonar y sincronizar cambios en el repositorio.
 - **[Visual Studio Code](https://code.visualstudio.com/)**: Editor de código recomendado.
 
@@ -51,7 +51,7 @@ Antes de ejecutar el proyecto, asegúrate de contar con las siguientes herramien
 Para tener la mejor experiencia de desarrollo, instala las siguientes extensiones desde la pestaña de Extensiones (`Ctrl + Shift + X`):
 - **Tailwind CSS IntelliSense** (`bradlc.vscode-tailwindcss`)
 - **ESLint** (`dbaeumer.vscode-eslint`)
-- **Prettier - Code formatter** (`esbenp.prettier-vscode`)
+- **Oxc** (`oxc.oxc-vscode`): formato con oxfmt.
 
 *(El repositorio ya incluye la configuración automática en `.vscode/extensions.json` para que VS Code te sugiera instalarlas al abrir la carpeta).*
 
@@ -79,7 +79,10 @@ Abre la terminal integrada de VS Code (`Ctrl + ñ` o `Ctrl + ` ` `) y ejecuta:
 npm install
 ```
 
-### 4. Iniciar el servidor de desarrollo
+### 4. Conectar con la API
+El frontend necesita el backend (`the-high-events-backend`), que por defecto corre en `http://localhost:3000/api`. Si usas otra dirección, copia `.env.example` a `.env` y ajusta `VITE_API_URL`.
+
+### 5. Iniciar el servidor de desarrollo
 Ejecuta el comando:
 ```bash
 npm run dev
@@ -99,8 +102,10 @@ En la raíz del proyecto puedes ejecutar los siguientes scripts:
 | `npm run dev` | Inicia el servidor de desarrollo local con recarga rápida (HMR). |
 | `npm run build` | Compila y optimiza la aplicación para producción en la carpeta `dist/`. |
 | `npm run preview` | Levanta un servidor local para previsualizar los archivos generados en `dist/`. |
-| `npm run typecheck` | Ejecuta la verificación estricta de tipos de TypeScript sin emitir archivos (`tsc --noEmit`). |
-| `npm run format` | Da formato a los archivos del proyecto con el linter/formateador rápido. |
+| `npm run lint` | Comprueba el estándar de código con ESLint (`eslint.config.js`). |
+| `npm run typecheck` | Verifica los tipos de TypeScript (`tsc --noEmit`). |
+| `npm run format` | Da formato al código con oxfmt. |
+| `npm run check` | Todo lo anterior más la compilación. **Ejecútalo antes de cada commit.** |
 
 ---
 
@@ -109,39 +114,31 @@ En la raíz del proyecto puedes ejecutar los siguientes scripts:
 ```text
 the-high-events-frontend/
 ├── .vscode/               # Configuración y extensiones recomendadas para VS Code
+├── docs/                  # Especificación de pantallas
 ├── src/
-│   ├── components/        # Componentes UI reutilizables (tablas, botones, badges, modales, etc.)
-│   ├── context/           # Contextos globales de React (autenticación, alertas, etc.)
-│   ├── data/              # Datos mock y catálogos maestros iniciales
-│   ├── hooks/             # Custom hooks (paginación, filtros, etc.)
-│   ├── layouts/           # Plantillas base (AppLayout, Sidebar de navegación, Topbar)
-│   ├── pages/             # Vistas de cada módulo del sistema:
-│   │   ├── abonos/
-│   │   ├── agendamiento/
-│   │   ├── clientes/
-│   │   ├── cotizaciones/
-│   │   ├── dashboard/
-│   │   ├── empleados/
-│   │   ├── equipos/
-│   │   ├── eventos/
-│   │   ├── incidentes/
-│   │   ├── prestamos/
-│   │   ├── proveedores/
-│   │   ├── recepciones/
-│   │   ├── roles/
-│   │   ├── servicios/
-│   │   ├── tareas/
-│   │   ├── usuarios/
-│   │   └── ventas/
-│   ├── routes/            # Definición centralizada de rutas (paths y React Router)
-│   ├── types/             # Definiciones e interfaces globales de TypeScript
-│   ├── App.tsx            # Componente raíz con los proveedores de contexto y enrutador
-│   ├── index.css          # Estilos globales y directivas de Tailwind CSS v4
-│   └── main.tsx           # Punto de entrada de la aplicación
-├── index.html             # Documento HTML base
-├── package.json           # Dependencias y scripts del proyecto
-├── tsconfig.json          # Configuración del compilador TypeScript
-└── vite.config.ts         # Configuración del empaquetador Vite y plugins
+│   ├── components/        # UI compartida
+│   │   ├── detail/        #   Piezas del modal de detalle
+│   │   ├── form/          #   Piezas de formulario
+│   │   └── list/          #   DataTable, ListPage, filtros y celdas
+│   ├── constants/         # Catálogos comunes a varios módulos
+│   ├── context/           # Sesión del usuario (AuthContext)
+│   ├── hooks/             # useCrudResource, useCrudActions, useRecordModal, useListFilters…
+│   ├── layouts/           # AppLayout, Sidebar, TopHeader y navegación móvil
+│   ├── pages/             # Un módulo por carpeta, todos con la misma estructura:
+│   │   └── <modulo>/      #   XPage, types, constants, form, components/, drawers/
+│   ├── routes/            # Rutas, paths y datos entre pantallas
+│   ├── services/          # Cliente HTTP y sesión
+│   ├── types/             # Tipos globales
+│   ├── utils/             # Funciones puras (formato, listas, errores, estados)
+│   ├── App.tsx            # Proveedores y enrutador
+│   ├── index.css          # Estilos globales y Tailwind CSS v4
+│   └── main.tsx           # Punto de entrada
+├── CLAUDE.md              # Estándar de código y diseño (la sección 8 prevalece)
+├── eslint.config.js       # Reglas automáticas del estándar
+├── .oxfmtrc.json          # Formato
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
 ```
 
 ---
@@ -153,9 +150,8 @@ the-high-events-frontend/
    git checkout -b feature/nombre-de-tu-cambio
    ```
 2. **Validar antes de hacer commit**:
-   Asegúrate de que el código no tenga errores de TypeScript ejecutando:
    ```bash
-   npm run build
+   npm run check
    ```
 3. **Confirmar y enviar tus cambios**:
    ```bash
@@ -163,4 +159,4 @@ the-high-events-frontend/
    git commit -m "feat: descripción clara de tu modificación"
    git push origin feature/nombre-de-tu-cambio
    ```
-4. Consulta el archivo `CLAUDE.md` o `ui-ux-standards.html` para detalles sobre la paleta de colores, diseño de modales (`Drawer`), estructura de tablas (`DataTable`) y estados de UI.
+4. El estándar (estructura de páginas, modales, tablas, formularios y textos) está en `CLAUDE.md`.

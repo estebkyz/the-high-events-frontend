@@ -1,8 +1,8 @@
-import React from "react"
-import { CheckSquare, X, LucideIcon } from "lucide-react"
+import { CheckSquare, X, type LucideIcon } from "lucide-react"
 
 export interface BulkActionItem {
-  label: string; onClick: () => void
+  label: string
+  onClick: () => void
   icon?: LucideIcon
   variant?: "primary" | "secondary" | "danger" | "success"
 }
@@ -16,8 +16,6 @@ export interface BulkActionsBarProps {
   onClearSelection: () => void
   /** Lista de acciones masivas a ejecutar */
   actions: BulkActionItem[]
-  /** Renderizado de acciones o botones personalizados opcionales */
-  children?: React.ReactNode
 }
 
 /**
@@ -26,13 +24,12 @@ export interface BulkActionsBarProps {
  * Proporciona un recuento visual claro y un menú de acciones rápidas (cambiar estado, exportar, eliminar)
  * sin romper el diseño de la tabla.
  */
-export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
+export function BulkActionsBar({
   selectedCount,
   totalCount,
   onClearSelection,
   actions,
-  children,
-}) => {
+}: BulkActionsBarProps) {
   if (selectedCount === 0) return null
 
   return (
@@ -47,8 +44,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
           <CheckSquare size={13} aria-hidden="true" />
         </div>
         <span className="text-xs font-semibold text-[#F1F5F9] whitespace-nowrap">
-          {selectedCount}{" "}
-          {selectedCount === 1 ? "seleccionado" : "seleccionados"}
+          {selectedCount} {selectedCount === 1 ? "seleccionado" : "seleccionados"}
           {totalCount ? ` de ${totalCount}` : ""}
         </span>
       </div>
@@ -58,7 +54,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
 
       {/* Acciones configuradas */}
       <div className="flex items-center gap-1.5 shrink-0">
-        {actions.map((act, index) => {
+        {actions.map((act) => {
           const Icon = act.icon
           const variantClasses =
             act.variant === "danger"
@@ -71,7 +67,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
 
           return (
             <button
-              key={index}
+              key={act.label}
               type="button"
               onClick={act.onClick}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${variantClasses}`}
@@ -81,7 +77,6 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             </button>
           )
         })}
-        {children}
       </div>
 
       {/* Separador vertical */}
