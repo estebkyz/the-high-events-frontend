@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="es" class="dark" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patrones de Diseño UI/UX — The High Events | SENA ADSO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Fondos y Superficies Extraídos de las Capturas */
+      --bg-page: #0B0E14;
+      --bg-surface: #0F1219;
+      --bg-card: #12151C;
+      --bg-card-hover: #171B24;
+      --bg-elevated: #1A1F2C;
+      --bg-input: #121620;
+      
+      /* Bordes Reales */
+      --border-main: #1E2536;
+      --border-subtle: #252D40;
+      --border-divider: #1A2130;
+      
+      /* Tipografía y Textos */
+      --text-main: #FFFFFF;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      
+      /* Identidad de Marca (Púrpura / Violeta Oficial) */
+      --accent: #7C3AED;
+      --accent-hover: #6D28D9;
+      --accent-light: #A78BFA;
+      --accent-subtle: rgba(124, 58, 237, 0.16);
+      --accent-glow: 0 0 20px rgba(124, 58, 237, 0.35);
+
+      /* Estados Semánticos de las Capturas Reales */
+      /* Confirmado / Éxito */
+      --status-confirmado-bg: #064E3B;
+      --status-confirmado-border: #065F46;
+      --status-confirmado-text: #10B981;
+      
+      /* Montaje / Warning */
+      --status-montaje-bg: #451A03;
+      --status-montaje-border: #78350F;
+      --status-montaje-text: #F59E0B;
+
+      /* Planificación / Info */
+      --status-plan-bg: #172554;
+      --status-plan-border: #1E3A8A;
+      --status-plan-text: #3B82F6;
+
+      /* Cancelado / Peligro */
+      --color-danger: #EF4444;
+      --color-danger-bg: #450A0A;
+      --color-danger-border: #7F1D1D;
+      
+      /* Sombras y Radios */
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.5);
+      --shadow-popover: 0 12px 30px rgba(0, 0, 0, 0.7);
+
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+
+      --sidebar-width: 290px;
+    }
+
+    html.light,
+    :root[data-theme="light"] {
+      --bg-page: #F1F5F9;
+      --bg-surface: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-elevated: #E2E8F0;
+      --bg-input: #FFFFFF;
+      
+      --border-main: #CBD5E1;
+      --border-subtle: #E2E8F0;
+      --border-divider: #E2E8F0;
+      
+      --text-main: #0F172A;
+      --text-secondary: #1E293B;
+      --text-muted: #475569;
+      --text-dim: #64748B;
+      
+      --accent: #7C3AED;
+      --accent-hover: #6D28D9;
+      --accent-light: #6D28D9;
+      --accent-subtle: rgba(124, 58, 237, 0.10);
+      --accent-glow: 0 0 15px rgba(124, 58, 237, 0.2);
+
+      --status-confirmado-bg: #D1FAE5;
+      --status-confirmado-border: #A7F3D0;
+      --status-confirmado-text: #047857;
+
+      --status-montaje-bg: #FEF3C7;
+      --status-montaje-border: #FDE68A;
+      --status-montaje-text: #B45309;
+
+      --status-plan-bg: #DBEAFE;
+      --status-plan-border: #BFDBFE;
+      --status-plan-text: #1D4ED8;
+
+      --color-danger: #B91C1C;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-border: #FECACA;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: var(--radius-full);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-dim);
+    }
+
+    /* ── BARRA LATERAL ÍNDICE ── */
+    .sidebar-nav {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-main);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .brand-block {
+      padding: 1.25rem 1.15rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .real-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .real-brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: -0.02em;
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+    }
+    .real-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .real-brand-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.15;
+    }
+    html.light .real-brand-title { color: #0F172A; }
+    .real-brand-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #A78BFA;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-main);
+      color: var(--text-main);
+      padding: 0.35rem 0.75rem;
+      border-radius: var(--radius-md);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .nav-list {
+      padding: 0.75rem 0.5rem 2rem;
+      flex: 1;
+    }
+
+    .nav-section-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      padding: 0.85rem 0.75rem 0.35rem;
+      font-weight: 700;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.45rem 0.75rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.785rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.15rem;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover {
+      color: var(--text-main);
+      background: var(--bg-elevated);
+    }
+    .nav-link.active {
+      color: var(--accent-light);
+      background: var(--accent-subtle);
+      font-weight: 600;
+    }
+    .nav-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+    }
+    .nav-link.active .nav-num {
+      background: var(--accent);
+      color: #FFFFFF;
+      border-color: var(--accent);
+    }
+
+    /* ── CONTENIDO PRINCIPAL ── */
+    .main-content {
+      flex: 1;
+      padding: 2.25rem 3.5rem;
+      max-width: 1300px;
+      overflow-y: auto;
+    }
+
+    /* Encabezado Académico SENA */
+    .academic-header-card {
+      background: linear-gradient(145deg, var(--bg-surface) 0%, var(--bg-card) 100%);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-xl);
+      padding: 1.75rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+    .academic-header-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #7C3AED 0%, #4F46E5 50%, #10B981 100%);
+    }
+
+    .academic-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.725rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.02em;
+    }
+    .pill-accent {
+      background: var(--accent-subtle);
+      color: var(--accent-light);
+      border: 1px solid rgba(124, 58, 237, 0.35);
+    }
+    .pill-sena {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .pill-neutral {
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .project-hero-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+    .project-hero-desc {
+      font-size: 0.925rem;
+      color: var(--text-muted);
+      max-width: 880px;
+      line-height: 1.55;
+      margin-bottom: 1.25rem;
+    }
+
+    .academic-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-divider);
+    }
+    .meta-box { font-size: 0.8rem; }
+    .meta-label {
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+    .meta-value {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .meta-highlight { color: var(--accent-light); }
+
+    /* ── SECCIONES DE PATRONES ── */
+    section {
+      margin-bottom: 3.5rem;
+      scroll-margin-top: 2rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--accent-subtle);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .author-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      padding: 0.3rem 0.85rem;
+      font-size: 0.725rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .author-badge strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+    .author-badge .author-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+    }
+
+    .section-lead {
+      font-size: 0.885rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+
+    /* Tarjetas y Contenedores */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin: 1.25rem 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .spec-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin: 1rem 0;
+    }
+
+    .spec-title {
+      font-size: 0.775rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* Grillas */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin: 1rem 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.85rem;
+      margin: 1rem 0;
+    }
+
+    /* Tablas */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-md);
+      margin: 1rem 0;
+      background: var(--bg-card);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.8125rem;
+    }
+    th {
+      background: var(--bg-surface);
+      color: var(--text-dim);
+      font-weight: 700;
+      padding: 0.75rem 1rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-main);
+    }
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-divider);
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(124, 58, 237, 0.03); }
+
+    /* Sandbox para live specimen */
+    .specimen-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin: 1rem 0;
+      position: relative;
+    }
+    .specimen-label {
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Botón Violeta de The High Events */
+    .btn-create-event {
+      background: #7C3AED;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+      transition: all 0.15s ease;
+    }
+    .btn-create-event:hover {
+      background: #6D28D9;
+      transform: translateY(-1px);
+    }
+
+    /* Iconos CRUD de las filas reales */
+    .table-action-icon {
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+    }
+    .table-action-icon:hover {
+      color: #FFFFFF;
+      background: var(--bg-elevated);
+    }
+    .table-action-icon.delete:hover {
+      color: #EF4444;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    /* Píldoras de Estado Reales de la Tabla (Captura 2) */
+    .status-select-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 3px 9px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .status-confirmado {
+      background: rgba(6, 78, 59, 0.5);
+      border-color: #065F46;
+      color: #10B981;
+    }
+    .status-montaje {
+      background: rgba(120, 53, 15, 0.4);
+      border-color: #78350F;
+      color: #F59E0B;
+    }
+    .status-planificacion {
+      background: rgba(23, 37, 84, 0.5);
+      border-color: #1E3A8A;
+      color: #60A5FA;
+    }
+
+    /* Tarjetas KPI Reales (Captura 1) */
+    .real-kpi-card {
+      background: #12151C;
+      border: 1px solid #1E2536;
+      border-radius: 14px;
+      padding: 1.15rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 125px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+    html.light .real-kpi-card {
+      background: #FFFFFF;
+      border-color: #CBD5E1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    }
+    .real-kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.65rem;
+    }
+    .real-kpi-title {
+      font-size: 0.8125rem;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+    html.light .real-kpi-title { color: #64748B; }
+    .real-kpi-icon {
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .real-kpi-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 0.35rem;
+    }
+    html.light .real-kpi-value { color: #0F172A; }
+    .real-kpi-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #94A3B8;
+    }
+    html.light .real-kpi-footer { color: #64748B; }
+    .real-kpi-link {
+      color: #A78BFA;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .real-kpi-link:hover { text-decoration: underline; }
+
+    /* Notificaciones Toast Reales (Capturas 3 y 4) */
+    .real-toast-success {
+      background: #07261B;
+      border: 1px solid #114A35;
+      border-radius: 12px;
+      padding: 0.65rem 1.15rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      box-shadow: 0 10px 25px rgba(4, 24, 17, 0.6);
+    }
+    .real-toast-icon-green {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #10B981;
+      color: #07261B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .real-toast-text-green {
+      color: #10B981;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .real-toast-warning {
+      background: #2B1905;
+      border: 1px solid #54330C;
+      border-radius: 12px;
+      padding: 0.65rem 1.15rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      box-shadow: 0 10px 25px rgba(33, 18, 3, 0.6);
+    }
+    .real-toast-icon-amber {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #F59E0B;
+      color: #2B1905;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .real-toast-text-amber {
+      color: #F59E0B;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    /* Árbol del Menú Lateral (Captura 5) */
+    .sidebar-tree-node {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    .sidebar-tree-node::before {
+      content: '';
+      position: absolute;
+      left: 0.75rem;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #1E2536;
+    }
+    .sidebar-subitem {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.5rem;
+      font-size: 0.8125rem;
+      color: #94A3B8;
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+    .sidebar-subitem:hover {
+      color: #FFFFFF;
+      background: #171B24;
+    }
+    .sidebar-subitem::before {
+      content: '';
+      position: absolute;
+      left: -0.75rem;
+      top: 50%;
+      width: 0.65rem;
+      height: 1px;
+      background: #1E2536;
+    }
+
+    /* Popover Usuario (Captura 5) */
+    .user-popover-card {
+      background: #12151C;
+      border: 1px solid #1E2536;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      box-shadow: var(--shadow-popover);
+      width: 230px;
+    }
+    .user-popover-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+    .user-popover-email {
+      font-size: 0.725rem;
+      color: #64748B;
+      margin-bottom: 0.65rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-popover-logout {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.785rem;
+      color: #94A3B8;
+      cursor: pointer;
+      padding-top: 0.5rem;
+      border-top: 1px solid #1E2536;
+    }
+    .user-popover-logout:hover {
+      color: #EF4444;
+    }
+
+    /* Live Toast Container Floating */
+    #live-toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .live-toast-item {
+      pointer-events: auto;
+      animation: toastSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes toastSlide {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes toastFade {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.95); }
+    }
+
+    @media (max-width: 1024px) {
+      body { flex-direction: column; }
+      .sidebar-nav { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border-main); }
+      .main-content { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       BARRA LATERAL DE NAVEGACIÓN Y ACCESO DIRECTO
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar-nav">
+    <div class="brand-block">
+      <!-- Logo Real Extraído de la Captura 5 -->
+      <div class="real-brand">
+        <div class="real-brand-logo">TH</div>
+        <div class="real-brand-text">
+          <span class="real-brand-title">The High</span>
+          <span class="real-brand-sub">EVENTS</span>
+        </div>
+      </div>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" title="Cambiar Tema (Oscuro / Claro)">
+        🌙 Dark
+      </button>
+    </div>
+
+    <div class="nav-list">
+      <div class="nav-section-title">Evidencia SENA ADSO</div>
+      <a href="#encabezado" class="nav-link active">
+        <span class="nav-num">ID</span> Ficha Técnica & Autores
+      </a>
+
+      <div class="nav-section-title">12 Patrones Obligatorios</div>
+      <a href="#patron-1" class="nav-link">
+        <span class="nav-num">01</span> Iconografía CRUD
+      </a>
+      <a href="#patron-2" class="nav-link">
+        <span class="nav-num">02</span> Iconografía Menú / Macroprocesos
+      </a>
+      <a href="#patron-3" class="nav-link">
+        <span class="nav-num">03</span> Barra de Navegación (Paginación)
+      </a>
+      <a href="#patron-4" class="nav-link">
+        <span class="nav-num">04</span> NavBar 1: SideBar Macroprocesos
+      </a>
+      <a href="#patron-5" class="nav-link">
+        <span class="nav-num">05</span> NavBar 2: TopBar Opciones Generales
+      </a>
+      <a href="#patron-6" class="nav-link">
+        <span class="nav-num">06</span> Footer Corporativo
+      </a>
+      <a href="#patron-7" class="nav-link">
+        <span class="nav-num">07</span> Sistema de Notificaciones (a-d)
+      </a>
+      <a href="#patron-8" class="nav-link">
+        <span class="nav-num">08</span> Fuentes & Jerarquía Tipográfica
+      </a>
+      <a href="#patron-9" class="nav-link">
+        <span class="nav-num">09</span> Separadores & Divisores
+      </a>
+      <a href="#patron-10" class="nav-link">
+        <span class="nav-num">10</span> Datos o Texto Relevante
+      </a>
+      <a href="#patron-11" class="nav-link">
+        <span class="nav-num">11</span> Guía de Estilos: Colores & WCAG
+      </a>
+      <a href="#patron-12" class="nav-link">
+        <span class="nav-num">12</span> Estándar de KPIs & Gráficos
+      </a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 1: ICONOGRAFÍA CRUD
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-1">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">01</div>
+          <h2 class="section-title">Iconografía CRUD</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Autor Responsable: <strong>Juan Esteban</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        Estandarización de las acciones de Create (Crear), Read (Consultar/Ver Detalle), Update (Editar) y Delete (Eliminar). En las vistas reales de The High Events (ej. módulo <strong>Eventos</strong>), la acción <em>Crear evento</em> se presenta como botón hero en color violeta, mientras que las acciones por fila se concentran en una columna dedicada con íconos vectoriales alineados a la derecha.
+      </p>
+
+      <!-- Espécimen en Vivo Fiel a la Captura 2 -->
+      <div class="specimen-box">
+        <span class="specimen-label">Espécimen en Vivo: Barra de Acciones y Filas Reales de Eventos</span>
+        
+        <!-- Header de la Tabla Real -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <h3 style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF;">Eventos</h3>
+            <button class="btn-create-event">Crear evento</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <!-- Selector Tarjetas / Tabla -->
+            <div style="display: flex; background: #121620; border: 1px solid #1E2536; border-radius: 8px; padding: 2px;">
+              <button style="background: none; border: none; color: #94A3B8; font-size: 0.75rem; padding: 4px 10px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Tarjetas</span>
+              </button>
+              <button style="background: #7C3AED; border: none; color: #FFFFFF; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                <span>Tabla</span>
+              </button>
+            </div>
+
+            <!-- Buscador -->
+            <div style="display: flex; align-items: center; gap: 0.4rem; background: #121620; border: 1px solid #1E2536; border-radius: 8px; padding: 5px 12px; font-size: 0.75rem; color: #64748B;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>Buscar</span>
+            </div>
+
+            <!-- Botón Filtrar -->
+            <button style="background: #121620; border: 1px solid #1E2536; border-radius: 8px; padding: 5px 12px; font-size: 0.75rem; color: #94A3B8; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+              <span>Filtrar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Muestra Real de Fila con Acciones CRUD -->
+        <div style="background: #12151C; border: 1px solid #1E2536; border-radius: 10px; padding: 0.85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.875rem; color: #FFFFFF;">Festival de Música 360</div>
+            <div style="font-size: 0.75rem; color: #64748B;">Discoteca 360 Club, Medellín · <span style="color: #94A3B8;">Propio</span></div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <div class="status-select-pill status-confirmado">
+              <span>Confirmado</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+
+            <div style="text-align: right;">
+              <div style="font-weight: 800; font-size: 0.875rem; color: #FFFFFF;">$ 38.000.000</div>
+              <div style="font-size: 0.7rem; color: #64748B;">850 personas pers.</div>
+            </div>
+
+            <!-- ICONOGRAFÍA CRUD REAL: EYE, EDIT2, TRASH2 -->
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding-left: 0.75rem; border-left: 1px solid #1E2536;">
+              <span class="table-action-icon" title="Ver detalle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </span>
+              <span class="table-action-icon" title="Editar evento">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+              </span>
+              <span class="table-action-icon delete" title="Eliminar registro">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla Técnica de Iconos CRUD -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Acción CRUD</th>
+              <th>Componente / Ícono</th>
+              <th>Color / Estado</th>
+              <th>Ubicación en la Interfaz Real</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Crear (Create)</strong></td>
+              <td><code>Button.tsx</code> con texto e ícono</td>
+              <td>Fondo Púrpura <code>#7C3AED</code>, texto blanco</td>
+              <td>Cabecera superior de cada módulo (ej. <em>Crear evento</em>, <em>Crear rol</em>).</td>
+            </tr>
+            <tr>
+              <td><strong>Ver (Read)</strong></td>
+              <td><code>&lt;Eye size={16} /&gt;</code></td>
+              <td>Gris <code>#94A3B8</code> a Blanco <code>#FFFFFF</code> on hover</td>
+              <td>Columna <em>Acciones</em> de tablas; abre Drawer de solo lectura.</td>
+            </tr>
+            <tr>
+              <td><strong>Editar (Update)</strong></td>
+              <td><code>&lt;Edit2 size={16} /&gt;</code></td>
+              <td>Gris <code>#94A3B8</code> a Blanco <code>#FFFFFF</code> on hover</td>
+              <td>Columna <em>Acciones</em>; abre Drawer en modo formulario controlado.</td>
+            </tr>
+            <tr>
+              <td><strong>Eliminar (Delete)</strong></td>
+              <td><code>&lt;Trash2 size={16} /&gt;</code></td>
+              <td>Gris <code>#94A3B8</code> a Rojo <code>#EF4444</code> on hover</td>
+              <td>Columna <em>Acciones</em>; dispara modal de confirmación destructiva.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 2: ICONOGRAFÍA MENÚ / MACROPROCESOS
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-2">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">02</div>
+          <h2 class="section-title">Iconografía Menú / MacroProcesos</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Autor Responsable: <strong>Juan Daniel</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        En la arquitectura de navegación de The High Events (visible en la Captura 5), los módulos se agrupan en secciones colapsables jerárquicas con líneas de guía tipo árbol (<em>tree connectors</em>). Cada macroproceso cuenta con un ícono principal y sub-íconos dedicados.
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Macroproceso / Sección</th>
+              <th>Ícono Principal</th>
+              <th>Submódulos Hijos</th>
+              <th>Ícono Hijo</th>
+              <th>Propósito Operativo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Dashboard</strong></td>
+              <td><code>LayoutGrid</code> (4 cuadros)</td>
+              <td>Resumen</td>
+              <td><code>LayoutGrid</code></td>
+              <td>Métricas de ventas, cobros, ticket promedio y rentabilidad neta.</td>
+            </tr>
+            <tr>
+              <td><strong>Eventos</strong></td>
+              <td><code>CalendarDays</code></td>
+              <td>Eventos<br>Agendamiento</td>
+              <td><code>CalendarDays</code><br><code>Clock</code></td>
+              <td>Gestión de festivales y visitas técnicas / reuniones a locación.</td>
+            </tr>
+            <tr>
+              <td><strong>Comercial y Ventas</strong></td>
+              <td><code>DollarSign</code></td>
+              <td>Clientes<br>Servicios<br>Cotizaciones<br>Ventas</td>
+              <td><code>Users</code><br><code>Layers</code><br><code>FileText</code><br><code>DollarSign</code></td>
+              <td>Ciclo comercial: prospección, cotización formal y facturación.</td>
+            </tr>
+            <tr>
+              <td><strong>Configuración</strong></td>
+              <td><code>ShieldCheck</code></td>
+              <td>Roles<br>Usuarios<br>Empleados</td>
+              <td><code>ShieldCheck</code><br><code>User</code><br><code>UserCheck</code></td>
+              <td>Permisos de sistema, credenciales y matriz de seguridad RBAC.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 3: BARRA DE NAVEGACIÓN EN LISTADOS (PAGINACIÓN)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-3">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">03</div>
+          <h2 class="section-title">Barra de Navegación en los Listados (Paginación)</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Autor Responsable: <strong>Juan Jose</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        Especificación del componente <code>Pagination.tsx</code> que gobierna las listas de Eventos, Cotizaciones, Equipos y Clientes. Ofrece cambio de tamaño de página, contador total de elementos y navegación por páginas con botones deshabilitados reactivamente en los límites.
+      </p>
+
+      <div class="specimen-box">
+        <span class="specimen-label">Espécimen Interactivo: Paginación Real</span>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.5rem 0;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #94A3B8;">
+            <span>Mostrar</span>
+            <div style="position: relative; display: inline-block;">
+              <select id="pSize" onchange="runPagination()" style="height: 32px; padding: 0 28px 0 10px; background: #181B22; border: 1px solid #1E2536; border-radius: 8px; font-size: 0.75rem; color: #FFFFFF; appearance: none; cursor: pointer; outline: none;">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+              </select>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" style="position: absolute; right: 8px; top: 10px; pointer-events: none;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <span id="pCount">de 5 eventos</span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.8125rem; color: #94A3B8;">
+            <span id="pIndicator">Página 1 de 1</span>
+            <div style="display: flex; gap: 4px;">
+              <button id="pFirst" onclick="changePage(1)" disabled style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #181B22; border: 1px solid #1E2536; border-radius: 6px; color: #94A3B8; cursor: not-allowed; opacity: 0.35;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+              </button>
+              <button id="pPrev" onclick="changePage(currentPage - 1)" disabled style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #181B22; border: 1px solid #1E2536; border-radius: 6px; color: #94A3B8; cursor: not-allowed; opacity: 0.35;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #7C3AED; border: 1px solid #7C3AED; border-radius: 6px; color: #FFFFFF; font-weight: 700; font-size: 0.75rem;">1</button>
+              <button id="pNext" onclick="changePage(currentPage + 1)" disabled style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #181B22; border: 1px solid #1E2536; border-radius: 6px; color: #94A3B8; cursor: not-allowed; opacity: 0.35;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+              <button id="pLast" onclick="changePage(totalPages)" disabled style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #181B22; border: 1px solid #1E2536; border-radius: 6px; color: #94A3B8; cursor: not-allowed; opacity: 0.35;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 4: NAVBAR 1 (SIDEBAR / MENÚ DE MACROPROCESOS)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-4">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">04</div>
+          <h2 class="section-title">NavBar 1 — SideBar (Menú de Macroprocesos)</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Autor Responsable: <strong>Juan Esteban</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        El SideBar oficial de The High Events (revelado en la Captura 5) cuenta con el logo distintivo <strong>[TH] The High EVENTS</strong>, secciones jerárquicas colapsables con guías de árbol y el menú de sesión del usuario con popover flotante en la parte inferior.
+      </p>
+
+      <div class="specimen-box">
+        <span class="specimen-label">Espécimen en Vivo Fiel: SideBar Real con Popover de Sesión</span>
+        
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+          <!-- Mockup del SideBar Real -->
+          <div style="width: 270px; background: #0F1219; border: 1px solid #1E2536; border-radius: 14px; padding: 1.15rem 1rem; position: relative;">
+            
+            <!-- Branding Real -->
+            <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.5rem;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #7C3AED, #4F46E5); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: white;">TH</div>
+              <div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #FFFFFF; line-height: 1.15;">The High</div>
+                <div style="font-size: 0.65rem; font-weight: 700; color: #A78BFA; letter-spacing: 0.08em; text-transform: uppercase;">EVENTS</div>
+              </div>
+            </div>
+
+            <!-- Item Dashboard -->
+            <div style="display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 0.65rem; color: #94A3B8; font-size: 0.825rem; font-weight: 500; cursor: pointer; border-radius: 8px; margin-bottom: 0.75rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Dashboard</span>
+            </div>
+
+            <!-- Sección Eventos -->
+            <div style="margin-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.65rem; color: #FFFFFF; font-size: 0.825rem; font-weight: 700;">
+                <div style="display: flex; align-items: center; gap: 0.55rem;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <span>Eventos</span>
+                </div>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+
+              <!-- Sub-items con Guía Tipo Árbol -->
+              <div class="sidebar-tree-node">
+                <div class="sidebar-subitem" style="color: #A78BFA; font-weight: 600;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <span>Eventos</span>
+                </div>
+                <div class="sidebar-subitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span>Agendamiento</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección Comercial y Ventas -->
+            <div style="margin-bottom: 2rem;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.65rem; color: #FFFFFF; font-size: 0.825rem; font-weight: 700;">
+                <div style="display: flex; align-items: center; gap: 0.55rem;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>Comercial y Ventas</span>
+                </div>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+
+              <!-- Sub-items Árbol -->
+              <div class="sidebar-tree-node">
+                <div class="sidebar-subitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                  <span>Clientes</span>
+                </div>
+                <div class="sidebar-subitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-10 6 10 6 10-6-10-6Z"></path><path d="m2 13 10 6 10-6"></path><path d="m2 18 10 6 10-6"></path></svg>
+                  <span>Servicios</span>
+                </div>
+                <div class="sidebar-subitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <span>Cotizaciones</span>
+                </div>
+                <div class="sidebar-subitem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>Ventas</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Popover de Usuario Real: Esteban D -->
+            <div class="user-popover-card" style="margin-bottom: 0.75rem;">
+              <div class="user-popover-name">Esteban D</div>
+              <div class="user-popover-email">juanestebancasta2007@gmail....</div>
+              <div class="user-popover-logout" onclick="alert('Sesión cerrada correctamente')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Cerrar sesión</span>
+              </div>
+            </div>
+
+            <!-- Trigger Inferior Esteban D -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.65rem; border-radius: 8px; background: #12151C; cursor: pointer;">
+              <span style="font-size: 0.825rem; font-weight: 700; color: #FFFFFF;">Esteban D</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+
+          </div>
+
+          <!-- Documentación Técnica del SideBar -->
+          <div style="flex: 1; min-width: 280px;">
+            <div class="spec-title">📋 Directrices de Diseño del SideBar</div>
+            <ul style="font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6; padding-left: 1.25rem;">
+              <li><strong>Estructura jerárquica con conectores de árbol:</strong> Los submódulos descienden con una guía vertical continua de <code>1px #1E2536</code> y conectores horizontales hacia cada ítem.</li>
+              <li><strong>Branding persistente:</strong> Contenedor cuadrado con degradado <code>linear-gradient(135deg, #7C3AED, #4F46E5)</code> y acrónimo <strong>TH</strong>.</li>
+              <li><strong>Perfil de usuario contextual:</strong> El usuario activo (<strong>Esteban D</strong>) despliega un popover superior que muestra su correo y la acción directa <em>Cerrar sesión</em>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 5: NAVBAR 2 (TOPBAR / OPCIONES GENERALES)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-5">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">05</div>
+          <h2 class="section-title">NavBar 2 — TopBar (Opciones Generales)</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Autor Responsable: <strong>Juan Daniel</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        En las pantallas reales de The High Events (Captura 2), la cabecera superior se mantiene minimalista y funcional: el botón de alternar barra lateral (hamburguesa) a la izquierda, y a la derecha los accesos de <strong>modo de color (Sol/Luna)</strong> y la <strong>campana de notificaciones</strong> con indicador activo.
+      </p>
+
+      <div class="specimen-box">
+        <span class="specimen-label">Espécimen en Vivo: Barra TopHeader Real</span>
+        
+        <header style="height: 52px; background: #0B0E14; border-bottom: 1px solid #1E2536; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem;">
+          <!-- Hamburguesa Izquierda -->
+          <button style="background: none; border: none; color: #94A3B8; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+
+          <!-- Acciones Derecha -->
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <!-- Botón Modo Sol / Luna -->
+            <button onclick="toggleTheme()" title="Cambiar tema" style="width: 34px; height: 34px; background: #12151C; border: 1px solid #1E2536; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #94A3B8; cursor: pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+
+            <!-- Botón Notificaciones con Indicador Rojo -->
+            <div style="position: relative;">
+              <button title="Notificaciones" style="width: 34px; height: 34px; background: #12151C; border: 1px solid #1E2536; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #94A3B8; cursor: pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              </button>
+              <span style="position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #EF4444;"></span>
+            </div>
+          </div>
+        </header>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 6: FOOTER CORPORATIVO
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-6">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">06</div>
+          <h2 class="section-title">Footer Corporativo</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Autor Responsable: <strong>Juan Jose</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        Pie de página corporativo para respaldar la entrega de reportes y pantallas de gestión con datos legales, enlaces de soporte y versión oficial del software.
+      </p>
+
+      <div class="specimen-box">
+        <span class="specimen-label">Espécimen en Vivo: Footer del Sistema</span>
+        <footer style="padding: 1.25rem; background: #0F1219; border: 1px solid #1E2536; border-radius: 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.75rem;">
+          <div style="color: #64748B;">
+            <div style="font-weight: 700; color: #FFFFFF; margin-bottom: 2px;">The High Events S.A.S. — NIT 901.482.319-4</div>
+            <div>© 2026 Todos los derechos reservados · Medellín, Colombia</div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; color: #94A3B8;">
+            <span>Términos del Servicio</span>
+            <span>·</span>
+            <span>Privacidad de Datos</span>
+            <span>·</span>
+            <span>Mesa de Ayuda</span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.35rem; color: #10B981; font-weight: 600;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+              <span>Sistemas Operativos</span>
+            </div>
+            <span style="font-family: 'JetBrains Mono', monospace; color: #64748B; background: #12151C; padding: 2px 6px; border-radius: 4px; border: 1px solid #1E2536;">v2.4.0</span>
+          </div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 7: NOTIFICACIONES (a, b, c, d)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-7">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">07</div>
+          <h2 class="section-title">Sistema de Notificaciones (a, b, c, d)</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Basado en las Capturas 3 y 4: <strong>Toast Real</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        El sistema de notificaciones de The High Events implementa píldoras flotantes compactas con borde coloreado, fondo muy oscuro y círculo sólido distintivo (tal como se aprecia en las notificaciones reales <strong>"Cotización eliminada"</strong> y <strong>"Descargando PDF — COT-8041"</strong>).
+      </p>
+
+      <!-- Botonera de Prueba Interactiva -->
+      <div class="spec-card" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+        <div>
+          <div style="font-size: 0.825rem; font-weight: 700;">🔔 Probar Notificaciones Reales en Pantalla</div>
+          <div style="font-size: 0.75rem; color: var(--text-dim);">Haz clic para disparar las notificaciones idénticas a las capturas:</div>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-create-event" style="background: #10B981;" onclick="fireRealToast('success')">a) Éxito Real</button>
+          <button class="btn-create-event" style="background: #F59E0B;" onclick="fireRealToast('warning')">b) Alerta / Proceso Real</button>
+          <button class="btn-create-event" style="background: #EF4444;" onclick="fireRealToast('error')">c) Error Real</button>
+          <button class="btn-create-event" style="background: #64748B;" onclick="fireRealToast('validation')">d) Validación</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- NOTIFICACIÓN REAL: ÉXITO (Captura 4) -->
+        <div class="card" style="margin: 0;">
+          <div class="spec-title" style="color: #10B981;">a) Notificación de Éxito (Captura 4 Real)</div>
+          <div style="margin: 1rem 0;">
+            <div class="real-toast-success">
+              <div class="real-toast-icon-green">✓</div>
+              <span class="real-toast-text-green">Cotización eliminada</span>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Tokens Reales:</strong> Fondo <code>#07261B</code>, Borde <code>#114A35</code>, Círculo <code>#10B981</code>, Texto <code>#10B981</code> (Inter Semibold).
+          </div>
+        </div>
+
+        <!-- NOTIFICACIÓN REAL: ALERTA / PROCESO (Captura 3) -->
+        <div class="card" style="margin: 0;">
+          <div class="spec-title" style="color: #F59E0B;">b) Notificación de Alerta / Proceso (Captura 3 Real)</div>
+          <div style="margin: 1rem 0;">
+            <div class="real-toast-warning">
+              <div class="real-toast-icon-amber">!</div>
+              <span class="real-toast-text-amber">Descargando PDF — COT-8041</span>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Tokens Reales:</strong> Fondo <code>#2B1905</code>, Borde <code>#54330C</code>, Círculo <code>#F59E0B</code>, Texto <code>#F59E0B</code> (Inter Semibold).
+          </div>
+        </div>
+
+        <!-- CASO C: ALERTA DESTRUCTIVA -->
+        <div class="card" style="margin: 0;">
+          <div class="spec-title" style="color: #EF4444;">c) Alerta Destructiva / Confirmación Modal</div>
+          <div style="background: #12151C; border: 1px solid #7F1D1D; border-radius: 12px; padding: 1rem;">
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #EF4444; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">!</div>
+              <div>
+                <div style="font-weight: 700; font-size: 0.85rem; color: #FFFFFF;">¿Eliminar este registro permanentemente?</div>
+                <div style="font-size: 0.75rem; color: #94A3B8; margin: 4px 0 8px;">Si elimina el usuario, se eliminarán los registros asociados en auditoría y agendamientos.</div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Sí, eliminar</button>
+                  <button style="background: #181B22; color: #94A3B8; border: 1px solid #1E2536; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Cancelar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CASO D: CAMPOS VACÍOS O CARACTERES ESPECIALES -->
+        <div class="card" style="margin: 0;">
+          <div class="spec-title" style="color: #EF4444;">d) Validación de Formularios (Campos Vacíos / Caracteres Prohibidos)</div>
+          <div style="margin-top: 0.5rem;">
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #EF4444; margin-bottom: 4px;">Nombre del Evento *</label>
+            <input type="text" value="Festival '360' <script>" style="width: 100%; padding: 7px 12px; background: rgba(239, 68, 68, 0.08); border: 1px solid #EF4444; border-radius: 8px; color: #FFFFFF; font-size: 0.8125rem; outline: none;">
+            <div style="font-size: 0.7rem; color: #EF4444; margin-top: 4px; font-weight: 600;">
+              ⚠ Campo obligatorio. No se permiten caracteres especiales como &lt; &gt; ; { }
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 8: FUENTES Y JERARQUÍA TIPOGRÁFICA
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-8">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">08</div>
+          <h2 class="section-title">Fuentes & Jerarquía Tipográfica</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Tipografía: <strong>Inter + JetBrains Mono</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        Especificación tipográfica basada en las capturas reales: títulos principales de módulo en <strong>24px/22px Bold</strong>, métricas KPI en <strong>26px/28px ExtraBold</strong>, filas de tabla en <strong>13px</strong> y valores monetarios en fuente numérica tabular.
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Elemento en Pantalla</th>
+              <th>Fuente</th>
+              <th>Tamaño (px / rem)</th>
+              <th>Peso (Weight)</th>
+              <th>Color Dark / Light</th>
+              <th>Alineación</th>
+              <th>Ejemplo de la Captura</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Título de Vista</strong></td>
+              <td><code>Inter</code></td>
+              <td>24px / 1.5rem</td>
+              <td>Bold (800)</td>
+              <td><code>#FFFFFF</code> / <code>#0F172A</code></td>
+              <td>Left</td>
+              <td><em>Resumen</em>, <em>Eventos</em>, <em>Roles</em></td>
+            </tr>
+            <tr>
+              <td><strong>Subtítulo Descriptivo</strong></td>
+              <td><code>Inter</code></td>
+              <td>13px / 0.8125rem</td>
+              <td>Regular (400)</td>
+              <td><code>#94A3B8</code> / <code>#64748B</code></td>
+              <td>Left</td>
+              <td><em>Resumen de rendimiento y métricas clave</em></td>
+            </tr>
+            <tr>
+              <td><strong>Métrica Principal KPI</strong></td>
+              <td><code>Inter</code></td>
+              <td>26px / 1.625rem</td>
+              <td>ExtraBold (800)</td>
+              <td><code>#FFFFFF</code> / <code>#0F172A</code></td>
+              <td>Left</td>
+              <td><em>$ 68.000.000</em>, <em>8/14</em></td>
+            </tr>
+            <tr>
+              <td><strong>Título de Evento en Tabla</strong></td>
+              <td><code>Inter</code></td>
+              <td>14px / 0.875rem</td>
+              <td>Bold (700)</td>
+              <td><code>#FFFFFF</code> / <code>#0F172A</code></td>
+              <td>Left</td>
+              <td><em>Festival de Música 360</em></td>
+            </tr>
+            <tr>
+              <td><strong>Detalle / Locación en Tabla</strong></td>
+              <td><code>Inter</code></td>
+              <td>12px / 0.75rem</td>
+              <td>Regular (400)</td>
+              <td><code>#64748B</code> / <code>#64748B</code></td>
+              <td>Left</td>
+              <td><em>Discoteca 360 Club, Medellín</em></td>
+            </tr>
+            <tr>
+              <td><strong>Píldoras de Estado (Dropdown)</strong></td>
+              <td><code>Inter</code></td>
+              <td>12px / 0.75rem</td>
+              <td>Semibold (600)</td>
+              <td>Verde / Ámbar / Azul</td>
+              <td>Center</td>
+              <td><em>Confirmado ⌵</em>, <em>Montaje ⌵</em></td>
+            </tr>
+            <tr>
+              <td><strong>Fecha y Horario</strong></td>
+              <td><code>Inter</code></td>
+              <td>12px / 0.75rem</td>
+              <td>Bold / Regular</td>
+              <td><code>#FFFFFF</code> / <code>#64748B</code></td>
+              <td>Left</td>
+              <td><em>2026-11-01 · 18:00 - 04:00</em></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 9: SEPARADORES (COLOR RGB, GROSOR, ALTURA, DEGRADADOS)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-9">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">09</div>
+          <h2 class="section-title">Separadores & Divisores (RGB, Grosor, Altura, Degradados)</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Bordes Nítidos: <strong>1px Sin Desfases</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        En las capturas reales, las divisiones son sutiles y armónicas con el fondo azul/negro pizarra, evitando líneas toscas.
+      </p>
+
+      <div class="grid-3">
+        <div class="spec-card">
+          <div class="spec-title">1. Borde Estructural de Tarjeta</div>
+          <div style="height: 1px; width: 100%; background: #1E2536; margin: 1rem 0;"></div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+            <div><strong>Color RGB:</strong> <code>rgb(30, 37, 54)</code> (#1E2536)</div>
+            <div><strong>Grosor:</strong> 1px uniforme</div>
+            <div><strong>Uso:</strong> Contorno de KPICards y filas de tabla.</div>
+          </div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-title">2. Separador Modo Claro</div>
+          <div style="height: 1px; width: 100%; background: #CBD5E1; margin: 1rem 0;"></div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+            <div><strong>Color RGB:</strong> <code>rgb(203, 213, 225)</code> (#CBD5E1)</div>
+            <div><strong>Grosor:</strong> 1px continuo</div>
+            <div><strong>Uso:</strong> Sustituye líneas negras agresivas en Light Mode.</div>
+          </div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-title">3. Separador con Degradado</div>
+          <div style="height: 2px; width: 100%; background: linear-gradient(90deg, transparent 0%, rgba(124, 58, 237, 0.7) 50%, transparent 100%); margin: 1rem 0;"></div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+            <div><strong>Gradiente:</strong> <code>linear-gradient(90deg, transparent, #7C3AED, transparent)</code></div>
+            <div><strong>Grosor:</strong> 2px</div>
+            <div><strong>Uso:</strong> División de resumen ejecutivo.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 10: DATOS O TEXTO RELEVANTE
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-10">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">10</div>
+          <h2 class="section-title">Datos o Texto Relevante</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Visibilidad Inmediata de Métricas</span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        En las pantallas de The High Events, los datos críticos (dinero, códigos COT y estados) se diferencian claramente de la metadata auxiliar:
+      </p>
+
+      <div class="grid-2">
+        <div class="card" style="margin: 0;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.75rem;">1. Importes Monetarios y Códigos Reales</h4>
+          <div class="specimen-box" style="padding: 1rem; margin: 0 0 0.85rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.75rem; color: #94A3B8;">Presupuesto de Evento:</span>
+              <span style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">$ 38.000.000</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 0.75rem; color: #94A3B8;">Código de Cotización:</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #64748B;">COT-INT-01 / COT-8039</span>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+            <strong>Regla:</strong> Los montos grandes de dinero van en blanco puro (<code>#FFFFFF</code>) con peso 800, y las personas/asistentes en gris (<code>#64748B</code>).
+          </div>
+        </div>
+
+        <div class="card" style="margin: 0;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.75rem;">2. Píldoras Dropdown de Estado (Captura 2)</h4>
+          <div class="specimen-box" style="padding: 1rem; margin: 0 0 0.85rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
+            <span class="status-select-pill status-confirmado">Confirmado ⌵</span>
+            <span class="status-select-pill status-montaje">Montaje ⌵</span>
+            <span class="status-select-pill status-planificacion">Planificación ⌵</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+            <strong>Regla:</strong> Cada estado cuenta con un color temático al 50% de opacidad de fondo, borde sólido fino y chevron down indicador de select.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 11: GUÍA DE ESTILOS: COLORES
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-11">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">11</div>
+          <h2 class="section-title">Guía de Estilos: Colores (Armonías, Contrastes, WCAG)</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Accesibilidad: <strong>WCAG 2.1 Nivel AA / AAA</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        Paleta cromática exacta muestreada de las capturas de la aplicación:
+      </p>
+
+      <div class="grid-4">
+        <div style="background: var(--bg-card); border: 1px solid #1E2536; border-radius: 8px; overflow: hidden;">
+          <div style="height: 50px; background: #7C3AED;"></div>
+          <div style="padding: 0.65rem; font-size: 0.75rem;">
+            <div style="font-weight: 700;">Violeta Marca</div>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #94A3B8;">#7C3AED</div>
+            <div style="font-size: 0.65rem; color: #64748B;">Botones, Logo TH, Tabs</div>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid #1E2536; border-radius: 8px; overflow: hidden;">
+          <div style="height: 50px; background: #0B0E14;"></div>
+          <div style="padding: 0.65rem; font-size: 0.75rem;">
+            <div style="font-weight: 700;">Lienzo Fondo</div>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #94A3B8;">#0B0E14</div>
+            <div style="font-size: 0.65rem; color: #64748B;">Página general</div>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid #1E2536; border-radius: 8px; overflow: hidden;">
+          <div style="height: 50px; background: #12151C;"></div>
+          <div style="padding: 0.65rem; font-size: 0.75rem;">
+            <div style="font-weight: 700;">Superficie Card</div>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #94A3B8;">#12151C</div>
+            <div style="font-size: 0.65rem; color: #64748B;">KPI Cards y Tablas</div>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid #1E2536; border-radius: 8px; overflow: hidden;">
+          <div style="height: 50px; background: #10B981;"></div>
+          <div style="padding: 0.65rem; font-size: 0.75rem;">
+            <div style="font-weight: 700;">Verde Confirmado</div>
+            <div style="font-family: 'JetBrains Mono', monospace; color: #94A3B8;">#10B981</div>
+            <div style="font-size: 0.65rem; color: #64748B;">Status y Toast</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Combinación de Interfaz</th>
+              <th>Texto</th>
+              <th>Fondo</th>
+              <th>Ratio Calculado</th>
+              <th>Evaluación WCAG 2.1</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Texto Blanco en Tarjeta (#12151C)</td>
+              <td><code>#FFFFFF</code></td>
+              <td><code>#12151C</code></td>
+              <td><strong>17.4 : 1</strong></td>
+              <td><span class="pill pill-sena">Cumple AAA</span></td>
+            </tr>
+            <tr>
+              <td>Botón "Crear evento" Púrpura</td>
+              <td><code>#FFFFFF</code></td>
+              <td><code>#7C3AED</code></td>
+              <td><strong>5.8 : 1</strong></td>
+              <td><span class="pill pill-sena">Cumple AA</span></td>
+            </tr>
+            <tr>
+              <td>Píldora Verde Confirmado</td>
+              <td><code>#10B981</code></td>
+              <td><code>#064E3B</code></td>
+              <td><strong>4.9 : 1</strong></td>
+              <td><span class="pill pill-sena">Cumple AA</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         PATRÓN 12: ESTÁNDAR DE DATOS ESTADÍSTICOS (KPIS Y GRÁFICOS)
+         ══════════════════════════════════════════════════════════════════════════ -->
+    <section id="patron-12">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <div class="section-num">12</div>
+          <h2 class="section-title">Estándar de KPIs y Gráficos Estadísticos</h2>
+        </div>
+        <div class="author-badge">
+          <span class="author-dot"></span>
+          <span>Basado 100% en la Captura 1: <strong>Dashboard Real</strong></span>
+        </div>
+      </div>
+
+      <p class="section-lead">
+        Reproducción de las 7 tarjetas de KPI y la sección de gráficos del módulo <strong>Resumen</strong> (Captura 1). Muestra valores reales como <code>$ 68.000.000</code>, enlaces de navegación directa (<em>Ver abonos →</em>) y comparativas mes a mes.
+      </p>
+
+      <!-- Fila 1 de KPICards Reales -->
+      <div class="grid-4" style="margin-bottom: 1rem;">
+        <!-- Card 1: Ventas Totales -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Ventas Totales</span>
+            <span class="real-kpi-icon" style="font-weight: 700; font-size: 15px;">$</span>
+          </div>
+          <div class="real-kpi-value">$ 68.000.000</div>
+          <div class="real-kpi-footer">
+            <span>Total del período</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Cobros Totales -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Cobros Totales</span>
+            <span class="real-kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+            </span>
+          </div>
+          <div class="real-kpi-value">$ 52.800.000</div>
+          <div class="real-kpi-footer">
+            <span>Total del período</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Ticket Promedio -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Ticket Promedio</span>
+            <span class="real-kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </span>
+          </div>
+          <div class="real-kpi-value">$ 4.857.143</div>
+          <div class="real-kpi-footer">
+            <span>Por evento (14 eventos)</span>
+          </div>
+        </div>
+
+        <!-- Card 4: Eventos -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Eventos</span>
+            <span class="real-kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </span>
+          </div>
+          <div class="real-kpi-value">8/14</div>
+          <div class="real-kpi-footer">
+            <span>8 confirmados de 14</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2 de KPICards Reales con Acciones -->
+      <div class="grid-3" style="margin-bottom: 1.25rem;">
+        <!-- Card 5: Por cobrar a clientes -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Por cobrar a clientes</span>
+            <span class="real-kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </span>
+          </div>
+          <div class="real-kpi-value">$ 15.200.000</div>
+          <div class="real-kpi-footer">
+            <span>22 % de lo vendido</span>
+            <a href="javascript:void(0)" class="real-kpi-link">Ver abonos →</a>
+          </div>
+        </div>
+
+        <!-- Card 6: Por pagar a proveedores -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Por pagar a proveedores</span>
+            <span class="real-kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+            </span>
+          </div>
+          <div class="real-kpi-value">$ 6.400.000</div>
+          <div class="real-kpi-footer">
+            <span>Pagos pendientes del período</span>
+            <a href="javascript:void(0)" class="real-kpi-link">Ver proveedores →</a>
+          </div>
+        </div>
+
+        <!-- Card 7: Rentabilidad neta -->
+        <div class="real-kpi-card">
+          <div class="real-kpi-header">
+            <span class="real-kpi-title">Rentabilidad neta</span>
+            <span class="real-kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            </span>
+          </div>
+          <div class="real-kpi-value">$ 26.100.000</div>
+          <div class="real-kpi-footer">
+            <span>Estimada después de costos</span>
+            <a href="javascript:void(0)" class="real-kpi-link">Ver ventas →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico Real: Cobrado Mes contra Mes -->
+      <div class="specimen-box">
+        <span class="specimen-label">Espécimen Dataviz Real: Cobrado Mes contra Mes</span>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #FFFFFF;">Cobrado Mes contra Mes</h4>
+            <div style="font-size: 0.75rem; color: #94A3B8;">Octubre vs septiembre · -4,0 % frente a la meta</div>
+          </div>
+          <div style="display: flex; gap: 1rem; font-size: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.35rem; color: #60A5FA;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #3B82F6;"></span>
+              <span>Octubre</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.35rem; color: #34D399;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+              <span>Septiembre</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Renderizado de Gráfico Lineal Fiel a la Captura 1 -->
+        <div style="position: relative; height: 120px; border-left: 1px solid #1E2536; border-bottom: 1px solid #1E2536; padding: 10px 0;">
+          <div style="position: absolute; left: -45px; top: 10px; font-size: 0.7rem; color: #64748B;">$ 60M</div>
+          <div style="position: absolute; left: -45px; top: 60px; font-size: 0.7rem; color: #64748B;">$ 40M</div>
+
+          <svg width="100%" height="100%" viewBox="0 0 600 100" preserveAspectRatio="none" style="overflow: visible;">
+            <!-- Línea Septiembre (Verde) -->
+            <path d="M 0 80 Q 250 75 580 30" fill="none" stroke="#10B981" stroke-width="2.5"></path>
+            <!-- Línea Octubre (Azul) -->
+            <path d="M 0 90 Q 250 80 580 20" fill="none" stroke="#3B82F6" stroke-width="2.5"></path>
+            <!-- Puntos de datos -->
+            <circle cx="260" cy="77" r="4" fill="#10B981"></circle>
+            <circle cx="260" cy="85" r="4" fill="#3B82F6"></circle>
+            <circle cx="580" cy="30" r="4" fill="#10B981"></circle>
+            <circle cx="580" cy="20" r="4" fill="#3B82F6"></circle>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Contenedor flotante para toasts en vivo -->
+  <div id="live-toast-container"></div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════════
+       JAVASCRIPT: TEMA, PAGINACIÓN Y TOASTS FIELES A LAS CAPTURAS
+       ══════════════════════════════════════════════════════════════════════════ -->
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      const btn = document.getElementById('themeBtn');
+
+      if (isDark) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        html.setAttribute('data-theme', 'light');
+        btn.textContent = '☀️ Light';
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        html.setAttribute('data-theme', 'dark');
+        btn.textContent = '🌙 Dark';
+      }
+    }
+
+    // Paginación Reactiva
+    let currentPage = 1;
+    let totalItems = 5;
+    let pageSize = 5;
+
+    function runPagination() {
+      const select = document.getElementById('pSize');
+      pageSize = parseInt(select.value, 10);
+      currentPage = 1;
+      updatePagination();
+    }
+
+    function changePage(page) {
+      const totalPages = Math.ceil(totalItems / pageSize);
+      if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        updatePagination();
+      }
+    }
+
+    function updatePagination() {
+      const totalPages = Math.ceil(totalItems / pageSize);
+      document.getElementById('pIndicator').textContent = `Página ${currentPage} de ${totalPages}`;
+      document.getElementById('pCount').textContent = `de ${totalItems} eventos`;
+      document.getElementById('pFirst').disabled = (currentPage === 1);
+      document.getElementById('pPrev').disabled = (currentPage === 1);
+      document.getElementById('pNext').disabled = (currentPage === totalPages);
+      document.getElementById('pLast').disabled = (currentPage === totalPages);
+    }
+
+    // Toast Fiel a las Capturas 3 y 4
+    function fireRealToast(type) {
+      const container = document.getElementById('live-toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'live-toast-item';
+
+      if (type === 'success') {
+        toast.className += ' real-toast-success';
+        toast.innerHTML = `
+          <div class="real-toast-icon-green">✓</div>
+          <span class="real-toast-text-green">Cotización eliminada</span>
+        `;
+      } else if (type === 'warning') {
+        toast.className += ' real-toast-warning';
+        toast.innerHTML = `
+          <div class="real-toast-icon-amber">!</div>
+          <span class="real-toast-text-amber">Descargando PDF — COT-8041</span>
+        `;
+      } else if (type === 'error') {
+        toast.style.background = '#2A0709';
+        toast.style.border = '1px solid #4C1116';
+        toast.style.borderRadius = '12px';
+        toast.style.padding = '0.65rem 1.15rem';
+        toast.style.display = 'inline-flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '0.65rem';
+        toast.innerHTML = `
+          <div style="width:20px;height:20px;border-radius:50%;background:#EF4444;color:#2A0709;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;">✕</div>
+          <span style="color:#FF8A8A;font-weight:700;font-size:0.85rem;">Error — El código COT-8039 ya existe</span>
+        `;
+      } else if (type === 'validation') {
+        toast.style.background = '#12151C';
+        toast.style.border = '1px solid #7F1D1D';
+        toast.style.borderRadius = '12px';
+        toast.style.padding = '0.65rem 1.15rem';
+        toast.style.display = 'inline-flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '0.65rem';
+        toast.innerHTML = `
+          <div style="width:20px;height:20px;border-radius:50%;background:#EF4444;color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;">⚠</div>
+          <span style="color:#EF4444;font-weight:700;font-size:0.85rem;">Campo obligatorio o con caracteres prohibidos</span>
+        `;
+      }
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'toastFade 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+  </script>
+</body>
+</html>

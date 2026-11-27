@@ -1,0 +1,5 @@
+export * from "./DetailPrimitives"
+export { DetailAction, type DetailActionTone } from "./DetailAction"
+export { DetailFooter } from "./DetailFooter"
+export { DetailStatusPicker } from "./DetailStatusPicker"
+export { DetailUbicacion } from "./DetailUbicacion"
